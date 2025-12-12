@@ -24,7 +24,7 @@ export function AppLayout({ children, className }: { children: React.ReactNode, 
       {!isLive && (
         <header className="p-4 flex justify-between items-center border-b border-white/10">
           <Link href="/">
-            <img src="/logo.jpeg" alt="PegPro" className="h-16 w-auto cursor-pointer object-contain" />
+            <img src="/logo.jpeg" alt="PegPro" className="w-[200px] h-[100px] cursor-pointer object-contain" />
           </Link>
           <Button 
             variant="ghost" 

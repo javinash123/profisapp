@@ -1,55 +1,48 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
-import MatchSetup from "@/pages/MatchSetup";
-import LiveMatch from "@/pages/LiveMatch";
-import EndSummary from "@/pages/EndSummary";
-import AlarmList from "@/pages/AlarmList";
-import WeatherDetail from "@/pages/WeatherDetail";
-// import AdminDashboard from "@/pages/admin/Dashboard.tsx";
-// import AdminLogin from "@/pages/admin/Login";
-// import MatchesManagement from "@/pages/admin/Matches";
-// import MatchDetail from "@/pages/admin/MatchDetail";
-// import UserManagement from "@/pages/admin/Users";
-// import UserEdit from "@/pages/admin/UserEdit";
-// import SystemSettings from "@/pages/admin/Settings";
+import React, { useState } from 'react';
+import { SafeAreaView, StatusBar, StyleSheet, View, Text } from 'react-native';
+import MatchSetup from './pages/MatchSetup';
+import LiveMatch from './pages/LiveMatchNative';
+import EndSummary from './pages/EndSummaryNative';
+import AlarmList from './pages/AlarmListNative';
+import WeatherDetail from './pages/WeatherDetailNative';
+import AdminLogin from './pages/admin/Login';
 
-function Router() {
+// Simple navigation state
+type Screen = 'setup' | 'live' | 'summary' | 'alarms' | 'weather' | 'admin';
+
+export default function App() {
+  const [currentScreen, setCurrentScreen] = useState<Screen>('setup');
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'setup':
+        return <MatchSetup onStart={() => setCurrentScreen('live')} />;
+      case 'live':
+        return <LiveMatch onNavigate={(screen) => setCurrentScreen(screen as Screen)} />;
+      case 'summary':
+        return <EndSummary onNavigate={(screen) => setCurrentScreen(screen as Screen)} />;
+      case 'alarms':
+        return <AlarmList onNavigate={(screen) => setCurrentScreen(screen as Screen)} />;
+      case 'weather':
+        return <WeatherDetail onNavigate={(screen) => setCurrentScreen(screen as Screen)} />;
+      case 'admin':
+        return <AdminLogin />;
+      default:
+        return <MatchSetup onStart={() => setCurrentScreen('live')} />;
+    }
+  };
+
   return (
-    <Switch>
-      <Route path="/" component={MatchSetup} />
-      <Route path="/live" component={LiveMatch} />
-      <Route path="/summary" component={EndSummary} />
-      <Route path="/alarms" component={AlarmList} />
-      <Route path="/weather" component={WeatherDetail} />
-      
-      {/* Admin Routes - Temporarily Disabled
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin/matches" component={MatchesManagement} />
-      <Route path="/admin/matches/:id" component={MatchDetail} />
-      <Route path="/admin/users" component={UserManagement} />
-      <Route path="/admin/users/:id" component={UserEdit} />
-      <Route path="/admin/settings" component={SystemSettings} />
-      */}
-      
-      <Route component={NotFound} />
-    </Switch>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      {renderScreen()}
+    </SafeAreaView>
   );
 }
 
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-}
-
-export default App;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0D1321',
+  },
+});
