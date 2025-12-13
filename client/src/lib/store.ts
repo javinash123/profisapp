@@ -1,5 +1,7 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 export type Unit = 'lb' | 'kg';
 
@@ -119,6 +121,18 @@ export const useMatchStore = create<MatchState>()(
     }),
     {
       name: 'pegpro-storage',
+      storage: createJSONStorage(() => {
+        // Use AsyncStorage for native platforms (Android/iOS)
+        if (Platform.OS !== 'web') {
+          return AsyncStorage;
+        }
+        // Wrap localStorage in a Promise-based interface for consistency
+        return {
+          getItem: async (name: string) => localStorage.getItem(name),
+          setItem: async (name: string, value: string) => localStorage.setItem(name, value),
+          removeItem: async (name: string) => localStorage.removeItem(name),
+        };
+      }),
     }
   )
 );

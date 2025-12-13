@@ -4,6 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-25_05"
+packages = ["imagemagick"]
 
 [deployment]
 deploymentTarget = "static"
@@ -40,3 +41,4 @@ waitForPort = 5000
 
 [agent]
 mockupState = "MOCKUP"
+expertMode = true

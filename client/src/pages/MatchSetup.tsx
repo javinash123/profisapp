@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     // @ts-ignore - outlineStyle is valid for web but not in RN types
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : {}),
   },
   row: {
     flexDirection: 'row',
