@@ -13,6 +13,10 @@ import { useMatchStore } from '@/lib/store';
 import Slider from '@react-native-community/slider';
 import { Play } from 'lucide-react-native';
 
+const logoSource = Platform.OS === 'web' 
+  ? { uri: '/logo.jpeg' } 
+  : require('../../assets/logo.jpeg');
+
 export default function MatchSetup({ onStart }: { onStart: () => void }) {
   const { startMatch, unit, setUnit, toggleFieldMode, fieldMode } = useMatchStore();
   
@@ -30,11 +34,13 @@ export default function MatchSetup({ onStart }: { onStart: () => void }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
+        {/* Image temporarily disabled for testing
         <Image 
-          source={{ uri: '/logo.jpeg' }} 
+          source={logoSource} 
           style={styles.logo} 
           resizeMode="contain" 
         />
+        */}
         <Text style={styles.headerTitle}>Match Setup</Text>
         <Text style={styles.headerSubtitle}>Configure your session settings</Text>
       </View>

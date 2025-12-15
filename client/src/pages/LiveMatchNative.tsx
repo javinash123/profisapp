@@ -6,6 +6,10 @@ import { NumericKeypad } from '@/components/match/NumericKeypadNative';
 import { Cloud, Lock, Plus, Bell, Home, StopCircle, Sun, Moon } from 'lucide-react-native';
 import { format } from 'date-fns';
 
+const logoSource = Platform.OS === 'web' 
+  ? { uri: '/logo.jpeg' } 
+  : require('../../assets/logo.jpeg');
+
 export default function LiveMatch({ onNavigate }: { onNavigate: (screen: string) => void }) {
   const { 
     matchTitle, 
@@ -97,11 +101,13 @@ export default function LiveMatch({ onNavigate }: { onNavigate: (screen: string)
       {/* Top Bar */}
       <View style={[styles.topBar, fieldMode && styles.fieldModeBorder]}>
         <View style={styles.matchInfo}>
+          {/* Image temporarily disabled for testing
           <Image 
-            source={{ uri: '/logo.jpeg' }} 
+            source={logoSource} 
             style={styles.headerLogo} 
             resizeMode="contain" 
           />
+          */}
           <View>
             <Text style={styles.matchTitle} numberOfLines={1}>{matchTitle}</Text>
             <Text style={styles.pegNumber}>PEG {pegNumber}</Text>

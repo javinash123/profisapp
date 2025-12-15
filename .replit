@@ -7,9 +7,10 @@ channel = "stable-25_05"
 packages = ["imagemagick"]
 
 [deployment]
-deploymentTarget = "static"
+deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 publicDir = "dist/public"
+run = ["npm", "run", "start"]
 
 [[ports]]
 localPort = 5000
@@ -36,9 +37,12 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev:client"
+args = "npm run dev"
 waitForPort = 5000
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [agent]
-mockupState = "MOCKUP"
+mockupState = "FULLSTACK"
 expertMode = true

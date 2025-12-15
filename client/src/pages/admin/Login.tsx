@@ -11,6 +11,10 @@ import {
   Platform
 } from 'react-native';
 
+const logoSource = Platform.OS === 'web' 
+  ? { uri: '/logo.jpeg' } 
+  : require('../../../assets/logo.jpeg');
+
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,12 +46,13 @@ export default function AdminLogin() {
     <View style={styles.container}>
       <View style={styles.contentContainer}>
         <View style={styles.header}>
-          {/* On web, /logo.jpeg works. On native, you need require or URI */}
+          {/* Image temporarily disabled for testing
           <Image 
-            source={{ uri: '/logo.jpeg' }} 
+            source={logoSource} 
             style={styles.logo}
             resizeMode="contain"
           />
+          */}
           <Text style={styles.title}>PegPro Admin</Text>
           <Text style={styles.subtitle}>Sign in to manage the platform</Text>
         </View>
