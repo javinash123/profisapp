@@ -45,7 +45,7 @@ export default function LiveMatchScreen() {
     return () => {
       deactivateKeepAwake();
     };
-  }, [currentMatch, navigation, refreshWeather]);
+  }, [currentMatch?.id, navigation]);
 
   useEffect(() => {
     if (!currentMatch) return;

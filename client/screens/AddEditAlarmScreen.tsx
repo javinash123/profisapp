@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable, Switch, TextInput } from "react-native";
+import { View, StyleSheet, Pressable, Switch, TextInput, ScrollView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
@@ -23,6 +23,9 @@ const ALARM_MODES: { value: AlarmMode; label: string; icon: string }[] = [
   { value: "duration-pattern", label: "Pattern", icon: "activity" },
 ];
 
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+
 export default function AddEditAlarmScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
@@ -35,8 +38,23 @@ export default function AddEditAlarmScreen() {
   const existingAlarm = alarmId ? alarms.find((a) => a.id === alarmId) : null;
   const isEditing = !!existingAlarm;
 
+  const getInitialTime = () => {
+    if (existingAlarm?.time) {
+      const date = new Date(existingAlarm.time);
+      return { hour: date.getHours(), minute: date.getMinutes() };
+    }
+    const now = new Date();
+    now.setHours(now.getHours() + 1);
+    return { hour: now.getHours(), minute: 0 };
+  };
+
+  const initialTime = getInitialTime();
+  const [originalAlarmTime] = useState(existingAlarm?.time || null);
+
   const [mode, setMode] = useState<AlarmMode>(existingAlarm?.mode || "repeat");
   const [label, setLabel] = useState(existingAlarm?.label || "");
+  const [selectedHour, setSelectedHour] = useState(initialTime.hour);
+  const [selectedMinute, setSelectedMinute] = useState(initialTime.minute);
   const [intervalMinutes, setIntervalMinutes] = useState(
     existingAlarm?.intervalMinutes?.toString() || "30"
   );
@@ -75,6 +93,31 @@ export default function AddEditAlarmScreen() {
     });
   }, [navigation, theme, mode, label, intervalMinutes, durationSeconds, patternMinutes, soundEnabled, vibrationEnabled]);
 
+  const getAlarmTime = () => {
+    const now = new Date();
+    let alarmDate: Date;
+    
+    if (originalAlarmTime && isEditing) {
+      alarmDate = new Date(originalAlarmTime);
+      alarmDate.setHours(selectedHour, selectedMinute, 0, 0);
+      if (alarmDate <= now) {
+        alarmDate.setDate(now.getDate());
+        alarmDate.setHours(selectedHour, selectedMinute, 0, 0);
+        if (alarmDate <= now) {
+          alarmDate.setDate(alarmDate.getDate() + 1);
+        }
+      }
+    } else {
+      alarmDate = new Date();
+      alarmDate.setHours(selectedHour, selectedMinute, 0, 0);
+      if (alarmDate <= now) {
+        alarmDate.setDate(alarmDate.getDate() + 1);
+      }
+    }
+    
+    return alarmDate.getTime();
+  };
+
   const handleSave = async () => {
     const alarmData = {
       mode,
@@ -82,7 +125,7 @@ export default function AddEditAlarmScreen() {
       intervalMinutes: mode === "repeat" ? parseInt(intervalMinutes) || 30 : undefined,
       durationSeconds: mode === "duration-pattern" ? parseInt(durationSeconds) || 20 : undefined,
       patternMinutes: mode === "duration-pattern" ? parseInt(patternMinutes) || 5 : undefined,
-      time: mode === "one-time" ? Date.now() + 3600000 : undefined,
+      time: mode === "one-time" ? getAlarmTime() : undefined,
       soundEnabled,
       vibrationEnabled,
       enabled: true,
@@ -229,10 +272,57 @@ export default function AddEditAlarmScreen() {
         ) : null}
 
         {mode === "one-time" ? (
-          <View style={[styles.infoCard, { backgroundColor: theme.backgroundDefault }]}>
-            <Feather name="info" size={20} color={theme.textSecondary} />
-            <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: Spacing.sm, flex: 1 }}>
-              One-time alarms will trigger once at your specified time. For now, this will trigger in 1 hour from save.
+          <View style={styles.section}>
+            <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
+              Set Time
+            </ThemedText>
+            <View style={styles.timePickerContainer}>
+              <View style={[styles.timePickerColumn, { backgroundColor: theme.backgroundDefault, borderColor: theme.border }]}>
+                <ThemedText type="caption" style={{ color: theme.textSecondary, marginBottom: Spacing.xs }}>Hour</ThemedText>
+                <View style={styles.timeButtonsRow}>
+                  <Pressable
+                    onPress={() => setSelectedHour((prev) => (prev === 0 ? 23 : prev - 1))}
+                    style={[styles.timeButton, { backgroundColor: theme.backgroundTertiary }]}
+                  >
+                    <Feather name="chevron-up" size={20} color={theme.text} />
+                  </Pressable>
+                  <ThemedText type="h2" style={styles.timeValue}>
+                    {selectedHour.toString().padStart(2, "0")}
+                  </ThemedText>
+                  <Pressable
+                    onPress={() => setSelectedHour((prev) => (prev === 23 ? 0 : prev + 1))}
+                    style={[styles.timeButton, { backgroundColor: theme.backgroundTertiary }]}
+                  >
+                    <Feather name="chevron-down" size={20} color={theme.text} />
+                  </Pressable>
+                </View>
+              </View>
+
+              <ThemedText type="h2" style={{ marginHorizontal: Spacing.sm }}>:</ThemedText>
+
+              <View style={[styles.timePickerColumn, { backgroundColor: theme.backgroundDefault, borderColor: theme.border }]}>
+                <ThemedText type="caption" style={{ color: theme.textSecondary, marginBottom: Spacing.xs }}>Minute</ThemedText>
+                <View style={styles.timeButtonsRow}>
+                  <Pressable
+                    onPress={() => setSelectedMinute((prev) => (prev === 0 ? 59 : prev - 1))}
+                    style={[styles.timeButton, { backgroundColor: theme.backgroundTertiary }]}
+                  >
+                    <Feather name="chevron-up" size={20} color={theme.text} />
+                  </Pressable>
+                  <ThemedText type="h2" style={styles.timeValue}>
+                    {selectedMinute.toString().padStart(2, "0")}
+                  </ThemedText>
+                  <Pressable
+                    onPress={() => setSelectedMinute((prev) => (prev === 59 ? 0 : prev + 1))}
+                    style={[styles.timeButton, { backgroundColor: theme.backgroundTertiary }]}
+                  >
+                    <Feather name="chevron-down" size={20} color={theme.text} />
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+            <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: Spacing.sm, textAlign: "center" }}>
+              Alarm will trigger at {selectedHour.toString().padStart(2, "0")}:{selectedMinute.toString().padStart(2, "0")}
             </ThemedText>
           </View>
         ) : null}
@@ -312,6 +402,31 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.sm,
     marginBottom: Spacing.xl,
+  },
+  timePickerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  timePickerColumn: {
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    minWidth: 100,
+  },
+  timeButtonsRow: {
+    alignItems: "center",
+  },
+  timeButton: {
+    width: 44,
+    height: 36,
+    borderRadius: BorderRadius.xs,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  timeValue: {
+    marginVertical: Spacing.sm,
   },
   switchRow: {
     flexDirection: "row",

@@ -146,7 +146,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await Storage.saveAlarms(newAlarms);
   };
 
-  const refreshWeather = async () => {
+  const refreshWeather = useCallback(async () => {
     const mockWeather: WeatherData = {
       temperature: 18,
       humidity: 65,
@@ -159,7 +159,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     setWeather(mockWeather);
     await Storage.saveWeather(mockWeather);
-  };
+  }, []);
 
   return (
     <AppContext.Provider
