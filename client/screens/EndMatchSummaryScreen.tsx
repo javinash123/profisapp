@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Pressable, ScrollView, Share } from "react-native";
+import React, { useEffect, useState, useRef } from "react";
+import { View, StyleSheet, Pressable, ScrollView, Share, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, { FadeInUp } from "react-native-reanimated";
+import { captureRef } from "react-native-view-shot";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -26,6 +27,7 @@ export default function EndMatchSummaryScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
   const { settings } = useApp();
+  const summaryRef = useRef<View>(null);
 
   const [match, setMatch] = useState<MatchState | null>(null);
 
@@ -55,20 +57,39 @@ export default function EndMatchSummaryScreen() {
   };
 
   const handleShare = async () => {
-    if (!match) return;
+    if (!match || !summaryRef.current) return;
     
-    const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
-    const summaryText = `PegPro Match Summary\n\n` +
-      `Match: ${match.config.name}\n` +
-      `Peg: ${match.config.pegNumber}\n` +
-      `Duration: ${formatDuration(match.config.durationMinutes)}\n` +
-      `Total Weight: ${formatWeight(totalWeight, match.config.unit)}\n\n` +
-      match.nets.map((net, i) => `Net ${i + 1}: ${formatWeight(net.weight, match.config.unit)}`).join("\n");
-
     try {
-      await Share.share({ message: summaryText });
+      const uri = await captureRef(summaryRef, {
+        format: "png",
+        quality: 1,
+        result: "tmpfile",
+      });
+      
+      if (Platform.OS === "web") {
+        const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
+        const summaryText = `PegPro Match Summary\n\n` +
+          `Match: ${match.config.name}\n` +
+          `Peg: ${match.config.pegNumber}\n` +
+          `Duration: ${formatDuration(match.config.durationMinutes)}\n` +
+          `Total Weight: ${formatWeight(totalWeight, match.config.unit)}\n\n` +
+          match.nets.map((net, i) => `Net ${i + 1}: ${formatWeight(net.weight, match.config.unit)}`).join("\n");
+        await Share.share({ message: summaryText });
+      } else {
+        await Share.share({
+          url: uri,
+        });
+      }
     } catch (error) {
       console.error("Share error:", error);
+      const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
+      const summaryText = `PegPro Match Summary\n\n` +
+        `Match: ${match.config.name}\n` +
+        `Peg: ${match.config.pegNumber}\n` +
+        `Duration: ${formatDuration(match.config.durationMinutes)}\n` +
+        `Total Weight: ${formatWeight(totalWeight, match.config.unit)}\n\n` +
+        match.nets.map((net, i) => `Net ${i + 1}: ${formatWeight(net.weight, match.config.unit)}`).join("\n");
+      await Share.share({ message: summaryText });
     }
   };
 
@@ -100,7 +121,12 @@ export default function EndMatchSummaryScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInUp.delay(100)}>
+        <View ref={summaryRef} collapsable={false} style={[styles.summaryContainer, { backgroundColor: Colors.dark.backgroundRoot }]}>
+          <View style={styles.summaryHeader}>
+            <ThemedText type="h3" style={styles.summaryTitle}>PegPro Match Summary</ThemedText>
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>{match.config.name}</ThemedText>
+          </View>
+
           <Card elevation={1} style={styles.totalCard}>
             <View style={styles.totalHeader}>
               <Feather name="award" size={32} color={Colors.dark.primary} />
@@ -112,40 +138,38 @@ export default function EndMatchSummaryScreen() {
               {formatWeight(totalWeight, match.config.unit)}
             </ThemedText>
           </Card>
-        </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(200)} style={styles.matchInfo}>
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <Feather name="flag" size={18} color={theme.textSecondary} />
-              <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: Spacing.xs }}>
-                Peg {match.config.pegNumber}
-              </ThemedText>
-            </View>
-            <View style={styles.infoItem}>
-              <Feather name="clock" size={18} color={theme.textSecondary} />
-              <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: Spacing.xs }}>
-                {formatDuration(match.config.durationMinutes)}
-              </ThemedText>
-            </View>
-            <View style={styles.infoItem}>
-              <Feather name="grid" size={18} color={theme.textSecondary} />
-              <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: Spacing.xs }}>
-                {match.config.numberOfNets} Nets
-              </ThemedText>
+          <View style={styles.matchInfo}>
+            <View style={styles.infoRow}>
+              <View style={styles.infoItem}>
+                <Feather name="flag" size={18} color={theme.textSecondary} />
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: Spacing.xs }}>
+                  Peg {match.config.pegNumber}
+                </ThemedText>
+              </View>
+              <View style={styles.infoItem}>
+                <Feather name="clock" size={18} color={theme.textSecondary} />
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: Spacing.xs }}>
+                  {formatDuration(match.config.durationMinutes)}
+                </ThemedText>
+              </View>
+              <View style={styles.infoItem}>
+                <Feather name="grid" size={18} color={theme.textSecondary} />
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: Spacing.xs }}>
+                  {match.config.numberOfNets} Nets
+                </ThemedText>
+              </View>
             </View>
           </View>
-        </Animated.View>
 
-        <ThemedText type="h4" style={styles.sectionTitle}>Per-Net Breakdown</ThemedText>
+          <ThemedText type="h4" style={styles.sectionTitle}>Per-Net Breakdown</ThemedText>
 
-        {match.nets.map((net, index) => {
-          const percentage = net.capacity ? (net.weight / net.capacity) * 100 : 0;
-          const isOverCapacity = percentage > 100;
+          {match.nets.map((net, index) => {
+            const percentage = net.capacity ? (net.weight / net.capacity) * 100 : 0;
+            const isOverCapacity = percentage > 100;
 
-          return (
-            <Animated.View key={index} entering={FadeInUp.delay(300 + index * 50)}>
-              <Card elevation={1} style={styles.netCard}>
+            return (
+              <Card key={index} elevation={1} style={styles.netCard}>
                 <View style={styles.netCardContent}>
                   <View style={styles.netInfo}>
                     <ThemedText type="body" style={{ fontWeight: "600" }}>Net {index + 1}</ThemedText>
@@ -179,9 +203,9 @@ export default function EndMatchSummaryScreen() {
                   </View>
                 ) : null}
               </Card>
-            </Animated.View>
-          );
-        })}
+            );
+          })}
+        </View>
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
@@ -213,6 +237,17 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: Spacing.xl,
+  },
+  summaryContainer: {
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+  },
+  summaryHeader: {
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+  },
+  summaryTitle: {
+    marginBottom: Spacing.xs,
   },
   totalCard: {
     alignItems: "center",

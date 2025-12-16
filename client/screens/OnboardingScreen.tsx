@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -14,6 +14,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { useApp } from "@/lib/AppContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
+
+const logoImage = require("../../attached_assets/generated_images/pegpro_fishing_float_app_icon.png");
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -65,7 +67,7 @@ export default function OnboardingScreen() {
       >
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.header}>
           <View style={[styles.logoContainer, { backgroundColor: theme.backgroundDefault }]}>
-            <Feather name="anchor" size={48} color={Colors.dark.primary} />
+            <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
           </View>
           <ThemedText type="h1" style={styles.title}>
             PegPro
@@ -144,6 +146,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.lg,
+    overflow: "hidden",
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
   },
   title: {
     marginBottom: Spacing.xs,

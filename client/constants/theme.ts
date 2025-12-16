@@ -68,7 +68,7 @@ export const Typography = {
   timer: {
     fontSize: 48,
     fontWeight: "700" as const,
-    fontVariant: ["tabular-nums"] as const,
+    fontVariant: ["tabular-nums"] as ("tabular-nums")[],
   },
   h1: {
     fontSize: 32,

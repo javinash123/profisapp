@@ -12,10 +12,7 @@ export function formatWeight(grams: number, unit: WeightUnit): string {
     const totalOunces = grams / 28.3495;
     const pounds = Math.floor(totalOunces / 16);
     const ounces = Math.round(totalOunces % 16);
-    if (pounds > 0) {
-      return ounces > 0 ? `${pounds}lb ${ounces}oz` : `${pounds}lb`;
-    }
-    return `${ounces}oz`;
+    return `${pounds}lb ${ounces}oz`;
   }
 }
 

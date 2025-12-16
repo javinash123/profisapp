@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, StyleSheet, Pressable, Dimensions } from "react-native";
+import { View, StyleSheet, Pressable, Dimensions, Alert, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -71,6 +71,17 @@ export default function LiveMatchScreen() {
     navigation.replace("EndMatchSummary");
   };
 
+  const confirmEndMatch = () => {
+    Alert.alert(
+      "End Match",
+      "Are you sure you want to end the match?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "End Match", style: "destructive", onPress: handleMatchEnd },
+      ]
+    );
+  };
+
   const handleLockTap = useCallback(() => {
     if (!isLocked) {
       setIsLocked(true);
@@ -92,9 +103,8 @@ export default function LiveMatchScreen() {
   if (!currentMatch) return null;
 
   const netCount = currentMatch.config.numberOfNets;
-  const columns = netCount <= 2 ? 1 : 2;
-  const rows = Math.ceil(netCount / columns);
-  const netWidth = (SCREEN_WIDTH - Spacing.xl * 2 - Spacing.md * (columns - 1)) / columns;
+  const columns = 1;
+  const netWidth = SCREEN_WIDTH - Spacing.xl * 2;
 
   return (
     <ThemedView style={styles.container}>
@@ -155,7 +165,7 @@ export default function LiveMatchScreen() {
         </View>
       ) : null}
 
-      <View style={[styles.netsGrid, { paddingHorizontal: Spacing.xl }]}>
+      <ScrollView style={styles.netsScrollView} contentContainerStyle={[styles.netsGrid, { paddingHorizontal: Spacing.xl }]}>
         {currentMatch.nets.map((net, index) => {
           const percentage = net.capacity ? (net.weight / net.capacity) * 100 : 0;
           const progressColor = getProgressColor(percentage, {
@@ -240,7 +250,7 @@ export default function LiveMatchScreen() {
             </Animated.View>
           );
         })}
-      </View>
+      </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
         <View style={[styles.totalCard, { backgroundColor: theme.backgroundDefault }]}>
@@ -253,7 +263,7 @@ export default function LiveMatchScreen() {
             </ThemedText>
           </View>
           <Pressable
-            onPress={handleMatchEnd}
+            onPress={confirmEndMatch}
             disabled={isLocked}
             style={({ pressed }) => [
               styles.endButton,
@@ -321,13 +331,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  netsGrid: {
+  netsScrollView: {
     flex: 1,
-    flexDirection: "row",
-    flexWrap: "wrap",
+  },
+  netsGrid: {
+    flexDirection: "column",
     gap: Spacing.md,
     paddingTop: Spacing.md,
-    alignContent: "flex-start",
+    paddingBottom: Spacing.xl,
   },
   netTile: {
     borderRadius: BorderRadius.sm,

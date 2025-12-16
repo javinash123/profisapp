@@ -20,7 +20,6 @@ type RouteType = RouteProp<RootStackParamList, "AddEditAlarm">;
 const ALARM_MODES: { value: AlarmMode; label: string; icon: string }[] = [
   { value: "one-time", label: "One-time", icon: "clock" },
   { value: "repeat", label: "Repeat", icon: "repeat" },
-  { value: "duration-pattern", label: "Pattern", icon: "activity" },
 ];
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -123,9 +122,9 @@ export default function AddEditAlarmScreen() {
       mode,
       label: label.trim() || undefined,
       intervalMinutes: mode === "repeat" ? parseInt(intervalMinutes) || 30 : undefined,
-      durationSeconds: mode === "duration-pattern" ? parseInt(durationSeconds) || 20 : undefined,
-      patternMinutes: mode === "duration-pattern" ? parseInt(patternMinutes) || 5 : undefined,
-      time: mode === "one-time" ? getAlarmTime() : undefined,
+      durationSeconds: undefined,
+      patternMinutes: undefined,
+      time: (mode === "one-time" || mode === "repeat") ? getAlarmTime() : undefined,
       soundEnabled,
       vibrationEnabled,
       enabled: true,
@@ -209,22 +208,78 @@ export default function AddEditAlarmScreen() {
         </View>
 
         {mode === "repeat" ? (
-          <View style={styles.section}>
-            <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
-              Repeat Every (minutes)
-            </ThemedText>
-            <TextInput
-              style={[
-                styles.textInput,
-                { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border },
-              ]}
-              keyboardType="number-pad"
-              value={intervalMinutes}
-              onChangeText={setIntervalMinutes}
-              placeholder="30"
-              placeholderTextColor={theme.textSecondary}
-            />
-          </View>
+          <>
+            <View style={styles.section}>
+              <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
+                Start Time
+              </ThemedText>
+              <View style={styles.timePickerContainer}>
+                <View style={[styles.timePickerColumn, { backgroundColor: theme.backgroundDefault, borderColor: theme.border }]}>
+                  <ThemedText type="caption" style={{ color: theme.textSecondary, marginBottom: Spacing.xs }}>Hour</ThemedText>
+                  <View style={styles.timeButtonsRow}>
+                    <Pressable
+                      onPress={() => setSelectedHour((prev) => (prev === 0 ? 23 : prev - 1))}
+                      style={[styles.timeButton, { backgroundColor: theme.backgroundTertiary }]}
+                    >
+                      <Feather name="chevron-up" size={20} color={theme.text} />
+                    </Pressable>
+                    <ThemedText type="h2" style={styles.timeValue}>
+                      {selectedHour.toString().padStart(2, "0")}
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => setSelectedHour((prev) => (prev === 23 ? 0 : prev + 1))}
+                      style={[styles.timeButton, { backgroundColor: theme.backgroundTertiary }]}
+                    >
+                      <Feather name="chevron-down" size={20} color={theme.text} />
+                    </Pressable>
+                  </View>
+                </View>
+
+                <ThemedText type="h2" style={{ marginHorizontal: Spacing.sm }}>:</ThemedText>
+
+                <View style={[styles.timePickerColumn, { backgroundColor: theme.backgroundDefault, borderColor: theme.border }]}>
+                  <ThemedText type="caption" style={{ color: theme.textSecondary, marginBottom: Spacing.xs }}>Minute</ThemedText>
+                  <View style={styles.timeButtonsRow}>
+                    <Pressable
+                      onPress={() => setSelectedMinute((prev) => (prev === 0 ? 59 : prev - 1))}
+                      style={[styles.timeButton, { backgroundColor: theme.backgroundTertiary }]}
+                    >
+                      <Feather name="chevron-up" size={20} color={theme.text} />
+                    </Pressable>
+                    <ThemedText type="h2" style={styles.timeValue}>
+                      {selectedMinute.toString().padStart(2, "0")}
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => setSelectedMinute((prev) => (prev === 59 ? 0 : prev + 1))}
+                      style={[styles.timeButton, { backgroundColor: theme.backgroundTertiary }]}
+                    >
+                      <Feather name="chevron-down" size={20} color={theme.text} />
+                    </Pressable>
+                  </View>
+                </View>
+              </View>
+              <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: Spacing.sm, textAlign: "center" }}>
+                First alarm at {selectedHour.toString().padStart(2, "0")}:{selectedMinute.toString().padStart(2, "0")}
+              </ThemedText>
+            </View>
+
+            <View style={styles.section}>
+              <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
+                Repeat Every (minutes)
+              </ThemedText>
+              <TextInput
+                style={[
+                  styles.textInput,
+                  { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border },
+                ]}
+                keyboardType="number-pad"
+                value={intervalMinutes}
+                onChangeText={setIntervalMinutes}
+                placeholder="30"
+                placeholderTextColor={theme.textSecondary}
+              />
+            </View>
+          </>
         ) : null}
 
         {mode === "duration-pattern" ? (
