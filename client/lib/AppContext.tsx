@@ -13,6 +13,7 @@ interface AppContextType {
   endMatch: () => Promise<void>;
   updateNetWeight: (netIndex: number, delta: number) => void;
   setNetWeight: (netIndex: number, weight: number) => void;
+  updateMatchUnit: (unit: "lb/oz" | "kg/g") => void;
   alarms: Alarm[];
   addAlarm: (alarm: Omit<Alarm, "id">) => Promise<void>;
   updateAlarm: (id: string, updates: Partial<Alarm>) => Promise<void>;
@@ -130,6 +131,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const updateMatchUnit = useCallback((unit: "lb/oz" | "kg/g") => {
+    setCurrentMatch((prev) => {
+      if (!prev) return prev;
+      const oldUnit = prev.config.unit;
+      if (oldUnit === unit) return prev;
+      
+      const conversionFactor = oldUnit === "kg/g" && unit === "lb/oz" 
+        ? 1 / 28.35 
+        : oldUnit === "lb/oz" && unit === "kg/g" 
+        ? 28.35 
+        : 1;
+      
+      const convertedNets = prev.nets.map(net => ({
+        ...net,
+        weight: Math.round(net.weight * conversionFactor * 100) / 100,
+        capacity: net.capacity ? Math.round(net.capacity * conversionFactor * 100) / 100 : undefined,
+      }));
+      
+      return { 
+        ...prev, 
+        config: { ...prev.config, unit },
+        nets: convertedNets,
+      };
+    });
+  }, []);
+
   const addAlarm = async (alarm: Omit<Alarm, "id">) => {
     const newAlarm: Alarm = { ...alarm, id: generateId() };
     const newAlarms = [...alarms, newAlarm];
@@ -175,6 +202,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         endMatch,
         updateNetWeight,
         setNetWeight,
+        updateMatchUnit,
         alarms,
         addAlarm,
         updateAlarm,

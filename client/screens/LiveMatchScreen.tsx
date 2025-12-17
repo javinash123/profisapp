@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, StyleSheet, Pressable, Dimensions, Alert, ScrollView } from "react-native";
+import { View, StyleSheet, Pressable, Dimensions, Alert, ScrollView, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -24,11 +24,12 @@ export default function LiveMatchScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
-  const { currentMatch, updateNetWeight, endMatch, weather, refreshWeather, settings, alarms } = useApp();
+  const { currentMatch, updateNetWeight, updateMatchUnit, endMatch, weather, refreshWeather, settings, alarms } = useApp();
 
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockTaps, setLockTaps] = useState(0);
+  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
 
   useEffect(() => {
     if (!currentMatch) {
@@ -146,7 +147,10 @@ export default function LiveMatchScreen() {
       </View>
 
       {weather ? (
-        <View style={styles.weatherBar}>
+        <Pressable 
+          style={styles.weatherBar}
+          onPress={() => navigation.navigate("WeatherDetails")}
+        >
           <View style={styles.weatherItem}>
             <Feather name="thermometer" size={14} color={theme.textSecondary} />
             <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: 4 }}>
@@ -169,8 +173,21 @@ export default function LiveMatchScreen() {
               {weather.windSpeed}mph
             </ThemedText>
           </View>
-        </View>
+        </Pressable>
       ) : null}
+
+      <View style={styles.unitSelectorContainer}>
+        <Pressable
+          style={[styles.unitSelector, { backgroundColor: theme.backgroundDefault }]}
+          onPress={() => !isLocked && setShowUnitDropdown(true)}
+          disabled={isLocked}
+        >
+          <ThemedText type="small" style={{ color: theme.text }}>
+            {currentMatch.config.unit === "lb/oz" ? "lb/oz" : "kg/g"}
+          </ThemedText>
+          <Feather name="chevron-down" size={16} color={theme.textSecondary} style={{ marginLeft: 4 }} />
+        </Pressable>
+      </View>
 
       <ScrollView style={styles.netsScrollView} contentContainerStyle={[styles.netsGrid, { paddingHorizontal: Spacing.xl }]}>
         {currentMatch.nets.map((net, index) => {
@@ -197,13 +214,6 @@ export default function LiveMatchScreen() {
                 <ThemedText type="small" style={{ color: theme.textSecondary }}>
                   Net {index + 1}
                 </ThemedText>
-                <Pressable
-                  onPress={() => !isLocked && navigation.navigate("ManualWeightEdit", { netIndex: index })}
-                  disabled={isLocked}
-                  style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-                >
-                  <Feather name="edit-2" size={16} color={theme.textSecondary} />
-                </Pressable>
               </View>
 
               <View style={styles.netContent}>
@@ -298,6 +308,51 @@ export default function LiveMatchScreen() {
           </View>
         </Pressable>
       ) : null}
+
+      <Modal
+        visible={showUnitDropdown}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowUnitDropdown(false)}
+      >
+        <Pressable 
+          style={styles.dropdownOverlay} 
+          onPress={() => setShowUnitDropdown(false)}
+        >
+          <View style={[styles.dropdownMenu, { backgroundColor: theme.backgroundDefault }]}>
+            <Pressable
+              style={[
+                styles.dropdownOption,
+                currentMatch.config.unit === "lb/oz" && { backgroundColor: theme.backgroundTertiary },
+              ]}
+              onPress={() => {
+                updateMatchUnit("lb/oz");
+                setShowUnitDropdown(false);
+              }}
+            >
+              <ThemedText type="body" style={{ color: theme.text }}>lb/oz</ThemedText>
+              {currentMatch.config.unit === "lb/oz" && (
+                <Feather name="check" size={18} color={Colors.dark.primary} />
+              )}
+            </Pressable>
+            <Pressable
+              style={[
+                styles.dropdownOption,
+                currentMatch.config.unit === "kg/g" && { backgroundColor: theme.backgroundTertiary },
+              ]}
+              onPress={() => {
+                updateMatchUnit("kg/g");
+                setShowUnitDropdown(false);
+              }}
+            >
+              <ThemedText type="body" style={{ color: theme.text }}>kg/g</ThemedText>
+              {currentMatch.config.unit === "kg/g" && (
+                <Feather name="check" size={18} color={Colors.dark.primary} />
+              )}
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
     </ThemedView>
   );
 }
@@ -337,6 +392,35 @@ const styles = StyleSheet.create({
   weatherItem: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  unitSelectorContainer: {
+    alignItems: "center",
+    paddingVertical: Spacing.sm,
+  },
+  unitSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+  },
+  dropdownOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dropdownMenu: {
+    borderRadius: BorderRadius.sm,
+    minWidth: 150,
+    overflow: "hidden",
+  },
+  dropdownOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
   },
   netsScrollView: {
     flex: 1,
