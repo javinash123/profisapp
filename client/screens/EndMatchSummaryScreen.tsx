@@ -26,14 +26,18 @@ export default function EndMatchSummaryScreen() {
   const headerHeight = useHeaderHeight();
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
-  const { settings } = useApp();
+  const { settings, lastCompletedMatch } = useApp();
   const summaryRef = useRef<View>(null);
 
   const [match, setMatch] = useState<MatchState | null>(null);
 
   useEffect(() => {
-    loadLastMatch();
-  }, []);
+    if (lastCompletedMatch) {
+      setMatch(lastCompletedMatch);
+    } else {
+      loadLastMatch();
+    }
+  }, [lastCompletedMatch]);
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -66,18 +70,21 @@ export default function EndMatchSummaryScreen() {
         result: "tmpfile",
       });
       
+      const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
+      const summaryText = `PegPro Match Summary\n\n` +
+        `Match: ${match.config.name}\n` +
+        `Peg: ${match.config.pegNumber}\n` +
+        `Duration: ${formatDuration(match.config.durationMinutes)}\n` +
+        `Total Weight: ${formatWeight(totalWeight, match.config.unit)}\n\n` +
+        match.nets.map((net, i) => `Net ${i + 1}: ${formatWeight(net.weight, match.config.unit)}`).join("\n");
+      
       if (Platform.OS === "web") {
-        const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
-        const summaryText = `PegPro Match Summary\n\n` +
-          `Match: ${match.config.name}\n` +
-          `Peg: ${match.config.pegNumber}\n` +
-          `Duration: ${formatDuration(match.config.durationMinutes)}\n` +
-          `Total Weight: ${formatWeight(totalWeight, match.config.unit)}\n\n` +
-          match.nets.map((net, i) => `Net ${i + 1}: ${formatWeight(net.weight, match.config.unit)}`).join("\n");
         await Share.share({ message: summaryText });
       } else {
         await Share.share({
           url: uri,
+          message: summaryText,
+          title: "PegPro Match Summary",
         });
       }
     } catch (error) {

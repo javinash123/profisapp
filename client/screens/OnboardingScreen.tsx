@@ -15,7 +15,7 @@ import { useApp } from "@/lib/AppContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
-const logoImage = require("../../attached_assets/generated_images/pegpro_fishing_float_app_icon.png");
+const logoImage = require("../../attached_assets/company_logo.jpg");
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 

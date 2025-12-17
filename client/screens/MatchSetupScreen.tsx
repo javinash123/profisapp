@@ -41,12 +41,21 @@ export default function MatchSetupScreen() {
 
   const handleStartMatch = async () => {
     const durationMinutes = parseInt(hours) * 60 + parseInt(minutes);
+    let capacityInGrams: number | undefined;
+    if (netCapacity) {
+      const capacityValue = parseFloat(netCapacity);
+      if (unit === "lb/oz") {
+        capacityInGrams = capacityValue * 16 * 28.3495;
+      } else {
+        capacityInGrams = capacityValue;
+      }
+    }
     const config: MatchConfig = {
       name: matchName || `Match ${new Date().toLocaleDateString()}`,
       durationMinutes: durationMinutes || 300,
       pegNumber: pegNumber || "1",
       numberOfNets,
-      netCapacity: netCapacity ? parseFloat(netCapacity) : undefined,
+      netCapacity: capacityInGrams,
       unit,
       keepScreenOn,
     };

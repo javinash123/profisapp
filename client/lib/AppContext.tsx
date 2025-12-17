@@ -8,6 +8,7 @@ interface AppContextType {
   settings: AppSettings;
   updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
   currentMatch: MatchState | null;
+  lastCompletedMatch: MatchState | null;
   startMatch: (config: MatchConfig) => Promise<void>;
   endMatch: () => Promise<void>;
   updateNetWeight: (netIndex: number, delta: number) => void;
@@ -26,6 +27,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [currentMatch, setCurrentMatch] = useState<MatchState | null>(null);
+  const [lastCompletedMatch, setLastCompletedMatch] = useState<MatchState | null>(null);
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,6 +96,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         endTime: Date.now(),
         isActive: false,
       };
+      setLastCompletedMatch(completedMatch);
       await Storage.saveMatchToHistory(completedMatch);
       setCurrentMatch(null);
       await Storage.saveCurrentMatch(null);
@@ -167,6 +170,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         settings,
         updateSettings,
         currentMatch,
+        lastCompletedMatch,
         startMatch,
         endMatch,
         updateNetWeight,
