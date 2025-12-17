@@ -66,10 +66,17 @@ export default function LiveMatchScreen() {
     return () => clearInterval(interval);
   }, [currentMatch]);
 
-  const handleMatchEnd = async () => {
-    await endMatch();
-    navigation.replace("EndMatchSummary");
-  };
+  const handleMatchEnd = useCallback(async () => {
+    try {
+      await endMatch();
+      setTimeout(() => {
+        navigation.replace("EndMatchSummary");
+      }, 100);
+    } catch (error) {
+      console.error("Error ending match:", error);
+      navigation.replace("EndMatchSummary");
+    }
+  }, [endMatch, navigation]);
 
   const confirmEndMatch = () => {
     Alert.alert(

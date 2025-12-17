@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, StyleSheet, Pressable, ScrollView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -15,12 +15,10 @@ import { formatWeight } from "@/lib/utils";
 
 type RouteType = RouteProp<RootStackParamList, "ManualWeightEdit">;
 
-const KEYPAD_BUTTONS = [
-  ["1", "2", "3"],
-  ["4", "5", "6"],
-  ["7", "8", "9"],
-  [".", "0", "del"],
-];
+const LB_VALUES = Array.from({ length: 101 }, (_, i) => i);
+const OZ_VALUES = Array.from({ length: 16 }, (_, i) => i);
+const ITEM_HEIGHT = 50;
+const VISIBLE_ITEMS = 5;
 
 export default function ManualWeightEditModal() {
   const insets = useSafeAreaInsets();
@@ -33,30 +31,17 @@ export default function ManualWeightEditModal() {
   const currentWeight = currentMatch?.nets[netIndex]?.weight || 0;
   const unit = currentMatch?.config.unit || settings.unit;
 
-  const [inputValue, setInputValue] = useState("");
+  const currentLb = Math.floor(currentWeight / 453.592);
+  const currentOz = Math.round((currentWeight % 453.592) / 28.3495);
 
-  const handleKeyPress = (key: string) => {
-    if (settings.haptics) {
-      Haptics.selectionAsync();
-    }
+  const [selectedLb, setSelectedLb] = useState(Math.min(currentLb, 100));
+  const [selectedOz, setSelectedOz] = useState(Math.min(currentOz, 15));
 
-    if (key === "del") {
-      setInputValue((prev) => prev.slice(0, -1));
-    } else if (key === ".") {
-      if (!inputValue.includes(".")) {
-        setInputValue((prev) => (prev === "" ? "0." : prev + "."));
-      }
-    } else {
-      setInputValue((prev) => {
-        if (prev === "0" && key !== ".") return key;
-        return prev + key;
-      });
-    }
-  };
+  const lbScrollRef = useRef<ScrollView>(null);
+  const ozScrollRef = useRef<ScrollView>(null);
 
   const handleConfirm = () => {
-    const numValue = parseFloat(inputValue) || 0;
-    const weightInGrams = unit === "kg/g" ? numValue : numValue * 28.3495 * 16;
+    const weightInGrams = (selectedLb * 16 + selectedOz) * 28.3495;
     setNetWeight(netIndex, weightInGrams);
     
     if (settings.haptics) {
@@ -70,6 +55,66 @@ export default function ManualWeightEditModal() {
     navigation.goBack();
   };
 
+  const handleLbScroll = (event: any) => {
+    const y = event.nativeEvent.contentOffset.y;
+    const index = Math.round(y / ITEM_HEIGHT);
+    const clampedIndex = Math.max(0, Math.min(index, LB_VALUES.length - 1));
+    if (clampedIndex !== selectedLb) {
+      setSelectedLb(clampedIndex);
+      if (settings.haptics) {
+        Haptics.selectionAsync();
+      }
+    }
+  };
+
+  const handleOzScroll = (event: any) => {
+    const y = event.nativeEvent.contentOffset.y;
+    const index = Math.round(y / ITEM_HEIGHT);
+    const clampedIndex = Math.max(0, Math.min(index, OZ_VALUES.length - 1));
+    if (clampedIndex !== selectedOz) {
+      setSelectedOz(clampedIndex);
+      if (settings.haptics) {
+        Haptics.selectionAsync();
+      }
+    }
+  };
+
+  const selectLb = (value: number) => {
+    setSelectedLb(value);
+    lbScrollRef.current?.scrollTo({ y: value * ITEM_HEIGHT, animated: true });
+    if (settings.haptics) {
+      Haptics.selectionAsync();
+    }
+  };
+
+  const selectOz = (value: number) => {
+    setSelectedOz(value);
+    ozScrollRef.current?.scrollTo({ y: value * ITEM_HEIGHT, animated: true });
+    if (settings.haptics) {
+      Haptics.selectionAsync();
+    }
+  };
+
+  const renderPickerItem = (value: number, isSelected: boolean, unit: string) => (
+    <View
+      key={value}
+      style={[
+        styles.pickerItem,
+        isSelected && styles.pickerItemSelected,
+      ]}
+    >
+      <ThemedText
+        style={[
+          styles.pickerItemText,
+          { color: isSelected ? theme.text : theme.textSecondary },
+          isSelected && styles.pickerItemTextSelected,
+        ]}
+      >
+        {value}
+      </ThemedText>
+    </View>
+  );
+
   return (
     <ThemedView style={styles.container}>
       <View style={[styles.content, { paddingBottom: insets.bottom + Spacing.xl }]}>
@@ -80,39 +125,67 @@ export default function ManualWeightEditModal() {
           </ThemedText>
         </View>
 
-        <View style={[styles.display, { backgroundColor: theme.backgroundDefault }]}>
-          <ThemedText style={styles.displayValue}>
-            {inputValue || "0"}
-          </ThemedText>
-          <ThemedText type="body" style={{ color: theme.textSecondary }}>
-            {unit === "kg/g" ? "grams" : "pounds"}
-          </ThemedText>
+        <View style={styles.pickersContainer}>
+          <View style={styles.pickerColumn}>
+            <ThemedText type="small" style={[styles.pickerLabel, { color: theme.textSecondary }]}>
+              Pounds (lb)
+            </ThemedText>
+            <View style={[styles.pickerWrapper, { backgroundColor: theme.backgroundDefault }]}>
+              <View style={[styles.selectionIndicator, { backgroundColor: Colors.dark.primary + "30", borderColor: Colors.dark.primary }]} />
+              <ScrollView
+                ref={lbScrollRef}
+                showsVerticalScrollIndicator={false}
+                snapToInterval={ITEM_HEIGHT}
+                decelerationRate="fast"
+                onMomentumScrollEnd={handleLbScroll}
+                onScrollEndDrag={handleLbScroll}
+                contentContainerStyle={{
+                  paddingVertical: ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2),
+                }}
+                contentOffset={{ x: 0, y: selectedLb * ITEM_HEIGHT }}
+              >
+                {LB_VALUES.map((value) => (
+                  <Pressable key={value} onPress={() => selectLb(value)}>
+                    {renderPickerItem(value, value === selectedLb, "lb")}
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+
+          <View style={styles.pickerColumn}>
+            <ThemedText type="small" style={[styles.pickerLabel, { color: theme.textSecondary }]}>
+              Ounces (oz)
+            </ThemedText>
+            <View style={[styles.pickerWrapper, { backgroundColor: theme.backgroundDefault }]}>
+              <View style={[styles.selectionIndicator, { backgroundColor: Colors.dark.primary + "30", borderColor: Colors.dark.primary }]} />
+              <ScrollView
+                ref={ozScrollRef}
+                showsVerticalScrollIndicator={false}
+                snapToInterval={ITEM_HEIGHT}
+                decelerationRate="fast"
+                onMomentumScrollEnd={handleOzScroll}
+                onScrollEndDrag={handleOzScroll}
+                contentContainerStyle={{
+                  paddingVertical: ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2),
+                }}
+                contentOffset={{ x: 0, y: selectedOz * ITEM_HEIGHT }}
+              >
+                {OZ_VALUES.map((value) => (
+                  <Pressable key={value} onPress={() => selectOz(value)}>
+                    {renderPickerItem(value, value === selectedOz, "oz")}
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
         </View>
 
-        <View style={styles.keypad}>
-          {KEYPAD_BUTTONS.map((row, rowIndex) => (
-            <View key={rowIndex} style={styles.keypadRow}>
-              {row.map((key) => (
-                <Pressable
-                  key={key}
-                  onPress={() => handleKeyPress(key)}
-                  style={({ pressed }) => [
-                    styles.keypadButton,
-                    {
-                      backgroundColor: key === "del" ? theme.backgroundTertiary : theme.backgroundDefault,
-                      opacity: pressed ? 0.7 : 1,
-                    },
-                  ]}
-                >
-                  {key === "del" ? (
-                    <Feather name="delete" size={24} color={theme.text} />
-                  ) : (
-                    <ThemedText style={styles.keypadButtonText}>{key}</ThemedText>
-                  )}
-                </Pressable>
-              ))}
-            </View>
-          ))}
+        <View style={[styles.previewCard, { backgroundColor: theme.backgroundDefault }]}>
+          <ThemedText type="small" style={{ color: theme.textSecondary }}>Selected Weight</ThemedText>
+          <ThemedText style={styles.previewText}>
+            {selectedLb} lb {selectedOz} oz
+          </ThemedText>
         </View>
 
         <View style={styles.actions}>
@@ -155,36 +228,59 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing["2xl"],
   },
-  display: {
-    height: 80,
-    borderRadius: BorderRadius.sm,
+  pickersContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: Spacing.xl,
-    gap: Spacing.sm,
-  },
-  displayValue: {
-    ...Typography.h1,
-    fontVariant: ["tabular-nums"],
-  },
-  keypad: {
-    gap: Spacing.sm,
+    gap: Spacing.lg,
     marginBottom: Spacing.xl,
   },
-  keypadRow: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-  },
-  keypadButton: {
+  pickerColumn: {
     flex: 1,
-    height: 64,
+  },
+  pickerLabel: {
+    textAlign: "center",
+    marginBottom: Spacing.sm,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  pickerWrapper: {
+    height: ITEM_HEIGHT * VISIBLE_ITEMS,
     borderRadius: BorderRadius.sm,
+    overflow: "hidden",
+    position: "relative",
+  },
+  selectionIndicator: {
+    position: "absolute",
+    top: ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2),
+    left: 0,
+    right: 0,
+    height: ITEM_HEIGHT,
+    borderWidth: 2,
+    borderRadius: BorderRadius.xs,
+    zIndex: 1,
+    pointerEvents: "none",
+  },
+  pickerItem: {
+    height: ITEM_HEIGHT,
     alignItems: "center",
     justifyContent: "center",
   },
-  keypadButtonText: {
+  pickerItemSelected: {},
+  pickerItemText: {
+    ...Typography.h3,
+    fontWeight: "400",
+  },
+  pickerItemTextSelected: {
+    fontWeight: "700",
+  },
+  previewCard: {
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.sm,
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+  },
+  previewText: {
     ...Typography.h2,
+    marginTop: Spacing.xs,
   },
   actions: {
     flexDirection: "row",

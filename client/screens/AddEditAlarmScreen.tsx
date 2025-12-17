@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { View, StyleSheet, Pressable, Switch, TextInput, ScrollView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -66,6 +66,10 @@ export default function AddEditAlarmScreen() {
   const [soundEnabled, setSoundEnabled] = useState(existingAlarm?.soundEnabled ?? true);
   const [vibrationEnabled, setVibrationEnabled] = useState(existingAlarm?.vibrationEnabled ?? true);
 
+  const handleSavePress = useCallback(() => {
+    handleSave();
+  }, [mode, label, selectedHour, selectedMinute, intervalMinutes, durationSeconds, patternMinutes, soundEnabled, vibrationEnabled, isEditing, alarmId]);
+
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: isEditing ? "Edit Alarm" : "New Alarm",
@@ -80,7 +84,7 @@ export default function AddEditAlarmScreen() {
       ),
       headerRight: () => (
         <Pressable
-          onPress={handleSave}
+          onPress={handleSavePress}
           hitSlop={8}
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
         >
@@ -90,7 +94,7 @@ export default function AddEditAlarmScreen() {
         </Pressable>
       ),
     });
-  }, [navigation, theme, mode, label, intervalMinutes, durationSeconds, patternMinutes, soundEnabled, vibrationEnabled]);
+  }, [navigation, theme, handleSavePress]);
 
   const getAlarmTime = () => {
     const now = new Date();
