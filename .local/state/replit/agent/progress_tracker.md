@@ -11,3 +11,4 @@
 - Added lb (0-100) and oz (0-15) dropdowns directly in each net tile
 - Net tiles now show lb and oz values with dropdown selectors instead of +/- buttons
 - Total weight display now shows in lb/oz format
+- Added logo image to the Match Setup screen (new match screen)

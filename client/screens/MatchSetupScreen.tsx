@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, Switch, TextInput } from "react-native";
+import { View, StyleSheet, Pressable, Switch, TextInput, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
@@ -14,6 +14,8 @@ import { useApp } from "@/lib/AppContext";
 import { Colors, Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { WeightUnit, MatchConfig } from "@/lib/types";
+
+const logoImage = require("@/assets/images/logo.png");
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -74,6 +76,10 @@ export default function MatchSetupScreen() {
           },
         ]}
       >
+        <View style={styles.logoContainer}>
+          <Image source={logoImage} style={styles.logo} resizeMode="contain" />
+        </View>
+
         <View style={styles.section}>
           <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
             Match Name
@@ -268,6 +274,14 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: Spacing.xl,
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   section: {
     marginBottom: Spacing.xl,
