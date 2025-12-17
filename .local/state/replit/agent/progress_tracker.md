@@ -7,5 +7,7 @@
 - Made weather bar clickable - now navigates to Weather Details screen
 - Removed edit icon from net tile headers
 - Added lb/oz dropdown unit selector on live match screen
-- Pending: Color updates based on user reference image
-- Fixed tsx package installation for server startup
+- Removed top-level unit selector dropdown from live match screen
+- Added lb (0-100) and oz (0-15) dropdowns directly in each net tile
+- Net tiles now show lb and oz values with dropdown selectors instead of +/- buttons
+- Total weight display now shows in lb/oz format
