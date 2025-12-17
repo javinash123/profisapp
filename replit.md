@@ -44,10 +44,14 @@ client/
 - **Export/Share**: Share match summaries
 
 ## Color Palette
-- Primary (Coral Red): #FF6B5A
-- Secondary (Teal Blue): #4ECDC4
-- Background (Dark Navy): #1A2332
-- Surface (Charcoal): #2D3748
+- **Backgrounds**: Deep Black (#05080B), Card (#0B1218), Elevated (#111A22), Border (#1C2A35)
+- **Primary Accent (Neon Green)**: #3CFFB0 (soft: #2EDC9C, progress: #41F5A3)
+- **Danger Red**: #FF4D4D (dark button: #8B1E1E)
+- **Warning Yellow**: #F6C343 (amber: #E9B949, muted: #D8B55A)
+- **Action Blue**: #2F8CFF (muted: #1E5FAF)
+- **Text**: Primary (#FFFFFF), Secondary (#A8B3BD), Muted (#6F7C87)
+- **Button Text**: Primary buttons use dark text (#05120C) on green background
+- **Effects**: Neon glow effects instead of shadows (green/red/blue glows)
 
 ## Running the App
 - Development: `npm run dev` (starts Expo on port 8081, Express on port 5000)

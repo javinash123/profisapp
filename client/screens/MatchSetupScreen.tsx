@@ -252,8 +252,8 @@ export default function MatchSetupScreen() {
             { backgroundColor: Colors.dark.primary, opacity: pressed ? 0.8 : 1 },
           ]}
         >
-          <Feather name="play" size={22} color="#FFFFFF" />
-          <ThemedText type="body" style={styles.startButtonText}>
+          <Feather name="play" size={22} color={Colors.dark.buttonTextDark} />
+          <ThemedText type="body" style={[styles.startButtonText, { color: Colors.dark.buttonTextDark }]}>
             Start Match
           </ThemedText>
         </Pressable>
