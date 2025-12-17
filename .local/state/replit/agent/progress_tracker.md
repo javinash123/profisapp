@@ -8,3 +8,4 @@
 - Removed edit icon from net tile headers
 - Added lb/oz dropdown unit selector on live match screen
 - Pending: Color updates based on user reference image
+- Fixed tsx package installation for server startup
