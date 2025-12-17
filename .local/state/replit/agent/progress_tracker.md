@@ -12,3 +12,4 @@
 - Net tiles now show lb and oz values with dropdown selectors instead of +/- buttons
 - Total weight display now shows in lb/oz format
 - Added logo image to the Match Setup screen (new match screen)
+- Fixed logo.png file format (was JPEG with PNG extension, now proper PNG) - resolves Android build failure
