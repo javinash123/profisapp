@@ -222,7 +222,7 @@ export default function LiveMatchScreen() {
                   disabled={isLocked}
                   style={({ pressed }) => [
                     styles.netButton,
-                    { backgroundColor: Colors.dark.secondary, opacity: pressed || isLocked ? 0.6 : 1 },
+                    { backgroundColor: Colors.dark.errorDark, opacity: pressed || isLocked ? 0.6 : 1 },
                   ]}
                 >
                   <Feather name="minus" size={24} color="#FFFFFF" />
@@ -284,7 +284,7 @@ export default function LiveMatchScreen() {
             disabled={isLocked}
             style={({ pressed }) => [
               styles.endButton,
-              { backgroundColor: Colors.dark.error, opacity: pressed || isLocked ? 0.6 : 1 },
+              { backgroundColor: Colors.dark.errorDark, opacity: pressed || isLocked ? 0.6 : 1 },
             ]}
           >
             <Feather name="stop-circle" size={20} color="#FFFFFF" />

@@ -116,10 +116,10 @@ export default function OnboardingScreen() {
               { backgroundColor: Colors.dark.primary, opacity: pressed ? 0.8 : 1 },
             ]}
           >
-            <ThemedText type="body" style={styles.buttonText}>
+            <ThemedText type="body" style={[styles.buttonText, { color: Colors.dark.buttonTextDark }]}>
               Get Started
             </ThemedText>
-            <Feather name="arrow-right" size={20} color="#FFFFFF" />
+            <Feather name="arrow-right" size={20} color={Colors.dark.buttonTextDark} />
           </Pressable>
         </Animated.View>
       </View>
