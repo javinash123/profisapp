@@ -14,22 +14,25 @@ import { useTheme } from "@/hooks/useTheme";
 import { useApp } from "@/lib/AppContext";
 import { Colors, Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { formatTime, formatWeight, getProgressColor } from "@/lib/utils";
+import { formatTime, getProgressColor } from "@/lib/utils";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+const LB_OPTIONS = Array.from({ length: 101 }, (_, i) => i);
+const OZ_OPTIONS = Array.from({ length: 16 }, (_, i) => i);
+
 export default function LiveMatchScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
-  const { currentMatch, updateNetWeight, updateMatchUnit, endMatch, weather, refreshWeather, settings, alarms } = useApp();
+  const { currentMatch, setNetWeight, endMatch, weather, refreshWeather, settings, alarms } = useApp();
 
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockTaps, setLockTaps] = useState(0);
-  const [showUnitDropdown, setShowUnitDropdown] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<{ netIndex: number; type: 'lb' | 'oz' } | null>(null);
 
   useEffect(() => {
     if (!currentMatch) {
@@ -108,6 +111,19 @@ export default function LiveMatchScreen() {
 
   const totalWeight = currentMatch?.nets.reduce((sum, net) => sum + net.weight, 0) || 0;
 
+  const getNetLbOz = (weightGrams: number) => {
+    const totalOunces = weightGrams / 28.3495;
+    const lb = Math.floor(totalOunces / 16);
+    const oz = Math.round(totalOunces % 16);
+    return { lb: Math.min(lb, 100), oz: Math.min(oz, 15) };
+  };
+
+  const setNetLbOz = (netIndex: number, lb: number, oz: number) => {
+    const weightGrams = (lb * 16 + oz) * 28.3495;
+    setNetWeight(netIndex, weightGrams);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   if (!currentMatch) return null;
 
   const netCount = currentMatch.config.numberOfNets;
@@ -176,19 +192,6 @@ export default function LiveMatchScreen() {
         </Pressable>
       ) : null}
 
-      <View style={styles.unitSelectorContainer}>
-        <Pressable
-          style={[styles.unitSelector, { backgroundColor: theme.backgroundDefault }]}
-          onPress={() => !isLocked && setShowUnitDropdown(true)}
-          disabled={isLocked}
-        >
-          <ThemedText type="small" style={{ color: theme.text }}>
-            {currentMatch.config.unit === "lb/oz" ? "lb/oz" : "kg/g"}
-          </ThemedText>
-          <Feather name="chevron-down" size={16} color={theme.textSecondary} style={{ marginLeft: 4 }} />
-        </Pressable>
-      </View>
-
       <ScrollView style={styles.netsScrollView} contentContainerStyle={[styles.netsGrid, { paddingHorizontal: Spacing.xl }]}>
         {currentMatch.nets.map((net, index) => {
           const percentage = net.capacity ? (net.weight / net.capacity) * 100 : 0;
@@ -197,6 +200,7 @@ export default function LiveMatchScreen() {
             warning: Colors.dark.warning,
             error: Colors.dark.error,
           });
+          const { lb, oz } = getNetLbOz(net.weight);
 
           return (
             <Animated.View
@@ -217,33 +221,37 @@ export default function LiveMatchScreen() {
               </View>
 
               <View style={styles.netContent}>
-                <Pressable
-                  onPress={() => !isLocked && updateNetWeight(index, currentMatch.config.unit === "kg/g" ? -100 : -28.35)}
-                  disabled={isLocked}
-                  style={({ pressed }) => [
-                    styles.netButton,
-                    { backgroundColor: Colors.dark.errorDark, opacity: pressed || isLocked ? 0.6 : 1 },
-                  ]}
-                >
-                  <Feather name="minus" size={24} color="#FFFFFF" />
-                </Pressable>
+                <View style={styles.dropdownRow}>
+                  <View style={styles.dropdownGroup}>
+                    <Pressable
+                      onPress={() => !isLocked && setActiveDropdown({ netIndex: index, type: 'lb' })}
+                      disabled={isLocked}
+                      style={[
+                        styles.dropdownButton,
+                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.6 : 1 },
+                      ]}
+                    >
+                      <ThemedText style={styles.dropdownValue}>{lb}</ThemedText>
+                      <Feather name="chevron-down" size={16} color={theme.textSecondary} />
+                    </Pressable>
+                    <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 4 }}>lb</ThemedText>
+                  </View>
 
-                <View style={styles.weightDisplay}>
-                  <ThemedText style={styles.weightText}>
-                    {formatWeight(net.weight, currentMatch.config.unit)}
-                  </ThemedText>
+                  <View style={styles.dropdownGroup}>
+                    <Pressable
+                      onPress={() => !isLocked && setActiveDropdown({ netIndex: index, type: 'oz' })}
+                      disabled={isLocked}
+                      style={[
+                        styles.dropdownButton,
+                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.6 : 1 },
+                      ]}
+                    >
+                      <ThemedText style={styles.dropdownValue}>{oz}</ThemedText>
+                      <Feather name="chevron-down" size={16} color={theme.textSecondary} />
+                    </Pressable>
+                    <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 4 }}>oz</ThemedText>
+                  </View>
                 </View>
-
-                <Pressable
-                  onPress={() => !isLocked && updateNetWeight(index, currentMatch.config.unit === "kg/g" ? 100 : 28.35)}
-                  disabled={isLocked}
-                  style={({ pressed }) => [
-                    styles.netButton,
-                    { backgroundColor: Colors.dark.primary, opacity: pressed || isLocked ? 0.6 : 1 },
-                  ]}
-                >
-                  <Feather name="plus" size={24} color="#FFFFFF" />
-                </Pressable>
               </View>
 
               {net.capacity ? (
@@ -276,7 +284,10 @@ export default function LiveMatchScreen() {
               Total Weight
             </ThemedText>
             <ThemedText type="h2">
-              {formatWeight(totalWeight, currentMatch.config.unit)}
+              {(() => {
+                const { lb, oz } = getNetLbOz(totalWeight);
+                return `${lb}lb ${oz}oz`;
+              })()}
             </ThemedText>
           </View>
           <Pressable
@@ -310,46 +321,68 @@ export default function LiveMatchScreen() {
       ) : null}
 
       <Modal
-        visible={showUnitDropdown}
+        visible={activeDropdown !== null}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowUnitDropdown(false)}
+        onRequestClose={() => setActiveDropdown(null)}
       >
         <Pressable 
-          style={styles.dropdownOverlay} 
-          onPress={() => setShowUnitDropdown(false)}
+          style={styles.modalOverlay} 
+          onPress={() => setActiveDropdown(null)}
         >
-          <View style={[styles.dropdownMenu, { backgroundColor: theme.backgroundDefault }]}>
-            <Pressable
-              style={[
-                styles.dropdownOption,
-                currentMatch.config.unit === "lb/oz" && { backgroundColor: theme.backgroundTertiary },
-              ]}
-              onPress={() => {
-                updateMatchUnit("lb/oz");
-                setShowUnitDropdown(false);
-              }}
-            >
-              <ThemedText type="body" style={{ color: theme.text }}>lb/oz</ThemedText>
-              {currentMatch.config.unit === "lb/oz" && (
-                <Feather name="check" size={18} color={Colors.dark.primary} />
-              )}
-            </Pressable>
-            <Pressable
-              style={[
-                styles.dropdownOption,
-                currentMatch.config.unit === "kg/g" && { backgroundColor: theme.backgroundTertiary },
-              ]}
-              onPress={() => {
-                updateMatchUnit("kg/g");
-                setShowUnitDropdown(false);
-              }}
-            >
-              <ThemedText type="body" style={{ color: theme.text }}>kg/g</ThemedText>
-              {currentMatch.config.unit === "kg/g" && (
-                <Feather name="check" size={18} color={Colors.dark.primary} />
-              )}
-            </Pressable>
+          <View style={[styles.pickerModal, { backgroundColor: theme.backgroundDefault }]}>
+            <View style={styles.pickerHeader}>
+              <ThemedText type="body" style={{ fontWeight: '600' }}>
+                Select {activeDropdown?.type === 'lb' ? 'Pounds (lb)' : 'Ounces (oz)'}
+              </ThemedText>
+              <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                Net {(activeDropdown?.netIndex ?? 0) + 1}
+              </ThemedText>
+            </View>
+            <ScrollView style={styles.pickerScrollView} showsVerticalScrollIndicator={false}>
+              {(activeDropdown?.type === 'lb' ? LB_OPTIONS : OZ_OPTIONS).map((value) => {
+                const netIndex = activeDropdown?.netIndex ?? 0;
+                const currentNet = currentMatch.nets[netIndex];
+                const { lb: currentLb, oz: currentOz } = getNetLbOz(currentNet?.weight ?? 0);
+                const isSelected = activeDropdown?.type === 'lb' 
+                  ? value === currentLb 
+                  : value === currentOz;
+
+                return (
+                  <Pressable
+                    key={value}
+                    style={[
+                      styles.pickerOption,
+                      isSelected && { backgroundColor: theme.backgroundTertiary },
+                    ]}
+                    onPress={() => {
+                      const netIndex = activeDropdown?.netIndex ?? 0;
+                      const currentNet = currentMatch.nets[netIndex];
+                      const { lb: currentLb, oz: currentOz } = getNetLbOz(currentNet?.weight ?? 0);
+                      if (activeDropdown?.type === 'lb') {
+                        setNetLbOz(netIndex, value, currentOz);
+                      } else {
+                        setNetLbOz(netIndex, currentLb, value);
+                      }
+                      setActiveDropdown(null);
+                    }}
+                  >
+                    <ThemedText 
+                      type="body" 
+                      style={{ 
+                        color: isSelected ? Colors.dark.primary : theme.text,
+                        fontWeight: isSelected ? '600' : '400',
+                      }}
+                    >
+                      {value}
+                    </ThemedText>
+                    {isSelected && (
+                      <Feather name="check" size={18} color={Colors.dark.primary} />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
           </View>
         </Pressable>
       </Modal>
@@ -393,34 +426,55 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  unitSelectorContainer: {
-    alignItems: "center",
-    paddingVertical: Spacing.sm,
-  },
-  unitSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.sm,
-  },
-  dropdownOverlay: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
-  dropdownMenu: {
-    borderRadius: BorderRadius.sm,
-    minWidth: 150,
+  pickerModal: {
+    borderRadius: BorderRadius.md,
+    width: 280,
+    maxHeight: 400,
     overflow: "hidden",
   },
-  dropdownOption: {
+  pickerHeader: {
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+    alignItems: "center",
+  },
+  pickerScrollView: {
+    maxHeight: 320,
+  },
+  pickerOption: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
+  },
+  dropdownRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: Spacing.xl,
+  },
+  dropdownGroup: {
+    alignItems: "center",
+  },
+  dropdownButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.sm,
+    minWidth: 80,
+    gap: Spacing.xs,
+  },
+  dropdownValue: {
+    fontSize: 24,
+    fontWeight: "600",
   },
   netsScrollView: {
     flex: 1,
@@ -444,22 +498,7 @@ const styles = StyleSheet.create({
   netContent: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-  },
-  netButton: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.full,
-    alignItems: "center",
     justifyContent: "center",
-  },
-  weightDisplay: {
-    flex: 1,
-    alignItems: "center",
-  },
-  weightText: {
-    ...Typography.bodyLarge,
-    fontWeight: "600",
   },
   progressContainer: {
     marginTop: Spacing.sm,
