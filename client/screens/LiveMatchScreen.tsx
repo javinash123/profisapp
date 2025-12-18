@@ -267,6 +267,14 @@ export default function LiveMatchScreen() {
 
               {net.capacity ? (
                 <View style={styles.progressContainer}>
+                  <View style={styles.capacityLabel}>
+                    <ThemedText type="caption" style={{ color: theme.textSecondary }}>
+                      {lb}lb / {Math.round(net.capacity / GRAMS_PER_LB)}lb
+                    </ThemedText>
+                    <ThemedText type="caption" style={{ color: progressColor, fontWeight: "600" }}>
+                      {Math.round(percentage)}%
+                    </ThemedText>
+                  </View>
                   <View style={[styles.progressBar, { backgroundColor: theme.backgroundTertiary }]}>
                     <View
                       style={[
@@ -278,9 +286,6 @@ export default function LiveMatchScreen() {
                       ]}
                     />
                   </View>
-                  <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 2 }}>
-                    {Math.round(percentage)}%
-                  </ThemedText>
                 </View>
               ) : null}
             </Animated.View>
@@ -517,19 +522,26 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   progressContainer: {
-    marginTop: 2,
+    marginTop: Spacing.sm,
     alignItems: "center",
     width: "100%",
   },
+  capacityLabel: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
+  },
   progressBar: {
     width: "100%",
-    height: 3,
-    borderRadius: 1,
+    height: 8,
+    borderRadius: BorderRadius.sm,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    borderRadius: 1,
+    borderRadius: BorderRadius.sm,
   },
   footer: {
     paddingHorizontal: Spacing.xl,
