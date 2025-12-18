@@ -31,7 +31,6 @@ export default function LiveMatchScreen() {
   const [lockTaps, setLockTaps] = useState(0);
   const [editingNetIndex, setEditingNetIndex] = useState<number | null>(null);
   const [editLb, setEditLb] = useState("0");
-  const [editOz, setEditOz] = useState("0");
 
   useEffect(() => {
     if (!currentMatch) {
@@ -110,15 +109,15 @@ export default function LiveMatchScreen() {
 
   const totalWeight = currentMatch?.nets.reduce((sum, net) => sum + net.weight, 0) || 0;
 
-  const getNetLbOz = (weightGrams: number) => {
-    const totalOunces = weightGrams / 28.3495;
-    const lb = Math.floor(totalOunces / 16);
-    const oz = Math.round(totalOunces % 16);
-    return { lb: Math.min(lb, 100), oz: Math.min(oz, 15) };
+  const GRAMS_PER_LB = 453.592; // More precise conversion
+
+  const getNetLb = (weightGrams: number) => {
+    const lb = Math.round(weightGrams / GRAMS_PER_LB);
+    return Math.min(Math.max(0, lb), 100);
   };
 
-  const setNetLbOz = (netIndex: number, lb: number, oz: number) => {
-    const weightGrams = (lb * 16 + oz) * 28.3495;
+  const setNetLb = (netIndex: number, lb: number) => {
+    const weightGrams = lb * GRAMS_PER_LB;
     setNetWeight(netIndex, weightGrams);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
@@ -126,8 +125,14 @@ export default function LiveMatchScreen() {
   if (!currentMatch) return null;
 
   const netCount = currentMatch.config.numberOfNets;
-  const columns = 1;
-  const netWidth = SCREEN_WIDTH - Spacing.xl * 2;
+  const columns = 2;
+  const netWidth = (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.xs) / 2;
+  const rows = Math.ceil(netCount / columns);
+  // Calculate available height for nets grid (accounting for header, weather, footer, etc)
+  const estimatedHeaderHeight = 120; // header + weather bar approximate
+  const estimatedFooterHeight = 100; // total weight card
+  const availableHeight = Dimensions.get("window").height - estimatedHeaderHeight - estimatedFooterHeight - insets.top - insets.bottom;
+  const netHeight = availableHeight / rows - Spacing.xs;
 
   return (
     <ThemedView style={styles.container}>
@@ -191,7 +196,7 @@ export default function LiveMatchScreen() {
         </Pressable>
       ) : null}
 
-      <ScrollView style={styles.netsScrollView} contentContainerStyle={[styles.netsGrid, { paddingHorizontal: Spacing.xl }]}>
+      <View style={[styles.netsGrid, { paddingHorizontal: Spacing.lg }]}>
         {currentMatch.nets.map((net, index) => {
           const percentage = net.capacity ? (net.weight / net.capacity) * 100 : 0;
           const progressColor = getProgressColor(percentage, {
@@ -199,7 +204,7 @@ export default function LiveMatchScreen() {
             warning: Colors.dark.warning,
             error: Colors.dark.error,
           });
-          const { lb, oz } = getNetLbOz(net.weight);
+          const lb = getNetLb(net.weight);
 
           return (
             <Animated.View
@@ -209,6 +214,7 @@ export default function LiveMatchScreen() {
                 styles.netTile,
                 {
                   width: netWidth,
+                  height: netHeight,
                   backgroundColor: theme.backgroundDefault,
                 },
               ]}
@@ -222,66 +228,40 @@ export default function LiveMatchScreen() {
                     onPress={() => {
                       setEditingNetIndex(index);
                       setEditLb(lb.toString());
-                      setEditOz(oz.toString());
                     }}
                     style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
                   >
-                    <Feather name="edit-2" size={16} color={theme.textSecondary} />
+                    <Feather name="edit-2" size={14} color={theme.textSecondary} />
                   </Pressable>
                 )}
               </View>
 
               <View style={styles.netContent}>
-                <View style={styles.controlsRow}>
-                  <View style={styles.controlGroup}>
-                    <Pressable
-                      onPress={() => !isLocked && setNetLbOz(index, Math.max(0, lb - 1), oz)}
-                      disabled={isLocked || lb === 0}
-                      style={[
-                        styles.controlButton,
-                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked || lb === 0 ? 0.4 : 1 },
-                      ]}
-                    >
-                      <Feather name="minus" size={18} color={theme.text} />
-                    </Pressable>
+                <View style={styles.controlGroup}>
+                  <Pressable
+                    onPress={() => !isLocked && setNetLb(index, Math.max(0, lb - 1))}
+                    disabled={isLocked || lb === 0}
+                    style={[
+                      styles.controlButton,
+                      { backgroundColor: theme.backgroundTertiary, opacity: isLocked || lb === 0 ? 0.4 : 1 },
+                    ]}
+                  >
+                    <Feather name="minus" size={18} color={theme.text} />
+                  </Pressable>
+                  <View style={styles.weightDisplay}>
                     <ThemedText style={styles.controlValue}>{lb}</ThemedText>
-                    <Pressable
-                      onPress={() => !isLocked && setNetLbOz(index, Math.min(100, lb + 1), oz)}
-                      disabled={isLocked || lb === 100}
-                      style={[
-                        styles.controlButton,
-                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked || lb === 100 ? 0.4 : 1 },
-                      ]}
-                    >
-                      <Feather name="plus" size={18} color={theme.text} />
-                    </Pressable>
-                    <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 4 }}>lb</ThemedText>
+                    <ThemedText type="small" style={{ color: theme.textSecondary, fontWeight: "600" }}>lb</ThemedText>
                   </View>
-
-                  <View style={styles.controlGroup}>
-                    <Pressable
-                      onPress={() => !isLocked && setNetLbOz(index, lb, Math.max(0, oz - 1))}
-                      disabled={isLocked || oz === 0}
-                      style={[
-                        styles.controlButton,
-                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked || oz === 0 ? 0.4 : 1 },
-                      ]}
-                    >
-                      <Feather name="minus" size={18} color={theme.text} />
-                    </Pressable>
-                    <ThemedText style={styles.controlValue}>{oz}</ThemedText>
-                    <Pressable
-                      onPress={() => !isLocked && setNetLbOz(index, lb, Math.min(15, oz + 1))}
-                      disabled={isLocked || oz === 15}
-                      style={[
-                        styles.controlButton,
-                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked || oz === 15 ? 0.4 : 1 },
-                      ]}
-                    >
-                      <Feather name="plus" size={18} color={theme.text} />
-                    </Pressable>
-                    <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 4 }}>oz</ThemedText>
-                  </View>
+                  <Pressable
+                    onPress={() => !isLocked && setNetLb(index, Math.min(100, lb + 1))}
+                    disabled={isLocked || lb === 100}
+                    style={[
+                      styles.controlButton,
+                      { backgroundColor: theme.backgroundTertiary, opacity: isLocked || lb === 100 ? 0.4 : 1 },
+                    ]}
+                  >
+                    <Feather name="plus" size={18} color={theme.text} />
+                  </Pressable>
                 </View>
               </View>
 
@@ -298,7 +278,7 @@ export default function LiveMatchScreen() {
                       ]}
                     />
                   </View>
-                  <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 4 }}>
+                  <ThemedText type="caption" style={{ color: theme.textSecondary, marginTop: 2 }}>
                     {Math.round(percentage)}%
                   </ThemedText>
                 </View>
@@ -306,7 +286,7 @@ export default function LiveMatchScreen() {
             </Animated.View>
           );
         })}
-      </ScrollView>
+      </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
         <View style={[styles.totalCard, { backgroundColor: theme.backgroundDefault }]}>
@@ -315,10 +295,7 @@ export default function LiveMatchScreen() {
               Total Weight
             </ThemedText>
             <ThemedText type="h2">
-              {(() => {
-                const { lb, oz } = getNetLbOz(totalWeight);
-                return `${lb}lb ${oz}oz`;
-              })()}
+              {getNetLb(totalWeight)}lb
             </ThemedText>
           </View>
           <Pressable
@@ -385,24 +362,6 @@ export default function LiveMatchScreen() {
                   placeholderTextColor={theme.textSecondary}
                 />
               </View>
-
-              <View style={styles.editInputGroup}>
-                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
-                  Ounces (oz)
-                </ThemedText>
-                <TextInput
-                  style={[
-                    styles.editInput,
-                    { backgroundColor: theme.backgroundTertiary, color: theme.text, borderColor: theme.textSecondary },
-                  ]}
-                  value={editOz}
-                  onChangeText={setEditOz}
-                  keyboardType="numeric"
-                  maxLength={2}
-                  placeholder="0"
-                  placeholderTextColor={theme.textSecondary}
-                />
-              </View>
             </View>
 
             <View style={styles.editButtonRow}>
@@ -417,8 +376,7 @@ export default function LiveMatchScreen() {
                 onPress={() => {
                   if (editingNetIndex !== null) {
                     const lb = Math.max(0, Math.min(100, parseInt(editLb) || 0));
-                    const oz = Math.max(0, Math.min(15, parseInt(editOz) || 0));
-                    setNetLbOz(editingNetIndex, lb, oz);
+                    setNetLb(editingNetIndex, lb);
                     setEditingNetIndex(null);
                   }
                 }}
@@ -437,13 +395,14 @@ export default function LiveMatchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    flexDirection: "column",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.sm,
+    paddingBottom: Spacing.xs,
   },
   headerButton: {
     width: 44,
@@ -463,19 +422,11 @@ const styles = StyleSheet.create({
   weatherBar: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: Spacing.xl,
-    paddingVertical: Spacing.sm,
+    gap: Spacing.md,
+    paddingVertical: Spacing.xs,
   },
   weatherItem: {
     flexDirection: "row",
-    alignItems: "center",
-  },
-  controlsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: Spacing.xl,
-  },
-  controlGroup: {
     alignItems: "center",
   },
   controlButton: {
@@ -486,9 +437,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   controlValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "600",
-    marginVertical: Spacing.xs,
+    marginHorizontal: Spacing.xs,
   },
   modalOverlay: {
     flex: 1,
@@ -527,47 +478,63 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     alignItems: "center",
   },
-  netsScrollView: {
-    flex: 1,
-  },
   netsGrid: {
-    flexDirection: "column",
-    gap: Spacing.md,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xl,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.xs,
+    paddingTop: Spacing.xs,
+    paddingBottom: Spacing.xs,
+    paddingHorizontal: Spacing.lg,
+    justifyContent: "space-between",
+    flex: 1,
+    alignContent: "flex-start",
   },
   netTile: {
     borderRadius: BorderRadius.sm,
-    padding: Spacing.md,
+    padding: Spacing.xs,
+    justifyContent: "flex-start",
   },
   netHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: Spacing.sm,
+    marginBottom: 2,
   },
   netContent: {
-    flexDirection: "row",
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  progressContainer: {
-    marginTop: Spacing.sm,
+  controlGroup: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.md,
+    width: "100%",
+  },
+  weightDisplay: {
+    alignItems: "center",
+    gap: 2,
+  },
+  progressContainer: {
+    marginTop: 2,
+    alignItems: "center",
+    width: "100%",
   },
   progressBar: {
     width: "100%",
-    height: 4,
-    borderRadius: 2,
+    height: 3,
+    borderRadius: 1,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    borderRadius: 2,
+    borderRadius: 1,
   },
   footer: {
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.xs,
+    marginTop: "auto",
   },
   totalCard: {
     flexDirection: "row",

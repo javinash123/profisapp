@@ -82,19 +82,8 @@ export default function AddEditAlarmScreen() {
           <ThemedText type="body" style={{ color: theme.link }}>Cancel</ThemedText>
         </Pressable>
       ),
-      headerRight: () => (
-        <Pressable
-          onPress={handleSavePress}
-          hitSlop={8}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-        >
-          <ThemedText type="body" style={{ color: Colors.dark.primary, fontWeight: "600" }}>
-            Save
-          </ThemedText>
-        </Pressable>
-      ),
     });
-  }, [navigation, theme, handleSavePress]);
+  }, [navigation, theme]);
 
   const getAlarmTime = () => {
     const now = new Date();
@@ -417,6 +406,23 @@ export default function AddEditAlarmScreen() {
             />
           </View>
         </View>
+
+        <View style={styles.saveButtonContainer}>
+          <Pressable
+            onPress={handleSave}
+            style={({ pressed }) => [
+              styles.saveButton,
+              {
+                backgroundColor: Colors.dark.primary,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <ThemedText type="body" style={{ color: "#FFFFFF", fontWeight: "600" }}>
+              {isEditing ? "Update Alarm" : "Create Alarm"}
+            </ThemedText>
+          </Pressable>
+        </View>
       </KeyboardAwareScrollViewCompat>
     </ThemedView>
   );
@@ -496,5 +502,14 @@ const styles = StyleSheet.create({
   switchLabel: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  saveButtonContainer: {
+    marginTop: Spacing.xl,
+  },
+  saveButton: {
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.sm,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
