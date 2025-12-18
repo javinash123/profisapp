@@ -13,3 +13,18 @@
 - Total weight display now shows in lb/oz format
 - Added logo image to the Match Setup screen (new match screen)
 - Fixed logo.png file format (was JPEG with PNG extension, now proper PNG) - resolves Android build failure
+
+## Import Completed (Dec 18, 2025)
+- Fixed missing tsx dependency by running npm install
+- Workflow "Start dev servers" is now running successfully
+- Express server serving on port 5000
+- Expo Metro bundler running and ready
+
+## Live Match Screen Update (Dec 18, 2025)
+- Removed dropdown selectors for lb/oz values
+- Added +/- buttons for each value (lb and oz) to increase/decrease weights
+- Each +/- button pair is disabled at the minimum (0) and maximum (100 for lb, 15 for oz)
+- Added edit icon back to the net header that appears when the screen is not locked
+- Removed Modal component code that was handling the dropdown selections
+- Updated styling with new controlsRow, controlGroup, controlButton, and controlValue styles
+- Cleaned up unused LB_OPTIONS and OZ_OPTIONS constants

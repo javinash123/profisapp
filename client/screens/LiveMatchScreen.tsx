@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, StyleSheet, Pressable, Dimensions, Alert, ScrollView, Modal } from "react-native";
+import { View, StyleSheet, Pressable, Dimensions, Alert, ScrollView, Modal, TextInput } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -20,9 +20,6 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const LB_OPTIONS = Array.from({ length: 101 }, (_, i) => i);
-const OZ_OPTIONS = Array.from({ length: 16 }, (_, i) => i);
-
 export default function LiveMatchScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
@@ -32,7 +29,9 @@ export default function LiveMatchScreen() {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockTaps, setLockTaps] = useState(0);
-  const [activeDropdown, setActiveDropdown] = useState<{ netIndex: number; type: 'lb' | 'oz' } | null>(null);
+  const [editingNetIndex, setEditingNetIndex] = useState<number | null>(null);
+  const [editLb, setEditLb] = useState("0");
+  const [editOz, setEditOz] = useState("0");
 
   useEffect(() => {
     if (!currentMatch) {
@@ -218,36 +217,68 @@ export default function LiveMatchScreen() {
                 <ThemedText type="small" style={{ color: theme.textSecondary }}>
                   Net {index + 1}
                 </ThemedText>
+                {!isLocked && (
+                  <Pressable
+                    onPress={() => {
+                      setEditingNetIndex(index);
+                      setEditLb(lb.toString());
+                      setEditOz(oz.toString());
+                    }}
+                    style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
+                  >
+                    <Feather name="edit-2" size={16} color={theme.textSecondary} />
+                  </Pressable>
+                )}
               </View>
 
               <View style={styles.netContent}>
-                <View style={styles.dropdownRow}>
-                  <View style={styles.dropdownGroup}>
+                <View style={styles.controlsRow}>
+                  <View style={styles.controlGroup}>
                     <Pressable
-                      onPress={() => !isLocked && setActiveDropdown({ netIndex: index, type: 'lb' })}
-                      disabled={isLocked}
+                      onPress={() => !isLocked && setNetLbOz(index, Math.max(0, lb - 1), oz)}
+                      disabled={isLocked || lb === 0}
                       style={[
-                        styles.dropdownButton,
-                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.6 : 1 },
+                        styles.controlButton,
+                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked || lb === 0 ? 0.4 : 1 },
                       ]}
                     >
-                      <ThemedText style={styles.dropdownValue}>{lb}</ThemedText>
-                      <Feather name="chevron-down" size={16} color={theme.textSecondary} />
+                      <Feather name="minus" size={18} color={theme.text} />
+                    </Pressable>
+                    <ThemedText style={styles.controlValue}>{lb}</ThemedText>
+                    <Pressable
+                      onPress={() => !isLocked && setNetLbOz(index, Math.min(100, lb + 1), oz)}
+                      disabled={isLocked || lb === 100}
+                      style={[
+                        styles.controlButton,
+                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked || lb === 100 ? 0.4 : 1 },
+                      ]}
+                    >
+                      <Feather name="plus" size={18} color={theme.text} />
                     </Pressable>
                     <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 4 }}>lb</ThemedText>
                   </View>
 
-                  <View style={styles.dropdownGroup}>
+                  <View style={styles.controlGroup}>
                     <Pressable
-                      onPress={() => !isLocked && setActiveDropdown({ netIndex: index, type: 'oz' })}
-                      disabled={isLocked}
+                      onPress={() => !isLocked && setNetLbOz(index, lb, Math.max(0, oz - 1))}
+                      disabled={isLocked || oz === 0}
                       style={[
-                        styles.dropdownButton,
-                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.6 : 1 },
+                        styles.controlButton,
+                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked || oz === 0 ? 0.4 : 1 },
                       ]}
                     >
-                      <ThemedText style={styles.dropdownValue}>{oz}</ThemedText>
-                      <Feather name="chevron-down" size={16} color={theme.textSecondary} />
+                      <Feather name="minus" size={18} color={theme.text} />
+                    </Pressable>
+                    <ThemedText style={styles.controlValue}>{oz}</ThemedText>
+                    <Pressable
+                      onPress={() => !isLocked && setNetLbOz(index, lb, Math.min(15, oz + 1))}
+                      disabled={isLocked || oz === 15}
+                      style={[
+                        styles.controlButton,
+                        { backgroundColor: theme.backgroundTertiary, opacity: isLocked || oz === 15 ? 0.4 : 1 },
+                      ]}
+                    >
+                      <Feather name="plus" size={18} color={theme.text} />
                     </Pressable>
                     <ThemedText type="small" style={{ color: theme.textSecondary, marginTop: 4 }}>oz</ThemedText>
                   </View>
@@ -321,70 +352,83 @@ export default function LiveMatchScreen() {
       ) : null}
 
       <Modal
-        visible={activeDropdown !== null}
+        visible={editingNetIndex !== null}
         transparent
         animationType="fade"
-        onRequestClose={() => setActiveDropdown(null)}
+        onRequestClose={() => setEditingNetIndex(null)}
       >
-        <Pressable 
-          style={styles.modalOverlay} 
-          onPress={() => setActiveDropdown(null)}
-        >
-          <View style={[styles.pickerModal, { backgroundColor: theme.backgroundDefault }]}>
-            <View style={styles.pickerHeader}>
-              <ThemedText type="body" style={{ fontWeight: '600' }}>
-                Select {activeDropdown?.type === 'lb' ? 'Pounds (lb)' : 'Ounces (oz)'}
-              </ThemedText>
-              <ThemedText type="small" style={{ color: theme.textSecondary }}>
-                Net {(activeDropdown?.netIndex ?? 0) + 1}
-              </ThemedText>
-            </View>
-            <ScrollView style={styles.pickerScrollView} showsVerticalScrollIndicator={false}>
-              {(activeDropdown?.type === 'lb' ? LB_OPTIONS : OZ_OPTIONS).map((value) => {
-                const netIndex = activeDropdown?.netIndex ?? 0;
-                const currentNet = currentMatch.nets[netIndex];
-                const { lb: currentLb, oz: currentOz } = getNetLbOz(currentNet?.weight ?? 0);
-                const isSelected = activeDropdown?.type === 'lb' 
-                  ? value === currentLb 
-                  : value === currentOz;
+        <View style={styles.modalOverlay}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setEditingNetIndex(null)}
+          />
+          <View style={[styles.editModal, { backgroundColor: theme.backgroundDefault }]}>
+            <ThemedText type="body" style={{ fontWeight: "600", marginBottom: Spacing.lg }}>
+              Edit Net {(editingNetIndex ?? 0) + 1} Weight
+            </ThemedText>
 
-                return (
-                  <Pressable
-                    key={value}
-                    style={[
-                      styles.pickerOption,
-                      isSelected && { backgroundColor: theme.backgroundTertiary },
-                    ]}
-                    onPress={() => {
-                      const netIndex = activeDropdown?.netIndex ?? 0;
-                      const currentNet = currentMatch.nets[netIndex];
-                      const { lb: currentLb, oz: currentOz } = getNetLbOz(currentNet?.weight ?? 0);
-                      if (activeDropdown?.type === 'lb') {
-                        setNetLbOz(netIndex, value, currentOz);
-                      } else {
-                        setNetLbOz(netIndex, currentLb, value);
-                      }
-                      setActiveDropdown(null);
-                    }}
-                  >
-                    <ThemedText 
-                      type="body" 
-                      style={{ 
-                        color: isSelected ? Colors.dark.primary : theme.text,
-                        fontWeight: isSelected ? '600' : '400',
-                      }}
-                    >
-                      {value}
-                    </ThemedText>
-                    {isSelected && (
-                      <Feather name="check" size={18} color={Colors.dark.primary} />
-                    )}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+            <View style={styles.editInputRow}>
+              <View style={styles.editInputGroup}>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
+                  Pounds (lb)
+                </ThemedText>
+                <TextInput
+                  style={[
+                    styles.editInput,
+                    { backgroundColor: theme.backgroundTertiary, color: theme.text, borderColor: theme.textSecondary },
+                  ]}
+                  value={editLb}
+                  onChangeText={setEditLb}
+                  keyboardType="numeric"
+                  maxLength={3}
+                  placeholder="0"
+                  placeholderTextColor={theme.textSecondary}
+                />
+              </View>
+
+              <View style={styles.editInputGroup}>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
+                  Ounces (oz)
+                </ThemedText>
+                <TextInput
+                  style={[
+                    styles.editInput,
+                    { backgroundColor: theme.backgroundTertiary, color: theme.text, borderColor: theme.textSecondary },
+                  ]}
+                  value={editOz}
+                  onChangeText={setEditOz}
+                  keyboardType="numeric"
+                  maxLength={2}
+                  placeholder="0"
+                  placeholderTextColor={theme.textSecondary}
+                />
+              </View>
+            </View>
+
+            <View style={styles.editButtonRow}>
+              <Pressable
+                onPress={() => setEditingNetIndex(null)}
+                style={[styles.editButton, { backgroundColor: theme.backgroundTertiary }]}
+              >
+                <ThemedText style={{ color: theme.text, fontWeight: "600" }}>Cancel</ThemedText>
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  if (editingNetIndex !== null) {
+                    const lb = Math.max(0, Math.min(100, parseInt(editLb) || 0));
+                    const oz = Math.max(0, Math.min(15, parseInt(editOz) || 0));
+                    setNetLbOz(editingNetIndex, lb, oz);
+                    setEditingNetIndex(null);
+                  }
+                }}
+                style={[styles.editButton, { backgroundColor: Colors.dark.primary }]}
+              >
+                <ThemedText style={{ color: "#FFFFFF", fontWeight: "600" }}>Save</ThemedText>
+              </Pressable>
+            </View>
           </View>
-        </Pressable>
+        </View>
       </Modal>
     </ThemedView>
   );
@@ -426,55 +470,62 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  controlsRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: Spacing.xl,
+  },
+  controlGroup: {
+    alignItems: "center",
+  },
+  controlButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  controlValue: {
+    fontSize: 24,
+    fontWeight: "600",
+    marginVertical: Spacing.xs,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
-  pickerModal: {
+  editModal: {
     borderRadius: BorderRadius.md,
-    width: 280,
-    maxHeight: 400,
-    overflow: "hidden",
-  },
-  pickerHeader: {
     padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.1)",
-    alignItems: "center",
+    minWidth: 300,
   },
-  pickerScrollView: {
-    maxHeight: 320,
-  },
-  pickerOption: {
+  editInputRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    gap: Spacing.lg,
+    marginBottom: Spacing.lg,
   },
-  dropdownRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: Spacing.xl,
+  editInputGroup: {
+    flex: 1,
   },
-  dropdownGroup: {
-    alignItems: "center",
-  },
-  dropdownButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
+  editInput: {
+    borderWidth: 1,
     borderRadius: BorderRadius.sm,
-    minWidth: 80,
-    gap: Spacing.xs,
-  },
-  dropdownValue: {
-    fontSize: 24,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    fontSize: 16,
     fontWeight: "600",
+  },
+  editButtonRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  editButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    alignItems: "center",
   },
   netsScrollView: {
     flex: 1,
