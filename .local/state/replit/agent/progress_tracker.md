@@ -3,6 +3,15 @@
 [x] 3. Verify the project is working using the feedback tool
 [x] 4. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool
 
+## Alarm System Fix & Live Match Display (Dec 18, 2025)
+- Fixed alarm triggering logic - alarms now check at 1-second intervals
+- Implemented support for all alarm modes: repeat, duration-pattern, and one-time
+- Added haptic feedback when alarms trigger (if vibration enabled)
+- Added active alarms display bar on Live Match screen
+- Shows all enabled alarms as badges with bell icon and label
+- Alarms properly track when they last fired to prevent duplicate triggers
+- Workflow restarted and all changes are live
+
 ## Progress Bar Enhancement (Dec 18, 2025)
 - Enhanced weight progress bars on Live Match screen
 - Increased progress bar height from 3px to 8px for better visibility

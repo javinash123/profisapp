@@ -15,10 +15,15 @@ import { useApp } from "@/lib/AppContext";
 import { Colors, Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { formatTime, getProgressColor } from "@/lib/utils";
+import { Alarm } from "@/lib/types";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+interface FiredAlarmTracker {
+  [alarmId: string]: number; // timestamp of last trigger
+}
 
 export default function LiveMatchScreen() {
   const insets = useSafeAreaInsets();
@@ -31,6 +36,7 @@ export default function LiveMatchScreen() {
   const [lockTaps, setLockTaps] = useState(0);
   const [editingNetIndex, setEditingNetIndex] = useState<number | null>(null);
   const [editLb, setEditLb] = useState("0");
+  const [firedAlarms, setFiredAlarms] = useState<FiredAlarmTracker>({});
 
   useEffect(() => {
     if (!currentMatch) {
@@ -107,7 +113,57 @@ export default function LiveMatchScreen() {
     }
   }, [isLocked, lockTaps]);
 
+  // Check and trigger alarms
+  useEffect(() => {
+    if (!currentMatch) return;
+
+    const checkAlarms = () => {
+      const now = Date.now();
+      const elapsedSeconds = Math.floor((now - currentMatch.startTime) / 1000);
+
+      alarms.forEach((alarm) => {
+        if (!alarm.enabled) return;
+
+        const lastFired = firedAlarms[alarm.id] || 0;
+        const timeSinceLastFire = now - lastFired;
+
+        let shouldFire = false;
+
+        if (alarm.mode === "repeat" && alarm.intervalMinutes) {
+          const intervalMs = alarm.intervalMinutes * 60 * 1000;
+          if (timeSinceLastFire >= intervalMs) {
+            shouldFire = true;
+          }
+        } else if (alarm.mode === "duration-pattern" && alarm.durationSeconds && alarm.patternMinutes) {
+          const patternMs = alarm.patternMinutes * 60 * 1000;
+          if (timeSinceLastFire >= patternMs) {
+            shouldFire = true;
+          }
+        } else if (alarm.mode === "one-time" && alarm.time) {
+          const targetTime = alarm.time;
+          const elapsedMs = now - currentMatch.startTime;
+          if (elapsedMs >= targetTime && timeSinceLastFire > 5000) {
+            shouldFire = true;
+          }
+        }
+
+        if (shouldFire) {
+          setFiredAlarms((prev) => ({ ...prev, [alarm.id]: now }));
+          if (alarm.vibrationEnabled) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          }
+        }
+      });
+    };
+
+    const interval = setInterval(checkAlarms, 1000);
+    return () => clearInterval(interval);
+  }, [currentMatch, alarms, firedAlarms]);
+
   const totalWeight = currentMatch?.nets.reduce((sum, net) => sum + net.weight, 0) || 0;
+
+  // Get enabled alarms for display
+  const enabledAlarms = alarms.filter((a) => a.enabled);
 
   const GRAMS_PER_LB = 453.592; // More precise conversion
 
@@ -194,6 +250,21 @@ export default function LiveMatchScreen() {
             </ThemedText>
           </View>
         </Pressable>
+      ) : null}
+
+      {enabledAlarms.length > 0 ? (
+        <View style={[styles.activeAlarmsBar, { backgroundColor: theme.backgroundDefault, borderBottomColor: theme.border }]}>
+          <View style={styles.alarmsContainer}>
+            {enabledAlarms.map((alarm, idx) => (
+              <View key={alarm.id} style={[styles.alarmBadge, { backgroundColor: Colors.dark.primary + "20" }]}>
+                <Feather name="bell" size={12} color={Colors.dark.primary} />
+                <ThemedText type="caption" style={{ color: Colors.dark.primary, marginLeft: 4, fontWeight: "600" }}>
+                  {alarm.label || `Alarm ${idx + 1}`}
+                </ThemedText>
+              </View>
+            ))}
+          </View>
+        </View>
       ) : null}
 
       <View style={[styles.netsGrid, { paddingHorizontal: Spacing.lg }]}>
@@ -433,6 +504,23 @@ const styles = StyleSheet.create({
   weatherItem: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  activeAlarmsBar: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+  },
+  alarmsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+  },
+  alarmBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
   },
   controlButton: {
     width: 40,
