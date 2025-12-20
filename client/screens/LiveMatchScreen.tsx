@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, StyleSheet, Pressable, Dimensions, Alert, ScrollView, Modal, TextInput } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -117,21 +117,21 @@ export default function LiveMatchScreen() {
   useEffect(() => {
     if (!currentMatch) return;
 
-    const checkAlarms = () => {
+    const checkAlarms = async () => {
       const now = Date.now();
-      const elapsedSeconds = Math.floor((now - currentMatch.startTime) / 1000);
+      const elapsedMs = now - currentMatch.startTime;
 
-      alarms.forEach((alarm) => {
+      alarms.forEach(async (alarm) => {
         if (!alarm.enabled) return;
 
         const lastFired = firedAlarms[alarm.id] || 0;
         const timeSinceLastFire = now - lastFired;
-
         let shouldFire = false;
 
-        if (alarm.mode === "repeat" && alarm.intervalMinutes) {
+        if (alarm.mode === "repeat" && alarm.intervalMinutes && alarm.time) {
+          // For repeat alarms: first check if initial time has been reached, then check interval
           const intervalMs = alarm.intervalMinutes * 60 * 1000;
-          if (timeSinceLastFire >= intervalMs) {
+          if (now >= alarm.time && timeSinceLastFire >= intervalMs) {
             shouldFire = true;
           }
         } else if (alarm.mode === "duration-pattern" && alarm.durationSeconds && alarm.patternMinutes) {
@@ -140,17 +140,29 @@ export default function LiveMatchScreen() {
             shouldFire = true;
           }
         } else if (alarm.mode === "one-time" && alarm.time) {
-          const targetTime = alarm.time;
-          const elapsedMs = now - currentMatch.startTime;
-          if (elapsedMs >= targetTime && timeSinceLastFire > 5000) {
+          // alarm.time is an absolute timestamp, compare with current time
+          if (now >= alarm.time && timeSinceLastFire > 2000) {
             shouldFire = true;
           }
         }
 
         if (shouldFire) {
+          console.log("🔔 ALARM TRIGGERED:", alarm.label || alarm.id, "mode:", alarm.mode);
           setFiredAlarms((prev) => ({ ...prev, [alarm.id]: now }));
-          if (alarm.vibrationEnabled) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          
+          // Vibrate multiple times for stronger effect
+          if (alarm.vibrationEnabled && settings.haptics) {
+            try {
+              await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              setTimeout(() => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              }, 150);
+              setTimeout(() => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              }, 300);
+            } catch (e) {
+              console.log("Haptic feedback error:", e);
+            }
           }
         }
       });
@@ -158,7 +170,7 @@ export default function LiveMatchScreen() {
 
     const interval = setInterval(checkAlarms, 1000);
     return () => clearInterval(interval);
-  }, [currentMatch, alarms, firedAlarms]);
+  }, [currentMatch, alarms, firedAlarms, settings]);
 
   const totalWeight = currentMatch?.nets.reduce((sum, net) => sum + net.weight, 0) || 0;
 
