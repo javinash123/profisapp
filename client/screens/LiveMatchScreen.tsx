@@ -6,6 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
+import { Audio } from "expo-av";
 import Animated, { FadeIn, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -37,6 +38,7 @@ export default function LiveMatchScreen() {
   const [editingNetIndex, setEditingNetIndex] = useState<number | null>(null);
   const [editLb, setEditLb] = useState("0");
   const [firedAlarms, setFiredAlarms] = useState<FiredAlarmTracker>({});
+  const soundRef = useRef<any>(null);
 
   useEffect(() => {
     if (!currentMatch) {
@@ -97,6 +99,24 @@ export default function LiveMatchScreen() {
     );
   };
 
+  const playAlarmSound = useCallback(async () => {
+    try {
+      // Use system notification sound - Expo's Audio API will play device's system sound
+      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+      // Create a simple beep by playing a short tone
+      if (!soundRef.current) {
+        const { sound } = await Audio.Sound.createAsync({
+          uri: "data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==",
+        });
+        soundRef.current = sound;
+      }
+      await soundRef.current.replayAsync();
+    } catch (e) {
+      console.log("Audio playback error:", e);
+      // Fallback: just rely on haptics
+    }
+  }, []);
+
   const handleLockTap = useCallback(() => {
     if (!isLocked) {
       setIsLocked(true);
@@ -149,6 +169,9 @@ export default function LiveMatchScreen() {
         if (shouldFire) {
           console.log("🔔 ALARM TRIGGERED:", alarm.label || alarm.id, "mode:", alarm.mode);
           setFiredAlarms((prev) => ({ ...prev, [alarm.id]: now }));
+          
+          // Play alarm sound
+          await playAlarmSound();
           
           // Vibrate multiple times for stronger effect
           if (alarm.vibrationEnabled && settings.haptics) {
@@ -268,12 +291,19 @@ export default function LiveMatchScreen() {
         <View style={[styles.activeAlarmsBar, { backgroundColor: theme.backgroundDefault, borderBottomColor: theme.border }]}>
           <View style={styles.alarmsContainer}>
             {enabledAlarms.map((alarm, idx) => (
-              <View key={alarm.id} style={[styles.alarmBadge, { backgroundColor: Colors.dark.primary + "20" }]}>
+              <Pressable 
+                key={alarm.id}
+                onPress={() => navigation.navigate("AlarmManagement")}
+                style={({ pressed }) => [
+                  styles.alarmBadge, 
+                  { backgroundColor: Colors.dark.primary + "20", opacity: pressed ? 0.6 : 1 }
+                ]}
+              >
                 <Feather name="bell" size={12} color={Colors.dark.primary} />
                 <ThemedText type="caption" style={{ color: Colors.dark.primary, marginLeft: 4, fontWeight: "600" }}>
                   {alarm.label || `Alarm ${idx + 1}`}
                 </ThemedText>
-              </View>
+              </Pressable>
             ))}
           </View>
         </View>
