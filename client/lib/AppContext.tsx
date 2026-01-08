@@ -158,7 +158,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addAlarm = async (alarm: Omit<Alarm, "id">) => {
-    const newAlarm: Alarm = { ...alarm, id: generateId() };
+    const newAlarm: Alarm = { ...alarm, id: generateId(), tone: (alarm as any).tone || "default" };
     const newAlarms = [...alarms, newAlarm];
     setAlarms(newAlarms);
     await Storage.saveAlarms(newAlarms);

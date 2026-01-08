@@ -37,6 +37,7 @@ export interface Alarm {
   vibrationEnabled: boolean;
   enabled: boolean;
   label?: string;
+  tone?: string;
 }
 
 export interface WeatherData {

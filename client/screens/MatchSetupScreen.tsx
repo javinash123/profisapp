@@ -77,7 +77,7 @@ export default function MatchSetupScreen() {
         ]}
       >
         <View style={styles.logoContainer}>
-          <Image source={logoImage} style={styles.logo} resizeMode="contain" />
+          <Image source={logoImage} style={[styles.logo, { backgroundColor: 'transparent' }]} resizeMode="contain" />
         </View>
 
         <View style={styles.section}>

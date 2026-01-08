@@ -11,8 +11,12 @@ import AddEditAlarmScreen from "@/screens/AddEditAlarmScreen";
 import WeatherDetailsScreen from "@/screens/WeatherDetailsScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import ManualWeightEditModal from "@/screens/ManualWeightEditModal";
+import LoginScreen from "@/screens/LoginScreen";
+import RegisterScreen from "@/screens/RegisterScreen";
 
 export type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
   Onboarding: undefined;
   MatchSetup: undefined;
   LiveMatch: undefined;
@@ -30,7 +34,17 @@ export default function RootStackNavigator() {
   const screenOptions = useScreenOptions();
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator screenOptions={screenOptions} initialRouteName="Login">
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen
         name="Onboarding"
         component={OnboardingScreen}

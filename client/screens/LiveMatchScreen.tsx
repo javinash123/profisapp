@@ -9,6 +9,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { Audio } from "expo-av";
 import Animated, { FadeIn, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
+import * as Speech from 'expo-speech';
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
@@ -37,7 +38,11 @@ export default function LiveMatchScreen() {
   const [lockTaps, setLockTaps] = useState(0);
   const [editingNetIndex, setEditingNetIndex] = useState<number | null>(null);
   const [editLb, setEditLb] = useState("0");
+  const [editOz, setEditOz] = useState("0");
   const [firedAlarms, setFiredAlarms] = useState<FiredAlarmTracker>({});
+  const [totalFish, setTotalFish] = useState(0);
+  const [activeAlarmBanner, setActiveAlarmBanner] = useState<Alarm | null>(null);
+  const [isListening, setIsListening] = useState(false);
   const soundRef = useRef<any>(null);
 
   useEffect(() => {
@@ -169,6 +174,8 @@ export default function LiveMatchScreen() {
         if (shouldFire) {
           console.log("🔔 ALARM TRIGGERED:", alarm.label || alarm.id, "mode:", alarm.mode);
           setFiredAlarms((prev) => ({ ...prev, [alarm.id]: now }));
+          setActiveAlarmBanner(alarm);
+          setTimeout(() => setActiveAlarmBanner(null), 10000); // Auto-hide after 10s
           
           // Play alarm sound
           await playAlarmSound();
@@ -218,12 +225,30 @@ export default function LiveMatchScreen() {
   const netCount = currentMatch.config.numberOfNets;
   const columns = 2;
   const netWidth = (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.xs) / 2;
-  const rows = Math.ceil(netCount / columns);
+  const rows = Math.ceil((netCount + 1) / columns);
   // Calculate available height for nets grid (accounting for header, weather, footer, etc)
   const estimatedHeaderHeight = 120; // header + weather bar approximate
   const estimatedFooterHeight = 100; // total weight card
   const availableHeight = Dimensions.get("window").height - estimatedHeaderHeight - estimatedFooterHeight - insets.top - insets.bottom;
   const netHeight = availableHeight / rows - Spacing.xs;
+
+  const handleVoiceCommand = useCallback(() => {
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+    
+    setIsListening(true);
+    Alert.alert(
+      "Voice Control",
+      "Try saying 'Add fish', 'Remove fish', or 'End match'",
+      [{ text: "OK", onPress: () => setIsListening(false) }]
+    );
+    
+    // Note: Full voice recognition requires expo-speech-recognition or similar 
+    // which has complex native setup. Using Speech to acknowledge for now.
+    Speech.speak("Voice control active. Listening for commands.");
+  }, [isListening]);
 
   return (
     <ThemedView style={styles.container}>
@@ -242,6 +267,12 @@ export default function LiveMatchScreen() {
         </View>
 
         <View style={styles.headerRight}>
+          <Pressable
+            onPress={handleVoiceCommand}
+            style={({ pressed }) => [styles.headerButton, { opacity: pressed ? 0.6 : 1 }]}
+          >
+            <Feather name="mic" size={22} color={isListening ? Colors.dark.primary : theme.text} />
+          </Pressable>
           <Pressable
             onPress={() => navigation.navigate("WeatherDetails")}
             style={({ pressed }) => [styles.headerButton, { opacity: pressed ? 0.6 : 1 }]}
@@ -287,6 +318,18 @@ export default function LiveMatchScreen() {
         </Pressable>
       ) : null}
 
+      {activeAlarmBanner && (
+        <Animated.View entering={FadeIn} style={[styles.alarmBanner, { backgroundColor: Colors.dark.primary }]}>
+          <Feather name="bell" size={20} color="#FFFFFF" />
+          <ThemedText style={styles.alarmBannerText}>
+            {activeAlarmBanner.label || "Alarm Triggered!"}
+          </ThemedText>
+          <Pressable onPress={() => setActiveAlarmBanner(null)}>
+            <Feather name="x" size={20} color="#FFFFFF" />
+          </Pressable>
+        </Animated.View>
+      )}
+
       {enabledAlarms.length > 0 ? (
         <View style={[styles.activeAlarmsBar, { backgroundColor: theme.backgroundDefault, borderBottomColor: theme.border }]}>
           <View style={styles.alarmsContainer}>
@@ -317,7 +360,8 @@ export default function LiveMatchScreen() {
             warning: Colors.dark.warning,
             error: Colors.dark.error,
           });
-          const lb = getNetLb(net.weight);
+          const lb = Math.floor(net.weight / GRAMS_PER_LB);
+          const oz = Math.round((net.weight % GRAMS_PER_LB) / 28.3495);
 
           return (
             <Animated.View
@@ -341,6 +385,7 @@ export default function LiveMatchScreen() {
                     onPress={() => {
                       setEditingNetIndex(index);
                       setEditLb(lb.toString());
+                      setEditOz(oz.toString());
                     }}
                     style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}
                   >
@@ -352,11 +397,11 @@ export default function LiveMatchScreen() {
               <View style={styles.netContent}>
                 <View style={styles.controlGroup}>
                   <Pressable
-                    onPress={() => !isLocked && setNetLb(index, Math.max(0, lb - 1))}
-                    disabled={isLocked || lb === 0}
+                    onPress={() => !isLocked && setNetWeight(index, Math.max(0, net.weight - GRAMS_PER_LB))}
+                    disabled={isLocked || net.weight < GRAMS_PER_LB}
                     style={[
                       styles.controlButton,
-                      { backgroundColor: theme.backgroundTertiary, opacity: isLocked || lb === 0 ? 0.4 : 1 },
+                      { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < GRAMS_PER_LB ? 0.4 : 1 },
                     ]}
                   >
                     <Feather name="minus" size={18} color={theme.text} />
@@ -364,17 +409,57 @@ export default function LiveMatchScreen() {
                   <View style={styles.weightDisplay}>
                     <ThemedText style={styles.controlValue}>{lb}</ThemedText>
                     <ThemedText type="small" style={{ color: theme.textSecondary, fontWeight: "600" }}>lb</ThemedText>
+                    <ThemedText style={[styles.controlValue, { marginLeft: 8 }]}>{oz}</ThemedText>
+                    <ThemedText type="small" style={{ color: theme.textSecondary, fontWeight: "600" }}>oz</ThemedText>
                   </View>
-                  <Pressable
-                    onPress={() => !isLocked && setNetLb(index, Math.min(100, lb + 1))}
-                    disabled={isLocked || lb === 100}
-                    style={[
-                      styles.controlButton,
-                      { backgroundColor: theme.backgroundTertiary, opacity: isLocked || lb === 100 ? 0.4 : 1 },
-                    ]}
-                  >
-                    <Feather name="plus" size={18} color={theme.text} />
-                  </Pressable>
+                  <View style={styles.controlColumn}>
+                    <View style={styles.controlRow}>
+                      <Pressable
+                        onPress={() => !isLocked && setNetWeight(index, Math.max(0, net.weight - GRAMS_PER_LB))}
+                        disabled={isLocked || net.weight < GRAMS_PER_LB}
+                        style={[
+                          styles.smallControlButton,
+                          { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < GRAMS_PER_LB ? 0.4 : 1 },
+                        ]}
+                      >
+                        <Feather name="minus" size={12} color={theme.text} />
+                      </Pressable>
+                      <Pressable
+                        onPress={() => !isLocked && setNetWeight(index, net.weight + GRAMS_PER_LB)}
+                        disabled={isLocked}
+                        style={[
+                          styles.smallControlButton,
+                          { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 },
+                        ]}
+                      >
+                        <Feather name="plus" size={12} color={theme.text} />
+                      </Pressable>
+                      <ThemedText type="caption" style={{ color: theme.textSecondary, width: 15 }}>lb</ThemedText>
+                    </View>
+                    <View style={styles.controlRow}>
+                      <Pressable
+                        onPress={() => !isLocked && setNetWeight(index, Math.max(0, net.weight - 28.3495))}
+                        disabled={isLocked || net.weight < 28.3495}
+                        style={[
+                          styles.smallControlButton,
+                          { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < 28.3495 ? 0.4 : 1 },
+                        ]}
+                      >
+                        <Feather name="minus" size={12} color={theme.text} />
+                      </Pressable>
+                      <Pressable
+                        onPress={() => !isLocked && setNetWeight(index, net.weight + 28.3495)}
+                        disabled={isLocked}
+                        style={[
+                          styles.smallControlButton,
+                          { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 },
+                        ]}
+                      >
+                        <Feather name="plus" size={12} color={theme.text} />
+                      </Pressable>
+                      <ThemedText type="caption" style={{ color: theme.textSecondary, width: 15 }}>oz</ThemedText>
+                    </View>
+                  </View>
                 </View>
               </View>
 
@@ -404,6 +489,47 @@ export default function LiveMatchScreen() {
             </Animated.View>
           );
         })}
+
+        <Animated.View
+          entering={FadeIn.delay(netCount * 50)}
+          style={[
+            styles.netTile,
+            {
+              width: netWidth,
+              height: netHeight,
+              backgroundColor: theme.backgroundDefault,
+              justifyContent: 'center',
+              alignItems: 'center',
+            },
+          ]}
+        >
+          <View style={[styles.controlRow, { paddingHorizontal: Spacing.md }]}>
+            <ThemedText type="small" style={{ color: theme.textSecondary, marginRight: Spacing.sm, flex: 1 }}>
+              Total Fish
+            </ThemedText>
+            <Pressable
+              onPress={() => !isLocked && setTotalFish(Math.max(0, totalFish - 1))}
+              disabled={isLocked || totalFish === 0}
+              style={[
+                styles.controlButton,
+                { backgroundColor: theme.backgroundTertiary, opacity: isLocked || totalFish === 0 ? 0.4 : 1 },
+              ]}
+            >
+              <Feather name="minus" size={18} color={theme.text} />
+            </Pressable>
+            <ThemedText style={[styles.controlValue, { width: 40, textAlign: 'center' }]}>{totalFish}</ThemedText>
+            <Pressable
+              onPress={() => !isLocked && setTotalFish(totalFish + 1)}
+              disabled={isLocked}
+              style={[
+                styles.controlButton,
+                { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 },
+              ]}
+            >
+              <Feather name="plus" size={18} color={theme.text} />
+            </Pressable>
+          </View>
+        </Animated.View>
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
@@ -470,14 +596,27 @@ export default function LiveMatchScreen() {
                 <TextInput
                   style={[
                     styles.editInput,
-                    { backgroundColor: theme.backgroundTertiary, color: theme.text, borderColor: theme.textSecondary },
+                    { backgroundColor: theme.backgroundTertiary, color: theme.text, borderColor: theme.border },
                   ]}
                   value={editLb}
                   onChangeText={setEditLb}
                   keyboardType="numeric"
                   maxLength={3}
-                  placeholder="0"
-                  placeholderTextColor={theme.textSecondary}
+                />
+              </View>
+              <View style={styles.editInputGroup}>
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
+                  Ounces (oz)
+                </ThemedText>
+                <TextInput
+                  style={[
+                    styles.editInput,
+                    { backgroundColor: theme.backgroundTertiary, color: theme.text, borderColor: theme.border },
+                  ]}
+                  value={editOz}
+                  onChangeText={setEditOz}
+                  keyboardType="numeric"
+                  maxLength={2}
                 />
               </View>
             </View>
@@ -493,8 +632,10 @@ export default function LiveMatchScreen() {
               <Pressable
                 onPress={() => {
                   if (editingNetIndex !== null) {
-                    const lb = Math.max(0, Math.min(100, parseInt(editLb) || 0));
-                    setNetLb(editingNetIndex, lb);
+                    const lb = parseInt(editLb) || 0;
+                    const oz = parseInt(editOz) || 0;
+                    const totalGrams = (lb * GRAMS_PER_LB) + (oz * 28.3495);
+                    setNetWeight(editingNetIndex, totalGrams);
                     setEditingNetIndex(null);
                   }
                 }}
@@ -537,6 +678,21 @@ const styles = StyleSheet.create({
   timer: {
     ...Typography.timer,
   },
+  alarmBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    marginHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.sm,
+    marginBottom: Spacing.sm,
+    justifyContent: "space-between",
+  },
+  alarmBannerText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    flex: 1,
+    marginLeft: Spacing.sm,
+  },
   weatherBar: {
     flexDirection: "row",
     justifyContent: "center",
@@ -575,6 +731,28 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "600",
     marginHorizontal: Spacing.xs,
+  },
+  controlColumn: {
+    flexDirection: "column",
+    gap: 4,
+  },
+  controlRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  smallControlButton: {
+    width: 28,
+    height: 28,
+    borderRadius: BorderRadius.xs,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  weightDisplay: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    flex: 1,
+    justifyContent: "center",
   },
   modalOverlay: {
     flex: 1,

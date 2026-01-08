@@ -54,6 +54,7 @@ export default function AddEditAlarmScreen() {
   const [label, setLabel] = useState(existingAlarm?.label || "");
   const [selectedHour, setSelectedHour] = useState(initialTime.hour);
   const [selectedMinute, setSelectedMinute] = useState(initialTime.minute);
+  const [tone, setTone] = useState(existingAlarm?.tone || "default");
   const [intervalMinutes, setIntervalMinutes] = useState(
     existingAlarm?.intervalMinutes?.toString() || "30"
   );
@@ -120,6 +121,7 @@ export default function AddEditAlarmScreen() {
       time: (mode === "one-time" || mode === "repeat") ? getAlarmTime() : undefined,
       soundEnabled,
       vibrationEnabled,
+      tone,
       enabled: true,
     };
 
@@ -374,6 +376,38 @@ export default function AddEditAlarmScreen() {
             </ThemedText>
           </View>
         ) : null}
+
+        <View style={styles.section}>
+          <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
+            Alarm Tone
+          </ThemedText>
+          <View style={styles.modeSelector}>
+            {["default", "soft", "alert"].map((t) => (
+              <Pressable
+                key={t}
+                onPress={() => setTone(t)}
+                style={[
+                  styles.modeOption,
+                  {
+                    backgroundColor: tone === t ? Colors.dark.primary : theme.backgroundDefault,
+                    borderColor: tone === t ? Colors.dark.primary : theme.border,
+                  },
+                ]}
+              >
+                <ThemedText
+                  type="small"
+                  style={{
+                    color: tone === t ? "#FFFFFF" : theme.text,
+                    fontWeight: "600",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {t}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </View>
+        </View>
 
         <View style={styles.section}>
           <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
