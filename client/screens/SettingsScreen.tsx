@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useNavigation } from "@react-navigation/native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -24,6 +25,7 @@ export default function SettingsScreen() {
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
   const { settings, updateSettings } = useApp();
+  const navigation = useNavigation();
 
   const handleUnitChange = (unit: WeightUnit) => {
     updateSettings({ unit });
@@ -219,6 +221,27 @@ export default function SettingsScreen() {
 
         <View style={styles.section}>
           <ThemedText type="small" style={[styles.sectionLabel, { color: theme.textSecondary }]}>
+            Matches
+          </ThemedText>
+          <Card elevation={1} style={styles.sectionCard}>
+            <Pressable
+              onPress={() => navigation.navigate("MatchHistory" as any)}
+              style={({ pressed }) => [
+                styles.historyButton,
+                { opacity: pressed ? 0.6 : 1 }
+              ]}
+            >
+              <View style={styles.historyButtonContent}>
+                <Feather name="list" size={20} color={theme.text} />
+                <ThemedText type="body" style={{ marginLeft: Spacing.md }}>View Match History</ThemedText>
+              </View>
+              <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+            </Pressable>
+          </Card>
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText type="small" style={[styles.sectionLabel, { color: theme.textSecondary }]}>
             About
           </ThemedText>
           <Card elevation={1} style={styles.sectionCard}>
@@ -283,6 +306,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.sm,
+    alignItems: "center",
+  },
+  historyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: Spacing.sm,
+  },
+  historyButtonContent: {
+    flexDirection: "row",
     alignItems: "center",
   },
   switchRow: {

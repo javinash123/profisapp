@@ -14,6 +14,8 @@ import ManualWeightEditModal from "@/screens/ManualWeightEditModal";
 import LoginScreen from "@/screens/LoginScreen";
 import RegisterScreen from "@/screens/RegisterScreen";
 
+import MatchHistoryScreen from "@/screens/MatchHistoryScreen";
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -26,6 +28,7 @@ export type RootStackParamList = {
   WeatherDetails: undefined;
   Settings: undefined;
   ManualWeightEdit: { netIndex: number };
+  MatchHistory: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -92,6 +95,11 @@ export default function RootStackNavigator() {
           headerTitle: "Edit Weight",
           presentation: "modal",
         }}
+      />
+      <Stack.Screen
+        name="MatchHistory"
+        component={MatchHistoryScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

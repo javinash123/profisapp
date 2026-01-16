@@ -32,12 +32,33 @@ export default function EndMatchSummaryScreen() {
   const [match, setMatch] = useState<MatchState | null>(null);
 
   useEffect(() => {
-    if (lastCompletedMatch) {
-      setMatch(lastCompletedMatch);
-    } else {
-      loadLastMatch();
-    }
-  }, [lastCompletedMatch]);
+    const saveMatch = async () => {
+      if (!match) return;
+      try {
+        const baseUrl = "https://da7a3336-bfd3-4ef2-88f2-973b9d4bb439-00-77or596362ye.spock.replit.dev";
+        const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
+        const response = await fetch(`${baseUrl}/api/matches`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            details: {
+              venue: match.config.name,
+              totalWeight: totalWeight,
+              duration: match.config.durationMinutes / 60,
+              nets: match.nets
+            },
+            summary: `Match at ${match.config.name} finished with total weight ${formatWeight(totalWeight, match.config.unit)}`,
+          }),
+        });
+        if (!response.ok) {
+          console.error("Match save failed:", await response.text());
+        }
+      } catch (error) {
+        console.error("Error saving match:", error);
+      }
+    };
+    saveMatch();
+  }, [match]);
 
   React.useLayoutEffect(() => {
     navigation.setOptions({

@@ -66,7 +66,7 @@ export default function OnboardingScreen() {
         ]}
       >
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.header}>
-          <View style={[styles.logoContainer, { backgroundColor: theme.backgroundDefault }]}>
+          <View style={[styles.logoContainer, { backgroundColor: "#1A2332" }]}>
             <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
           </View>
           <ThemedText type="h1" style={styles.title}>

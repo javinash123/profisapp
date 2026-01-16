@@ -2,6 +2,7 @@ import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
+import { connectDB } from "./mongodb";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -168,36 +169,34 @@ function configureExpoAndLanding(app: express.Application) {
 
   log("Serving static Expo files with dynamic manifest routing");
 
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.path.startsWith("/api")) {
-      return next();
-    }
+  // Move static assets BEFORE the manifest handler
+  app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
+  
+  // Only serve static build for specific file requests, NOT as a catch-all root
+  app.use("/static-build", express.static(path.resolve(process.cwd(), "static-build")));
 
-    if (req.path !== "/" && req.path !== "/manifest") {
-      return next();
-    }
-
+  app.get("/manifest", (req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith("/api")) return next();
     const platform = req.header("expo-platform");
     if (platform && (platform === "ios" || platform === "android")) {
       return serveExpoManifest(platform, res);
     }
-
-    if (req.path === "/") {
-      return serveLandingPage({
-        req,
-        res,
-        landingPageTemplate,
-        appName,
-      });
-    }
-
-    next();
+    res.status(404).send("Not found");
   });
 
-  app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
-  app.use(express.static(path.resolve(process.cwd(), "static-build")));
-
-  log("Expo routing: Checking expo-platform header on / and /manifest");
+  app.get("/", (req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith("/api")) return next();
+    const platform = req.header("expo-platform");
+    if (platform && (platform === "ios" || platform === "android")) {
+      return serveExpoManifest(platform, res);
+    }
+    return serveLandingPage({
+      req,
+      res,
+      landingPageTemplate,
+      appName,
+    });
+  });
 }
 
 function setupErrorHandler(app: express.Application) {
@@ -218,23 +217,24 @@ function setupErrorHandler(app: express.Application) {
 }
 
 (async () => {
+  await connectDB();
   setupCors(app);
   setupBodyParsing(app);
   setupRequestLogging(app);
 
   setupAuth(app);
+  
+  await registerRoutes(app);
+  
   configureExpoAndLanding(app);
-
-  const server = await registerRoutes(app);
 
   setupErrorHandler(app);
 
   const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen(
+  app.listen(
     {
       port,
       host: "0.0.0.0",
-      reusePort: true,
     },
     () => {
       log(`express server serving on port ${port}`);
