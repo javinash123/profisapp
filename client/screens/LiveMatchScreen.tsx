@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     width: "100%",
   },
-  weightDisplay: {
+  weightDisplayContent: {
     alignItems: "center",
     gap: 2,
   },

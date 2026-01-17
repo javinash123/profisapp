@@ -29,18 +29,12 @@ export default function App() {
         console.warn("Font loading error:", e);
       } finally {
         setAppIsReady(true);
+        // Hide splash screen immediately when ready
+        await SplashScreen.hideAsync();
       }
     }
     prepare();
   }, []);
-
-  const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
-      setTimeout(async () => {
-        await SplashScreen.hideAsync();
-      }, 500);
-    }
-  }, [appIsReady]);
 
   if (!appIsReady) {
     return null;
@@ -51,7 +45,7 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <AppProvider>
           <SafeAreaProvider>
-            <GestureHandlerRootView style={styles.root} onLayout={onLayoutRootView}>
+            <GestureHandlerRootView style={styles.root}>
               <KeyboardProvider>
                 <NavigationContainer>
                   <RootStackNavigator />

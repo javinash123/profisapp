@@ -50,7 +50,14 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      const baseUrl = "https://da7a3336-bfd3-4ef2-88f2-973b9d4bb439-00-77or596362ye.spock.replit.dev";
+      // Use a safer dynamic base URL
+      const forwardedHost = typeof window !== 'undefined' && window.location ? window.location.host : null;
+      const baseUrl = forwardedHost 
+        ? `${window.location.protocol}//${forwardedHost}`
+        : `https://${process.env.EXPO_PUBLIC_DOMAIN || 'dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev'}`;
+      
+      console.log("Attempting registration at:", `${baseUrl}/api/register`);
+      
       const response = await fetch(`${baseUrl}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

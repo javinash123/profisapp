@@ -22,7 +22,7 @@ export type RootStackParamList = {
   Onboarding: undefined;
   MatchSetup: undefined;
   LiveMatch: undefined;
-  EndMatchSummary: undefined;
+  EndMatchSummary: { matchData?: any } | undefined;
   AlarmManagement: undefined;
   AddEditAlarm: { alarmId?: string };
   WeatherDetails: undefined;

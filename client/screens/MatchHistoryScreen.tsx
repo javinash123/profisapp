@@ -9,11 +9,16 @@ import { Card } from "@/components/Card";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 
+import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 export default function MatchHistoryScreen() {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
 
   useEffect(() => {
     fetchMatches();
@@ -21,7 +26,12 @@ export default function MatchHistoryScreen() {
 
   const fetchMatches = async () => {
     try {
-      const baseUrl = "https://da7a3336-bfd3-4ef2-88f2-973b9d4bb439-00-77or596362ye.spock.replit.dev";
+      const forwardedHost = typeof window !== 'undefined' && window.location ? window.location.host : null;
+      const baseUrl = forwardedHost 
+        ? `${window.location.protocol}//${forwardedHost}`
+        : `https://${process.env.EXPO_PUBLIC_DOMAIN || 'dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev'}`;
+      
+      console.log("Fetching matches from:", `${baseUrl}/api/matches`);
       const response = await fetch(`${baseUrl}/api/matches`);
       if (response.ok) {
         const data = await response.json();
@@ -35,25 +45,27 @@ export default function MatchHistoryScreen() {
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <Card style={styles.card}>
-      <View style={styles.cardHeader}>
-        <ThemedText type="h4">{item.details?.venue || "Unnamed Venue"}</ThemedText>
-        <ThemedText type="small" style={{ color: theme.textSecondary }}>
-          {new Date(item.createdAt).toLocaleDateString()}
-        </ThemedText>
-      </View>
-      <ThemedText style={styles.summary}>{item.summary}</ThemedText>
-      <View style={styles.stats}>
-        <View style={styles.statItem}>
-          <Feather name="anchor" size={16} color={Colors.dark.primary} />
-          <ThemedText style={styles.statText}>{item.details?.totalWeight || 0}kg</ThemedText>
+    <Pressable onPress={() => navigation.navigate("EndMatchSummary", { matchData: item })}>
+      <Card style={styles.card}>
+        <View style={styles.cardHeader}>
+          <ThemedText type="h4">{item.details?.venue || "Unnamed Venue"}</ThemedText>
+          <ThemedText type="small" style={{ color: theme.textSecondary }}>
+            {new Date(item.createdAt).toLocaleDateString()}
+          </ThemedText>
         </View>
-        <View style={styles.statItem}>
-          <Feather name="clock" size={16} color={Colors.dark.primary} />
-          <ThemedText style={styles.statText}>{item.details?.duration || 0}h</ThemedText>
+        <ThemedText style={styles.summary}>{item.summary}</ThemedText>
+        <View style={styles.stats}>
+          <View style={styles.statItem}>
+            <Feather name="anchor" size={16} color={Colors.dark.primary} />
+            <ThemedText style={styles.statText}>{item.details?.totalWeight || 0}kg</ThemedText>
+          </View>
+          <View style={styles.statItem}>
+            <Feather name="clock" size={16} color={Colors.dark.primary} />
+            <ThemedText style={styles.statText}>{item.details?.duration || 0}h</ThemedText>
+          </View>
         </View>
-      </View>
-    </Card>
+      </Card>
+    </Pressable>
   );
 
   if (loading) {

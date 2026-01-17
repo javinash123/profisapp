@@ -32,7 +32,13 @@ export default function LoginScreen() {
     
     setLoading(true);
     try {
-      const baseUrl = "https://da7a3336-bfd3-4ef2-88f2-973b9d4bb439-00-77or596362ye.spock.replit.dev";
+      const forwardedHost = typeof window !== 'undefined' && window.location ? window.location.host : null;
+      const baseUrl = forwardedHost 
+        ? `${window.location.protocol}//${forwardedHost}`
+        : `https://${process.env.EXPO_PUBLIC_DOMAIN || 'dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev'}`;
+      
+      console.log("Attempting login at:", `${baseUrl}/api/login`);
+      
       const response = await fetch(`${baseUrl}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

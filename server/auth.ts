@@ -30,7 +30,10 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        const user = await User.findOne({ username });
+        // Allow login with either username or email
+        const user = await User.findOne({
+          $or: [{ username: username }, { email: username }]
+        });
         if (!user || !(await bcrypt.compare(password, user.password))) {
           return done(null, false);
         }
@@ -53,21 +56,27 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res) => {
     try {
-      console.log("Registration request received:", req.body);
-      const { username, email, password } = req.body;
+      // Body parsing might be nested depending on the client implementation
+      const body = req.body;
+      console.log("Registration request received (Full Body):", JSON.stringify(body, null, 2));
+      
+      const { username, email, password } = body;
       
       if (!username || !email || !password) {
-        return res.status(400).send("Missing required fields");
+        console.log("Validation failed: missing fields", { username, email, hasPassword: !!password });
+        return res.status(400).json({ error: "Missing required fields", received: Object.keys(body) });
       }
 
       const existingUserByUsername = await User.findOne({ username });
       if (existingUserByUsername) {
-        return res.status(400).send("Username already exists");
+        console.log("Registration failed: Username exists", username);
+        return res.status(400).json({ error: "Username already exists" });
       }
 
       const existingUserByEmail = await User.findOne({ email });
       if (existingUserByEmail) {
-        return res.status(400).send("Email already registered");
+        console.log("Registration failed: Email exists", email);
+        return res.status(400).json({ error: "Email already registered" });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -77,18 +86,26 @@ export function setupAuth(app: Express) {
         password: hashedPassword,
       });
       await user.save();
-      console.log("User saved successfully:", user._id);
+      console.log("User saved successfully in MongoDB:", user._id);
 
       req.login(user, (err) => {
         if (err) {
           console.error("Login error after registration:", err);
-          return res.status(500).send("Error logging in after registration");
+          return res.status(500).json({ error: "Error logging in after registration" });
         }
-        res.status(201).json(user);
+        console.log("User logged in successfully after registration");
+        // Don't send the password back
+        const userResponse = {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          createdAt: user.createdAt
+        };
+        res.status(201).json(userResponse);
       });
     } catch (err) {
-      console.error("Registration error:", err);
-      res.status(500).send("Error creating user");
+      console.error("CRITICAL: Registration error:", err);
+      res.status(500).json({ error: "Error creating user" });
     }
   });
 

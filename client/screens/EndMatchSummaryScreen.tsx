@@ -28,14 +28,55 @@ export default function EndMatchSummaryScreen() {
   const { theme } = useTheme();
   const { settings, lastCompletedMatch } = useApp();
   const summaryRef = useRef<View>(null);
-
+  
   const [match, setMatch] = useState<MatchState | null>(null);
+
+  // Use a ref to track if we've already tried to load/save to prevent extra renders/calls
+  const hasInitialized = useRef(false);
+
+  const route = React.useMemo(() => {
+    try {
+      // @ts-ignore
+      return navigation.getState().routes.find(r => r.name === "EndMatchSummary");
+    } catch (e) {
+      return null;
+    }
+  }, [navigation]);
+
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    
+    const initializeMatch = async () => {
+      // If we have matchData in route params, use it
+      const params = route?.params as any;
+      if (params?.matchData) {
+        setMatch(params.matchData);
+        hasInitialized.current = true;
+        return;
+      }
+      
+      const history = await getMatchHistory();
+      if (history.length > 0) {
+        setMatch(history[0]);
+      }
+      hasInitialized.current = true;
+    };
+
+    initializeMatch();
+  }, [route]);
 
   useEffect(() => {
     const saveMatch = async () => {
       if (!match) return;
+      // Don't save if it's a historical match (has an _id from the database)
+      if ((match as any)._id) return;
+      
       try {
-        const baseUrl = "https://da7a3336-bfd3-4ef2-88f2-973b9d4bb439-00-77or596362ye.spock.replit.dev";
+        const forwardedHost = typeof window !== 'undefined' && window.location ? window.location.host : null;
+        const baseUrl = forwardedHost 
+          ? `${window.location.protocol}//${forwardedHost}`
+          : `https://${process.env.EXPO_PUBLIC_DOMAIN || 'dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev'}`;
+        
         const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
         const response = await fetch(`${baseUrl}/api/matches`, {
           method: "POST",
@@ -57,6 +98,7 @@ export default function EndMatchSummaryScreen() {
         console.error("Error saving match:", error);
       }
     };
+    
     saveMatch();
   }, [match]);
 
@@ -73,13 +115,6 @@ export default function EndMatchSummaryScreen() {
       ),
     });
   }, [navigation, theme, match]);
-
-  const loadLastMatch = async () => {
-    const history = await getMatchHistory();
-    if (history.length > 0) {
-      setMatch(history[0]);
-    }
-  };
 
   const handleShare = async () => {
     if (!match || !summaryRef.current) return;
@@ -125,6 +160,8 @@ export default function EndMatchSummaryScreen() {
     navigation.replace("MatchSetup");
   };
 
+  const totalWeight = match ? match.nets.reduce((sum, net) => sum + net.weight, 0) : 0;
+
   if (!match) {
     return (
       <ThemedView style={styles.container}>
@@ -134,8 +171,6 @@ export default function EndMatchSummaryScreen() {
       </ThemedView>
     );
   }
-
-  const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
 
   return (
     <ThemedView style={styles.container}>
