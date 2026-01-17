@@ -28,17 +28,29 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy({ usernameField: 'username', passwordField: 'password' }, async (username, password, done) => {
       try {
+        console.log("Login attempt for:", username);
         // Allow login with either username or email
         const user = await User.findOne({
           $or: [{ username: username }, { email: username }]
         });
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-          return done(null, false);
+        
+        if (!user) {
+          console.log("User not found:", username);
+          return done(null, false, { message: "Invalid username or password" });
         }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+          console.log("Password mismatch for:", username);
+          return done(null, false, { message: "Invalid username or password" });
+        }
+
+        console.log("Login successful for:", username);
         return done(null, user);
       } catch (err) {
+        console.error("LocalStrategy error:", err);
         return done(err);
       }
     }),
@@ -56,7 +68,6 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res) => {
     try {
-      // Body parsing might be nested depending on the client implementation
       const body = req.body;
       console.log("Registration request received (Full Body):", JSON.stringify(body, null, 2));
       
@@ -64,25 +75,27 @@ export function setupAuth(app: Express) {
       
       if (!username || !email || !password) {
         console.log("Validation failed: missing fields", { username, email, hasPassword: !!password });
-        return res.status(400).json({ error: "Missing required fields", received: Object.keys(body) });
+        return res.status(400).json({ error: "Missing required fields" });
       }
 
-      const existingUserByUsername = await User.findOne({ username });
-      if (existingUserByUsername) {
-        console.log("Registration failed: Username exists", username);
-        return res.status(400).json({ error: "Username already exists" });
-      }
+      // Check if user already exists
+      const existingUser = await User.findOne({ 
+        $or: [
+          { username: username.toLowerCase() }, 
+          { email: email.toLowerCase() }
+        ] 
+      });
 
-      const existingUserByEmail = await User.findOne({ email });
-      if (existingUserByEmail) {
-        console.log("Registration failed: Email exists", email);
-        return res.status(400).json({ error: "Email already registered" });
+      if (existingUser) {
+        const field = existingUser.username.toLowerCase() === username.toLowerCase() ? "Username" : "Email";
+        console.log(`Registration failed: ${field} exists`, username);
+        return res.status(400).json({ error: `${field} already exists` });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
       const user = new User({
-        username,
-        email,
+        username: username.toLowerCase(),
+        email: email.toLowerCase(),
         password: hashedPassword,
       });
       await user.save();
@@ -93,15 +106,11 @@ export function setupAuth(app: Express) {
           console.error("Login error after registration:", err);
           return res.status(500).json({ error: "Error logging in after registration" });
         }
-        console.log("User logged in successfully after registration");
-        // Don't send the password back
-        const userResponse = {
+        res.status(201).json({
           _id: user._id,
           username: user.username,
           email: user.email,
-          createdAt: user.createdAt
-        };
-        res.status(201).json(userResponse);
+        });
       });
     } catch (err) {
       console.error("CRITICAL: Registration error:", err);
@@ -109,8 +118,25 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.json(req.user);
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) {
+        console.error("Auth error:", err);
+        return res.status(500).json({ message: "Internal server error" });
+      }
+      if (!user) {
+        console.log("Login failed info:", info);
+        return res.status(401).json({ message: info?.message || "Invalid username or password" });
+      }
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login session error:", err);
+          return res.status(500).json({ message: "Error establishing session" });
+        }
+        console.log("Session established for:", user.username);
+        return res.json(user);
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {

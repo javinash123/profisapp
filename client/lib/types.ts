@@ -17,6 +17,7 @@ export interface MatchConfig {
 
 export interface MatchState {
   id: string;
+  dbId?: string;
   config: MatchConfig;
   startTime: number;
   endTime?: number;

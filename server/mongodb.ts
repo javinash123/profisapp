@@ -28,7 +28,14 @@ const MatchSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   details: { type: mongoose.Schema.Types.Mixed, required: true },
   summary: { type: String },
-  createdAt: { type: Date, default: Date.now }
+  status: { type: String, enum: ['active', 'completed'], default: 'active' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+MatchSchema.pre('save', function(this: any, next) {
+  this.updatedAt = new Date();
+  next();
 });
 
 export const User = mongoose.models.User || mongoose.model('User', UserSchema);

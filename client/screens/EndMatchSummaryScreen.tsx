@@ -3,7 +3,7 @@ import { View, StyleSheet, Pressable, ScrollView, Share, Platform } from "react-
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { captureRef } from "react-native-view-shot";
@@ -25,6 +25,7 @@ export default function EndMatchSummaryScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute();
   const { theme } = useTheme();
   const { settings, lastCompletedMatch } = useApp();
   const summaryRef = useRef<View>(null);
@@ -34,53 +35,63 @@ export default function EndMatchSummaryScreen() {
   // Use a ref to track if we've already tried to load/save to prevent extra renders/calls
   const hasInitialized = useRef(false);
 
-  const route = React.useMemo(() => {
-    try {
-      // @ts-ignore
-      return navigation.getState().routes.find(r => r.name === "EndMatchSummary");
-    } catch (e) {
-      return null;
-    }
-  }, [navigation]);
-
   useEffect(() => {
     if (hasInitialized.current) return;
     
     const initializeMatch = async () => {
       // If we have matchData in route params, use it
-      const params = route?.params as any;
+      const params = route.params as any;
       if (params?.matchData) {
         setMatch(params.matchData);
         hasInitialized.current = true;
         return;
       }
+
+      // If we have a local lastCompletedMatch, use it
+      if (lastCompletedMatch) {
+        setMatch(lastCompletedMatch);
+        hasInitialized.current = true;
+        return;
+      }
       
-      const history = await getMatchHistory();
-      if (history.length > 0) {
-        setMatch(history[0]);
+      try {
+        const history = await getMatchHistory();
+        if (history.length > 0) {
+          setMatch(history[0]);
+        }
+      } catch (e) {
+        console.error("Error loading history:", e);
       }
       hasInitialized.current = true;
     };
 
     initializeMatch();
-  }, [route]);
+  }, [route.params, lastCompletedMatch]);
+
+  const [hasSaved, setHasSaved] = useState(false);
 
   useEffect(() => {
     const saveMatch = async () => {
-      if (!match) return;
-      // Don't save if it's a historical match (has an _id from the database)
-      if ((match as any)._id) return;
+      if (!match || hasSaved) return;
+      // Don't save if it's already in DB
+      if ((match as any)._id || (match as any).dbId) {
+        setHasSaved(true);
+        return;
+      }
       
       try {
-        const forwardedHost = typeof window !== 'undefined' && window.location ? window.location.host : null;
-        const baseUrl = forwardedHost 
-          ? `${window.location.protocol}//${forwardedHost}`
-          : `https://${process.env.EXPO_PUBLIC_DOMAIN || 'dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev'}`;
+        setHasSaved(true);
+        const domain = process.env.EXPO_PUBLIC_DOMAIN || '43dca1a0-0ad5-4479-bbd3-f80ea6abf018-00-19wz613fani68.spock.replit.dev';
+        const baseUrl = `https://${domain}`;
+        const apiBaseUrl = baseUrl.includes(':5000') ? baseUrl : `${baseUrl}:5000`;
         
         const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
-        const response = await fetch(`${baseUrl}/api/matches`, {
+        const response = await fetch(`${apiBaseUrl}/api/matches`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
           body: JSON.stringify({
             details: {
               venue: match.config.name,
@@ -89,10 +100,14 @@ export default function EndMatchSummaryScreen() {
               nets: match.nets
             },
             summary: `Match at ${match.config.name} finished with total weight ${formatWeight(totalWeight, match.config.unit)}`,
+            status: 'completed'
           }),
         });
         if (!response.ok) {
-          console.error("Match save failed:", await response.text());
+          const errorText = await response.text();
+          console.error("Match save failed:", response.status, errorText);
+        } else {
+          console.log("Match saved successfully to server");
         }
       } catch (error) {
         console.error("Error saving match:", error);
@@ -100,7 +115,7 @@ export default function EndMatchSummaryScreen() {
     };
     
     saveMatch();
-  }, [match]);
+  }, [match, hasSaved]);
 
   React.useLayoutEffect(() => {
     navigation.setOptions({

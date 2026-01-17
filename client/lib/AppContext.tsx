@@ -10,7 +10,7 @@ interface AppContextType {
   currentMatch: MatchState | null;
   lastCompletedMatch: MatchState | null;
   startMatch: (config: MatchConfig) => Promise<void>;
-  endMatch: () => Promise<void>;
+  endMatch: () => Promise<MatchState | null>;
   updateNetWeight: (netIndex: number, delta: number) => void;
   setNetWeight: (netIndex: number, weight: number) => void;
   updateMatchUnit: (unit: "lb/oz" | "kg/g") => void;
@@ -84,11 +84,78 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     setCurrentMatch(match);
     await Storage.saveCurrentMatch(match);
+
+    // Auto-save to database
+    try {
+      const forwardedHost = typeof window !== 'undefined' && window.location ? window.location.host : null;
+      const baseUrl = forwardedHost 
+        ? `${window.location.protocol}//${forwardedHost}`
+        : `https://${process.env.EXPO_PUBLIC_DOMAIN || '43dca1a0-0ad5-4479-bbd3-f80ea6abf018-00-19wz613fani68.spock.replit.dev'}`;
+      
+      // Always ensure we talk to the backend on port 5000 in development
+      const apiBaseUrl = baseUrl.includes(':5000') ? baseUrl : `${baseUrl}:5000`;
+
+      const response = await fetch(`${apiBaseUrl}/api/matches`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          details: {
+            venue: config.name,
+            totalWeight: 0,
+            duration: config.durationMinutes / 60,
+            nets: nets,
+            pegNumber: config.pegNumber
+          },
+          summary: `Match at ${config.name} started`,
+          status: 'active'
+        }),
+      });
+      if (response.ok) {
+        const savedMatch = await response.json();
+        setCurrentMatch(prev => prev ? { ...prev, dbId: savedMatch._id } : null);
+      }
+    } catch (error) {
+      console.error("Initial match save failed:", error);
+    }
     
     if (settings.haptics) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   };
+
+  const syncMatchToDb = useCallback(async (match: MatchState) => {
+    if (!match.dbId) return;
+    try {
+      const forwardedHost = typeof window !== 'undefined' && window.location ? window.location.host : null;
+      const baseUrl = forwardedHost 
+        ? `${window.location.protocol}//${forwardedHost}`
+        : `https://${process.env.EXPO_PUBLIC_DOMAIN || '43dca1a0-0ad5-4479-bbd3-f80ea6abf018-00-19wz613fani68.spock.replit.dev'}`;
+      
+      // Always ensure we talk to the backend on port 5000 in development
+      const apiBaseUrl = baseUrl.includes(':5000') ? baseUrl : `${baseUrl}:5000`;
+
+      const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
+      await fetch(`${apiBaseUrl}/api/matches/${match.dbId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          details: {
+            venue: match.config.name,
+            totalWeight: totalWeight,
+            duration: match.config.durationMinutes / 60,
+            nets: match.nets,
+            pegNumber: match.config.pegNumber
+          },
+          summary: match.isActive 
+            ? `Live match at ${match.config.name}` 
+            : `Match at ${match.config.name} finished`,
+          status: match.isActive ? 'active' : 'completed'
+        }),
+      });
+    } catch (error) {
+      console.error("Match sync failed:", error);
+    }
+  }, []);
 
   const endMatch = async () => {
     if (currentMatch) {
@@ -99,13 +166,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
       setLastCompletedMatch(completedMatch);
       await Storage.saveMatchToHistory(completedMatch);
+      
+      // Sync completion to DB
+      await syncMatchToDb(completedMatch);
+
       setCurrentMatch(null);
       await Storage.saveCurrentMatch(null);
       
       if (settings.haptics) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
+      return completedMatch;
     }
+    return null;
   };
 
   const updateNetWeight = useCallback((netIndex: number, delta: number) => {
@@ -114,22 +187,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const newNets = [...prev.nets];
       const newWeight = Math.max(0, newNets[netIndex].weight + delta);
       newNets[netIndex] = { ...newNets[netIndex], weight: newWeight };
-      return { ...prev, nets: newNets };
+      const updated = { ...prev, nets: newNets };
+      
+      // Throttle/debounce this in a real app, but for now:
+      syncMatchToDb(updated);
+      
+      return updated;
     });
     
     if (settings.haptics) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-  }, [settings.haptics]);
+  }, [settings.haptics, syncMatchToDb]);
 
   const setNetWeight = useCallback((netIndex: number, weight: number) => {
     setCurrentMatch((prev) => {
       if (!prev) return prev;
       const newNets = [...prev.nets];
       newNets[netIndex] = { ...newNets[netIndex], weight: Math.max(0, weight) };
-      return { ...prev, nets: newNets };
+      const updated = { ...prev, nets: newNets };
+      
+      syncMatchToDb(updated);
+      
+      return updated;
     });
-  }, []);
+  }, [syncMatchToDb]);
 
   const updateMatchUnit = useCallback((unit: "lb/oz" | "kg/g") => {
     setCurrentMatch((prev) => {

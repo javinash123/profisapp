@@ -81,9 +81,20 @@ export default function MatchSetupScreen() {
         </View>
 
         <View style={styles.section}>
-          <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
-            Match Name
-          </ThemedText>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm }}>
+            <ThemedText type="small" style={[styles.label, { color: theme.textSecondary, marginBottom: 0 }]}>
+              Match Name
+            </ThemedText>
+            <Pressable 
+              onPress={() => navigation.navigate("MatchHistory")}
+              style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1, flexDirection: 'row', alignItems: 'center' }]}
+            >
+              <Feather name="clock" size={14} color={Colors.dark.primary} />
+              <ThemedText type="small" style={{ color: Colors.dark.primary, marginLeft: 4, fontWeight: '600' }}>
+                History
+              </ThemedText>
+            </Pressable>
+          </View>
           <TextInput
             style={[
               styles.textInput,

@@ -83,9 +83,9 @@ export default function LiveMatchScreen() {
 
   const handleMatchEnd = useCallback(async () => {
     try {
-      await endMatch();
+      const finalMatch = await endMatch();
       setTimeout(() => {
-        navigation.replace("EndMatchSummary");
+        navigation.replace("EndMatchSummary", { matchData: finalMatch });
       }, 100);
     } catch (error) {
       console.error("Error ending match:", error);

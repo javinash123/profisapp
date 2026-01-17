@@ -32,7 +32,12 @@ export default function MatchHistoryScreen() {
         : `https://${process.env.EXPO_PUBLIC_DOMAIN || 'dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev'}`;
       
       console.log("Fetching matches from:", `${baseUrl}/api/matches`);
-      const response = await fetch(`${baseUrl}/api/matches`);
+      const response = await fetch(`${baseUrl}/api/matches`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setMatches(data);
@@ -57,11 +62,11 @@ export default function MatchHistoryScreen() {
         <View style={styles.stats}>
           <View style={styles.statItem}>
             <Feather name="anchor" size={16} color={Colors.dark.primary} />
-            <ThemedText style={styles.statText}>{item.details?.totalWeight || 0}kg</ThemedText>
+            <ThemedText style={styles.statText}>{item.details?.totalWeight ? (item.details.totalWeight / 453.592).toFixed(1) : 0}lb</ThemedText>
           </View>
           <View style={styles.statItem}>
             <Feather name="clock" size={16} color={Colors.dark.primary} />
-            <ThemedText style={styles.statText}>{item.details?.duration || 0}h</ThemedText>
+            <ThemedText style={styles.statText}>{item.details?.duration ? item.details.duration.toFixed(1) : 0}h</ThemedText>
           </View>
         </View>
       </Card>
