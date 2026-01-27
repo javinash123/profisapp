@@ -3,18 +3,21 @@ import { createServer, type Server } from "node:http";
 import { Match } from "./mongodb";
 
 export async function registerRoutes(app: Express): Promise<void> {
-  app.get("/api/matches", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  // Use .all to ensure we catch all methods for logging/auth before specific routes if needed
+  // but here we just register the specific endpoints
+  
+  app.get("/matches", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     try {
       const matches = await Match.find({ userId: (req.user as any)._id }).sort({ createdAt: -1 });
       res.json(matches);
     } catch (err) {
-      res.status(500).send("Error fetching matches");
+      res.status(500).json({ message: "Error fetching matches" });
     }
   });
 
-  app.post("/api/matches", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.post("/matches", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     try {
       const match = new Match({
         userId: (req.user as any)._id,
@@ -23,15 +26,16 @@ export async function registerRoutes(app: Express): Promise<void> {
         status: req.body.status || 'active'
       });
       await match.save();
+      console.log("Match saved successfully to MongoDB:", match._id);
       res.status(201).json(match);
     } catch (err) {
-      console.error("Error saving match:", err);
-      res.status(500).send("Error saving match");
+      console.error("Error saving match to MongoDB:", err);
+      res.status(500).json({ message: "Error saving match" });
     }
   });
 
-  app.patch("/api/matches/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.patch("/matches/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     try {
       const match = await Match.findOneAndUpdate(
         { _id: req.params.id, userId: (req.user as any)._id },
@@ -42,11 +46,11 @@ export async function registerRoutes(app: Express): Promise<void> {
         },
         { new: true }
       );
-      if (!match) return res.status(404).send("Match not found");
+      if (!match) return res.status(404).json({ message: "Match not found" });
       res.json(match);
     } catch (err) {
-      console.error("Error updating match:", err);
-      res.status(500).send("Error updating match");
+      console.error("Error updating match in MongoDB:", err);
+      res.status(500).json({ message: "Error updating match" });
     }
   });
 }

@@ -201,8 +201,10 @@ export default function LiveMatchScreen() {
   if (!currentMatch) return null;
 
   const netCount = currentMatch.nets.length;
-  const netWidth = SCREEN_WIDTH - Spacing.lg * 2;
+  const netWidth = (SCREEN_WIDTH - Spacing.lg * 3) / 2;
   const netHeight = 180;
+
+  const GRAMS_PER_OZ = 28.3495;
 
   const handleVoiceCommand = useCallback(() => {
     if (isListening) {
@@ -240,80 +242,98 @@ export default function LiveMatchScreen() {
         contentContainerStyle={styles.netsGrid}
         showsVerticalScrollIndicator={false}
       >
-        {currentMatch.nets.map((net, index) => {
-          const percentage = net.capacity ? (net.weight / net.capacity) * 100 : 0;
-          const progressColor = getProgressColor(percentage, {
-            success: Colors.dark.success,
-            warning: Colors.dark.warning,
-            error: Colors.dark.error,
-          });
-          const lb = Math.floor(net.weight / GRAMS_PER_LB);
-          const oz = Math.round((net.weight % GRAMS_PER_LB) / 28.3495);
+        <View style={styles.netsGridInner}>
+          {currentMatch.nets.map((net, index) => {
+            const percentage = net.capacity ? (net.weight / net.capacity) * 100 : 0;
+            const progressColor = getProgressColor(percentage, {
+              success: Colors.dark.success,
+              warning: Colors.dark.warning,
+              error: Colors.dark.error,
+            });
+            const lb = Math.floor(net.weight / GRAMS_PER_LB);
+            const oz = Math.round((net.weight % GRAMS_PER_LB) / GRAMS_PER_OZ);
 
-          return (
-            <Animated.View
-              key={index}
-              entering={FadeIn.delay(index * 50)}
-              style={[styles.netTile, { width: netWidth, height: netHeight, backgroundColor: theme.backgroundDefault }]}
-            >
-              <View style={styles.netHeader}>
-                <ThemedText type="small" style={{ color: theme.textSecondary }}>Net {index + 1}</ThemedText>
-                {!isLocked && (
-                  <Pressable onPress={() => {
-                    setEditingNetIndex(index);
-                    setEditLb(lb.toString());
-                    setEditOz(oz.toString());
-                  }}>
-                    <Feather name="edit-2" size={14} color={theme.textSecondary} />
-                  </Pressable>
-                )}
-              </View>
+            return (
+              <Animated.View
+                key={index}
+                entering={FadeIn.delay(index * 50)}
+                style={[styles.netTile, { width: netWidth, height: netHeight, backgroundColor: theme.backgroundDefault }]}
+              >
+                <View style={styles.netHeader}>
+                  <ThemedText type="small" style={{ color: theme.textSecondary }}>Net {index + 1}</ThemedText>
+                  {!isLocked && (
+                    <Pressable onPress={() => {
+                      setEditingNetIndex(index);
+                      setEditLb(lb.toString());
+                      setEditOz(oz.toString());
+                    }}>
+                      <Feather name="edit-2" size={14} color={theme.textSecondary} />
+                    </Pressable>
+                  )}
+                </View>
 
-              <View style={styles.netContent}>
-                <View style={styles.controlGroup}>
-                  <Pressable
-                    onPress={() => !isLocked && setNetWeight(index, Math.max(0, net.weight - GRAMS_PER_LB))}
-                    disabled={isLocked || net.weight < GRAMS_PER_LB}
-                    style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < GRAMS_PER_LB ? 0.4 : 1 }]}
-                  >
-                    <Feather name="minus" size={24} color={theme.text} />
-                  </Pressable>
-                  
+                <View style={styles.netContent}>
                   <View style={styles.weightDisplay}>
                     <ThemedText style={styles.controlValue}>{lb}</ThemedText>
-                    <ThemedText type="small" style={{ color: theme.textSecondary }}>lb</ThemedText>
-                    <ThemedText style={[styles.controlValue, { marginLeft: 12 }]}>{oz}</ThemedText>
-                    <ThemedText type="small" style={{ color: theme.textSecondary }}>oz</ThemedText>
+                    <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 4 }}>lb</ThemedText>
+                    <ThemedText style={[styles.controlValue, { marginLeft: 8 }]}>{oz}</ThemedText>
+                    <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: 4 }}>oz</ThemedText>
                   </View>
 
-                  <Pressable
-                    onPress={() => !isLocked && setNetWeight(index, net.weight + GRAMS_PER_LB)}
-                    disabled={isLocked}
-                    style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 }]}
-                  >
-                    <Feather name="plus" size={24} color={theme.text} />
-                  </Pressable>
-                </View>
-              </View>
+                  <View style={styles.controlGroup}>
+                    <View style={styles.controlGroupRow}>
+                      <Pressable
+                        onPress={() => !isLocked && setNetWeight(index, Math.max(0, net.weight - GRAMS_PER_LB))}
+                        disabled={isLocked || net.weight < GRAMS_PER_LB}
+                        style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < GRAMS_PER_LB ? 0.4 : 1 }]}
+                      >
+                        <Feather name="minus" size={20} color={theme.text} />
+                      </Pressable>
+                      <ThemedText type="caption" style={{ color: theme.textSecondary }}>LB</ThemedText>
+                      <Pressable
+                        onPress={() => !isLocked && setNetWeight(index, net.weight + GRAMS_PER_LB)}
+                        disabled={isLocked}
+                        style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 }]}
+                      >
+                        <Feather name="plus" size={20} color={theme.text} />
+                      </Pressable>
+                    </View>
 
-              {net.capacity ? (
-                <View style={styles.progressContainer}>
-                  <View style={styles.capacityLabel}>
-                    <ThemedText type="caption" style={{ color: theme.textSecondary }}>{lb}lb / {Math.round(net.capacity / GRAMS_PER_LB)}lb</ThemedText>
-                    <ThemedText type="caption" style={{ color: progressColor, fontWeight: "600" }}>{Math.round(percentage)}%</ThemedText>
-                  </View>
-                  <View style={[styles.progressBar, { backgroundColor: theme.backgroundTertiary }]}>
-                    <View style={[styles.progressFill, { width: `${Math.min(percentage, 100)}%`, backgroundColor: progressColor }]} />
+                    <View style={styles.controlGroupRow}>
+                      <Pressable
+                        onPress={() => !isLocked && setNetWeight(index, Math.max(0, net.weight - GRAMS_PER_OZ))}
+                        disabled={isLocked || net.weight < GRAMS_PER_OZ}
+                        style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < GRAMS_PER_OZ ? 0.4 : 1 }]}
+                      >
+                        <Feather name="minus" size={20} color={theme.text} />
+                      </Pressable>
+                      <ThemedText type="caption" style={{ color: theme.textSecondary }}>OZ</ThemedText>
+                      <Pressable
+                        onPress={() => !isLocked && setNetWeight(index, net.weight + GRAMS_PER_OZ)}
+                        disabled={isLocked}
+                        style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 }]}
+                      >
+                        <Feather name="plus" size={20} color={theme.text} />
+                      </Pressable>
+                    </View>
                   </View>
                 </View>
-              ) : null}
-            </Animated.View>
-          );
-        })}
+
+                {net.capacity ? (
+                  <View style={styles.progressContainer}>
+                    <View style={[styles.progressBar, { backgroundColor: theme.backgroundTertiary }]}>
+                      <View style={[styles.progressFill, { width: `${Math.min(percentage, 100)}%`, backgroundColor: progressColor }]} />
+                    </View>
+                  </View>
+                ) : null}
+              </Animated.View>
+            );
+          })}
+        </View>
 
         <Animated.View
           entering={FadeIn.delay(netCount * 50)}
-          style={[styles.netTile, { width: netWidth, height: 100, backgroundColor: theme.backgroundDefault, justifyContent: 'center' }]}
+          style={[styles.netTile, { width: SCREEN_WIDTH - Spacing.lg * 2, height: 100, backgroundColor: theme.backgroundDefault, justifyContent: 'center' }]}
         >
           <View style={[styles.controlRow, { paddingHorizontal: Spacing.md, width: '100%', justifyContent: 'space-between' }]}>
             <ThemedText type="h4" style={{ color: theme.textSecondary }}>Total Fish</ThemedText>
@@ -339,14 +359,6 @@ export default function LiveMatchScreen() {
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
-        <View style={styles.statsSummary}>
-          <View style={styles.statBox}>
-            <Feather name="layers" size={16} color={Colors.dark.primary} />
-            <ThemedText type="small" style={{ marginLeft: 8, color: theme.textSecondary }}>
-              Fish Count: {totalFish}
-            </ThemedText>
-          </View>
-        </View>
         <View style={[styles.totalCard, { backgroundColor: theme.backgroundDefault }]}>
           <View style={styles.totalContent}>
             <ThemedText type="small" style={{ color: theme.textSecondary }}>Total Weight</ThemedText>
@@ -437,9 +449,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: 150,
   },
+  netsGridInner: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
   netTile: {
     borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
+    padding: Spacing.md,
     marginBottom: Spacing.lg,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
@@ -448,29 +465,36 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xs,
   },
   netContent: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
   },
   controlGroup: {
+    width: '100%',
+    gap: Spacing.xs,
+  },
+  controlGroupRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    width: '100%',
   },
   weightDisplay: {
     flexDirection: "row",
     alignItems: "baseline",
+    marginBottom: Spacing.sm,
   },
   controlValue: {
-    fontSize: 42,
+    fontSize: 28,
     fontWeight: "700",
   },
   controlButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -25,12 +25,13 @@ declare module "http" {
 
 function setupCors(app: express.Application | express.Router) {
   app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
+    const origin = req.header("Origin") || "*";
+    res.header("Access-Control-Allow-Origin", origin);
     res.header(
       "Access-Control-Allow-Methods",
-      "GET, POST, PUT, DELETE, OPTIONS",
+      "GET, POST, PUT, PATCH, DELETE, OPTIONS",
     );
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, expo-platform");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, expo-platform, Accept");
     res.header("Access-Control-Allow-Credentials", "true");
 
     if (req.method === "OPTIONS") {
@@ -212,21 +213,50 @@ function setupErrorHandler(app: express.Application | express.Router) {
   setupRequestLogging(apiRouter);
   setupAuth(apiRouter);
   await registerRoutes(apiRouter as any);
-  
-  // Use the API router at /api prefix within BASE_PATH
-  app.use(`${BASE_PATH}`, apiRouter);
 
-  // Configure Expo Landing Page at BASE_PATH
   const mainRouter = express.Router();
-  configureExpoAndLanding(mainRouter);
-  app.use(`${BASE_PATH}`, mainRouter);
+  
+  // IMPORTANT: configureExpoAndLanding uses app.get("/") and app.get("/manifest")
+  // which can catch everything if not careful. We must ensure it doesn't intercept /api
+  const expoRouter = express.Router();
+  configureExpoAndLanding(expoRouter);
+  
+  // CORS configuration to allow pegslam.com
+  app.use((req, res, next) => {
+    const origin = req.header("Origin") || "*";
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    );
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, expo-platform, Accept, Cookie");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Expose-Headers", "Set-Cookie");
 
-  // Catch-all route handler for non-API requests
-  app.get("*", (req: Request, res: Response, next: NextFunction) => {
-    if (req.path.startsWith(`${BASE_PATH}/api`) || req.path.startsWith("/api")) {
-      return res.status(404).json({ message: "API endpoint not found" });
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
     }
     next();
+  });
+
+  // Use absolute path for API routes to match client expectations
+  app.use(`/api`, apiRouter);
+  
+  // Catch-all for /api/* that didn't match anything in apiRouter
+  app.use(`/api`, (req: Request, res: Response) => {
+    console.log("404 API Request (Fallback):", req.method, req.originalUrl);
+    res.status(404).json({ 
+      message: `API endpoint not found: ${req.originalUrl}`,
+      path: req.originalUrl,
+      method: req.method
+    });
+  });
+
+  app.use(`/`, (req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    expoRouter(req, res, next);
   });
 
   setupErrorHandler(app);

@@ -149,7 +149,11 @@ export function setupAuth(app: Express | Router) {
   });
 
   (app as any).get("/api/user", (req: any, res: any) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
     res.json(req.user);
+  });
+
+  (app as any).get("/api/check-auth", (req: any, res: any) => {
+    res.json({ authenticated: req.isAuthenticated(), user: req.user });
   });
 }

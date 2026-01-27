@@ -87,11 +87,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Auto-save to database
     try {
-      const apiBaseUrl = "https://pegslam.com/pegpro";
-
-      const response = await fetch(`${apiBaseUrl}/api/matches`, {
+      const apiPath = "/api/matches";
+      console.log("Starting match save to:", apiPath);
+      
+      const response = await fetch(apiPath, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         credentials: "include",
         body: JSON.stringify({
           details: {
@@ -105,12 +109,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
           status: 'active'
         }),
       });
+      
+      console.log("Match save status:", response.status);
+      const responseText = await response.text();
+      console.log("Match save response text:", responseText);
+
       if (response.ok) {
-        const savedMatch = await response.json();
-        setCurrentMatch(prev => prev ? { ...prev, dbId: savedMatch._id } : null);
+        try {
+          const savedMatch = JSON.parse(responseText);
+          setCurrentMatch(prev => prev ? { ...prev, dbId: savedMatch._id } : null);
+          console.log("Match saved successfully with ID:", savedMatch._id);
+        } catch (e: any) {
+          console.error("Failed to parse match save JSON error:", e.message);
+        }
+      } else {
+        console.error("Match save failed with status:", response.status, responseText);
       }
     } catch (error) {
-      console.error("Initial match save failed:", error);
+      console.error("Initial match save failed with error details:", error instanceof Error ? error.message : String(error));
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+         console.error("Network error detected - possible CORS or connectivity issue");
+      }
     }
     
     if (settings.haptics) {
@@ -121,12 +140,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const syncMatchToDb = useCallback(async (match: MatchState) => {
     if (!match.dbId) return;
     try {
-      const apiBaseUrl = "https://pegslam.com/pegpro";
-
       const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
-      await fetch(`${apiBaseUrl}/api/matches/${match.dbId}`, {
+      const response = await fetch(`/api/matches/${match.dbId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         credentials: "include",
         body: JSON.stringify({
           details: {
@@ -142,6 +162,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           status: match.isActive ? 'active' : 'completed'
         }),
       });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Match sync failed with status:", response.status, errorText);
+      }
     } catch (error) {
       console.error("Match sync failed:", error);
     }
