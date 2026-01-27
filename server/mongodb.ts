@@ -1,4 +1,8 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+// Load environment variables as early as possible
+dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -33,8 +37,8 @@ const MatchSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-MatchSchema.pre('save', function(this: any, next) {
-  this.updatedAt = new Date();
+MatchSchema.pre('save', function(next: any) {
+  (this as any).updatedAt = new Date();
   next();
 });
 

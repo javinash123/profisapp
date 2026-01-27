@@ -1,0 +1,55 @@
+ error TS2833: Cannot find namespace 'express'. Did you mean 'Express'?
+
+9 export function setupAuth(app: Express | express.Router) {
+                                           ~~~~~~~
+
+server/index.ts:165:7 - error TS2769: No overload matches this call.
+  Overload 1 of 3, '(...handlers: RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>[]): Router', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+  Overload 2 of 3, '(...handlers: RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>[]): Router', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+  Overload 3 of 3, '(path: PathParams, subApplication: Application<Record<string, any>>): Router', gave the following error.
+    Argument of type 'RequestHandler<Response<any, Record<string, any>>>' is not assignable to parameter of type 'Application<Record<string, any>>'.
+      Type 'RequestHandler<Response<any, Record<string, any>>>' is missing the following properties from type 'Application<Record<string, any>>': init, defaultConfiguration, engine, set, and 63 more.
+
+165   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
+          ~~~
+
+
+server/index.ts:166:7 - error TS2769: No overload matches this call.
+  Overload 1 of 3, '(...handlers: RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>[]): Router', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'RequestHandler<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+  Overload 2 of 3, '(...handlers: RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>[]): Router', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type 'RequestHandlerParams<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+  Overload 3 of 3, '(path: PathParams, subApplication: Application<Record<string, any>>): Router', gave the following error.
+    Argument of type 'RequestHandler<Response<any, Record<string, any>>>' is not assignable to parameter of type 'Application<Record<string, any>>'.
+      Type 'RequestHandler<Response<any, Record<string, any>>>' is missing the following properties from type 'Application<Record<string, any>>': init, defaultConfiguration, engine, set, and 63 more.
+
+166   app.use("/static-build", express.static(path.resolve(process.cwd(), "static-build")));
+          ~~~
+
+
+server/index.ts:168:24 - error TS2345: Argument of type '(req: Request, res: Response, next: NextFunction) => void | express.Response<any, Record<string, any>>' is not assignable to parameter of type 'Application<Record<string, any>>'.
+  Type '(req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>, res: Response<any, Record<string, any>>, next: NextFunction) => void | Response<...>' is missing the following properties from type 'Application<Record<string, any>>': init, defaultConfiguration, engine, set, and 63 more.
+
+168   app.get("/manifest", (req: Request, res: Response, next: NextFunction) => {
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+server/index.ts:177:16 - error TS2345: Argument of type '(req: Request, res: Response, next: NextFunction) => void | express.Response<any, Record<string, any>>' is not assignable to parameter of type 'Application<Record<string, any>>'.
+  Type '(req: Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>, res: Response<any, Record<string, any>>, next: NextFunction) => void | Response<...>' is missing the following properties from type 'Application<Record<string, any>>': init, defaultConfiguration, engine, set, and 63 more.
+
+177   app.get("/", (req: Request, res: Response, next: NextFunction) => {
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+server/index.ts:217:24 - error TS2345: Argument of type 'Router' is not assignable to parameter of type 'Express'.
+  Type 'IRouter' is missing the following properties from type 'Express': request, response, init, defaultConfiguration, and 32 more.
+
+217   await registerRoutes(apiRouter);
+                           ~~~~~~~~~
+
+
+Found 6 errors in 2 files.
+
+Errors  Files
+     1  server/auth.ts:9
+     5  server/index.ts:165

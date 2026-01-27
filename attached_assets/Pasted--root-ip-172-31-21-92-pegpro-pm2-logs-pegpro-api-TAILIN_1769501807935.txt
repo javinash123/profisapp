@@ -1,0 +1,37 @@
+[root@ip-172-31-21-92 pegpro]# pm2 logs pegpro-api
+[TAILING] Tailing last 15 lines for [pegpro-api] process (change the value with --lines option)
+/root/.pm2/logs/pegpro-api-out.log last 15 lines:
+4|pegpro-a | Serving static Expo files with dynamic manifest routing
+4|pegpro-a | express server serving on port 6119 with BASE_PATH: /pegpro
+4|pegpro-a | MongoDB connected
+4|pegpro-a | Serving static Expo files with dynamic manifest routing
+4|pegpro-a | express server serving on port 5000 with BASE_PATH: /pegpro
+4|pegpro-a | MongoDB connected
+4|pegpro-a | Serving static Expo files with dynamic manifest routing
+4|pegpro-a | express server serving on port 5000 with BASE_PATH: /pegpro
+4|pegpro-a | MongoDB connected
+4|pegpro-a | Serving static Expo files with dynamic manifest routing
+4|pegpro-a | express server serving on port 5000 with BASE_PATH: /pegpro
+4|pegpro-a | MongoDB connected
+4|pegpro-a | Serving static Expo files with dynamic manifest routing
+4|pegpro-a | express server serving on port 5000 with BASE_PATH: /pegpro
+4|pegpro-a | MongoDB connected
+
+/root/.pm2/logs/pegpro-api-error.log last 15 lines:
+4|pegpro-a |     at Object.require.extensions.<computed> [as .js] (/usr/lib/nodejs22/lib/node_modules/ts-node/src/index.ts:1608:43)
+4|pegpro-a |     at Module.load (node:internal/modules/cjs/loader:1441:32) {
+4|pegpro-a |   code: 'MODULE_NOT_FOUND',
+4|pegpro-a |   requireStack: []
+4|pegpro-a | }
+4|pegpro-a | Error: ENOENT: no such file or directory, open '/var/www/html/pegpro/server/templates/landing-page.html'
+4|pegpro-a |     at Object.readFileSync (node:fs:441:20)
+4|pegpro-a |     at configureExpoAndLanding (/var/www/html/pegpro/index.js:1:6680)
+4|pegpro-a |     at /var/www/html/pegpro/index.js:1:7751
+4|pegpro-a |     at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+4|pegpro-a |   errno: -2,
+4|pegpro-a |   code: 'ENOENT',
+4|pegpro-a |   syscall: 'open',
+4|pegpro-a |   path: '/var/www/html/pegpro/server/templates/landing-page.html'
+4|pegpro-a | }
+
+

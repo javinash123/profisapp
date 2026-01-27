@@ -87,17 +87,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Auto-save to database
     try {
-      const forwardedHost = typeof window !== 'undefined' && window.location ? window.location.host : null;
-      const baseUrl = forwardedHost 
-        ? `${window.location.protocol}//${forwardedHost}`
-        : `https://${process.env.EXPO_PUBLIC_DOMAIN || '43dca1a0-0ad5-4479-bbd3-f80ea6abf018-00-19wz613fani68.spock.replit.dev'}`;
-      
-      // Always ensure we talk to the backend on port 5000 in development
-      const apiBaseUrl = baseUrl.includes(':5000') ? baseUrl : `${baseUrl}:5000`;
+      const apiBaseUrl = "https://pegslam.com/pegpro";
 
       const response = await fetch(`${apiBaseUrl}/api/matches`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           details: {
             venue: config.name,
@@ -126,18 +121,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const syncMatchToDb = useCallback(async (match: MatchState) => {
     if (!match.dbId) return;
     try {
-      const forwardedHost = typeof window !== 'undefined' && window.location ? window.location.host : null;
-      const baseUrl = forwardedHost 
-        ? `${window.location.protocol}//${forwardedHost}`
-        : `https://${process.env.EXPO_PUBLIC_DOMAIN || '43dca1a0-0ad5-4479-bbd3-f80ea6abf018-00-19wz613fani68.spock.replit.dev'}`;
-      
-      // Always ensure we talk to the backend on port 5000 in development
-      const apiBaseUrl = baseUrl.includes(':5000') ? baseUrl : `${baseUrl}:5000`;
+      const apiBaseUrl = "https://pegslam.com/pegpro";
 
       const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
       await fetch(`${apiBaseUrl}/api/matches/${match.dbId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           details: {
             venue: match.config.name,

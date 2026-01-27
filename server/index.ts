@@ -5,9 +5,17 @@ import { setupAuth } from "./auth";
 import { connectDB } from "./mongodb";
 import * as fs from "fs";
 import * as path from "path";
+import dotenv from "dotenv";
+
+// Load environment variables from .env file
+dotenv.config();
 
 const app = express();
 const log = console.log;
+
+// Support subdirectory hosting (e.g., /pegpro/)
+const BASE_PATH = process.env.BASE_PATH || "";
+const apiRouter = express.Router();
 
 declare module "http" {
   interface IncomingMessage {
@@ -15,31 +23,15 @@ declare module "http" {
   }
 }
 
-function setupCors(app: express.Application) {
+function setupCors(app: express.Application | express.Router) {
   app.use((req, res, next) => {
-    const origins = new Set<string>();
-
-    if (process.env.REPLIT_DEV_DOMAIN) {
-      origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
-    }
-
-    if (process.env.REPLIT_DOMAINS) {
-      process.env.REPLIT_DOMAINS.split(",").forEach((d) => {
-        origins.add(`https://${d.trim()}`);
-      });
-    }
-
-    const origin = req.header("origin");
-
-    if (origin && origins.has(origin)) {
-      res.header("Access-Control-Allow-Origin", origin);
-      res.header(
-        "Access-Control-Allow-Methods",
-        "GET, POST, PUT, DELETE, OPTIONS",
-      );
-      res.header("Access-Control-Allow-Headers", "Content-Type");
-      res.header("Access-Control-Allow-Credentials", "true");
-    }
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS",
+    );
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, expo-platform");
+    res.header("Access-Control-Allow-Credentials", "true");
 
     if (req.method === "OPTIONS") {
       return res.sendStatus(200);
@@ -49,7 +41,7 @@ function setupCors(app: express.Application) {
   });
 }
 
-function setupBodyParsing(app: express.Application) {
+function setupBodyParsing(app: express.Application | express.Router) {
   app.use(
     express.json({
       verify: (req, _res, buf) => {
@@ -61,8 +53,9 @@ function setupBodyParsing(app: express.Application) {
   app.use(express.urlencoded({ extended: false }));
 }
 
-function setupRequestLogging(app: express.Application) {
+function setupRequestLogging(app: express.Application | express.Router) {
   app.use((req, res, next) => {
+    log(`Incoming ${req.method} request to: ${req.url}`);
     const start = Date.now();
     const path = req.path;
     let capturedJsonResponse: Record<string, unknown> | undefined = undefined;
@@ -142,8 +135,8 @@ function serveLandingPage({
   const protocol = forwardedProto || req.protocol || "https";
   const forwardedHost = req.header("x-forwarded-host");
   const host = forwardedHost || req.get("host");
-  const baseUrl = `${protocol}://${host}`;
-  const expsUrl = `${host}`;
+  const baseUrl = `${protocol}://${host}${BASE_PATH}`;
+  const expsUrl = `${host}${BASE_PATH}`;
 
   log(`baseUrl`, baseUrl);
   log(`expsUrl`, expsUrl);
@@ -157,25 +150,19 @@ function serveLandingPage({
   res.status(200).send(html);
 }
 
-function configureExpoAndLanding(app: express.Application) {
-  const templatePath = path.resolve(
-    process.cwd(),
-    "server",
-    "templates",
-    "landing-page.html",
-  );
-  const landingPageTemplate = fs.readFileSync(templatePath, "utf-8");
+function configureExpoAndLanding(app: express.Application | express.Router) {
+  const landingPageTemplate = "<html><head><title>PegPro API</title></head><body><h1>PegPro API</h1><p>Running on Port 6119</p></body></html>";
   const appName = getAppName();
 
   log("Serving static Expo files with dynamic manifest routing");
 
-  // Move static assets BEFORE the manifest handler
-  app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
-  
-  // Only serve static build for specific file requests, NOT as a catch-all root
-  app.use("/static-build", express.static(path.resolve(process.cwd(), "static-build")));
+  const assetsPath = path.resolve(process.cwd(), "assets");
+  const staticBuildPath = path.resolve(process.cwd(), "static-build");
 
-  app.get("/manifest", (req: Request, res: Response, next: NextFunction) => {
+  (app as any).use("/assets", express.static(assetsPath));
+  (app as any).use("/static-build", express.static(staticBuildPath));
+
+  (app as any).get("/manifest", (req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith("/api")) return next();
     const platform = req.header("expo-platform");
     if (platform && (platform === "ios" || platform === "android")) {
@@ -184,7 +171,7 @@ function configureExpoAndLanding(app: express.Application) {
     res.status(404).send("Not found");
   });
 
-  app.get("/", (req: Request, res: Response, next: NextFunction) => {
+  (app as any).get("/", (req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith("/api")) return next();
     const platform = req.header("expo-platform");
     if (platform && (platform === "ios" || platform === "android")) {
@@ -199,7 +186,7 @@ function configureExpoAndLanding(app: express.Application) {
   });
 }
 
-function setupErrorHandler(app: express.Application) {
+function setupErrorHandler(app: express.Application | express.Router) {
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     const error = err as {
       status?: number;
@@ -218,26 +205,40 @@ function setupErrorHandler(app: express.Application) {
 
 (async () => {
   await connectDB();
-  setupCors(app);
-  setupBodyParsing(app);
-  setupRequestLogging(app);
+  
+  // Apply middleware to apiRouter
+  setupCors(apiRouter);
+  setupBodyParsing(apiRouter);
+  setupRequestLogging(apiRouter);
+  setupAuth(apiRouter);
+  await registerRoutes(apiRouter as any);
+  
+  // Use the API router at /api prefix within BASE_PATH
+  app.use(`${BASE_PATH}`, apiRouter);
 
-  setupAuth(app);
-  
-  await registerRoutes(app);
-  
-  configureExpoAndLanding(app);
+  // Configure Expo Landing Page at BASE_PATH
+  const mainRouter = express.Router();
+  configureExpoAndLanding(mainRouter);
+  app.use(`${BASE_PATH}`, mainRouter);
+
+  // Catch-all route handler for non-API requests
+  app.get("*", (req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith(`${BASE_PATH}/api`) || req.path.startsWith("/api")) {
+      return res.status(404).json({ message: "API endpoint not found" });
+    }
+    next();
+  });
 
   setupErrorHandler(app);
 
-  const port = parseInt(process.env.PORT || "5000", 10);
+  const port = parseInt(process.env.PORT || "6119", 10);
   app.listen(
     {
       port,
       host: "0.0.0.0",
     },
     () => {
-      log(`express server serving on port ${port}`);
+      log(`express server serving on port ${port} with BASE_PATH: ${BASE_PATH}`);
     },
   );
 })();

@@ -1,12 +1,12 @@
+import express, { Express, Router } from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
 import session from "express-session";
 import bcrypt from "bcryptjs";
 import MongoStore from "connect-mongo";
 import { User } from "./mongodb";
 
-export function setupAuth(app: Express) {
+export function setupAuth(app: Express | Router) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "fishing-match-secret",
     resave: false,
@@ -22,7 +22,9 @@ export function setupAuth(app: Express) {
     },
   };
 
-  app.set("trust proxy", 1);
+  if ('set' in app && typeof (app as any).set === 'function') {
+    (app as any).set("trust proxy", 1);
+  }
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
@@ -66,7 +68,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/register", async (req, res) => {
+  (app as any).post("/api/register", async (req: any, res: any) => {
     try {
       const body = req.body;
       console.log("Registration request received (Full Body):", JSON.stringify(body, null, 2));
@@ -101,7 +103,7 @@ export function setupAuth(app: Express) {
       await user.save();
       console.log("User saved successfully in MongoDB:", user._id);
 
-      req.login(user, (err) => {
+      req.login(user, (err: any) => {
         if (err) {
           console.error("Login error after registration:", err);
           return res.status(500).json({ error: "Error logging in after registration" });
@@ -118,7 +120,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
+  (app as any).post("/api/login", (req: any, res: any, next: any) => {
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) {
         console.error("Auth error:", err);
@@ -128,7 +130,7 @@ export function setupAuth(app: Express) {
         console.log("Login failed info:", info);
         return res.status(401).json({ message: info?.message || "Invalid username or password" });
       }
-      req.login(user, (err) => {
+      req.login(user, (err: any) => {
         if (err) {
           console.error("Login session error:", err);
           return res.status(500).json({ message: "Error establishing session" });
@@ -139,14 +141,14 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
+  (app as any).post("/api/logout", (req: any, res: any, next: any) => {
+    req.logout((err: any) => {
       if (err) return next(err);
       res.sendStatus(200);
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  (app as any).get("/api/user", (req: any, res: any) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });

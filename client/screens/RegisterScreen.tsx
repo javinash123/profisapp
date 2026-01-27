@@ -50,11 +50,8 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      // Use a safer dynamic base URL
-      const forwardedHost = typeof window !== 'undefined' && window.location ? window.location.host : null;
-      const baseUrl = forwardedHost 
-        ? `${window.location.protocol}//${forwardedHost}`
-        : `https://${process.env.EXPO_PUBLIC_DOMAIN || 'dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev'}`;
+      // Use the live production URL
+      const baseUrl = "https://pegslam.com/pegpro";
       
       console.log("Attempting registration at:", `${baseUrl}/api/register`);
       

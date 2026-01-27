@@ -26,10 +26,7 @@ export default function MatchHistoryScreen() {
 
   const fetchMatches = async () => {
     try {
-      const forwardedHost = typeof window !== 'undefined' && window.location ? window.location.host : null;
-      const baseUrl = forwardedHost 
-        ? `${window.location.protocol}//${forwardedHost}`
-        : `https://${process.env.EXPO_PUBLIC_DOMAIN || 'dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev'}`;
+      const baseUrl = "https://pegslam.com/pegpro";
       
       console.log("Fetching matches from:", `${baseUrl}/api/matches`);
       const response = await fetch(`${baseUrl}/api/matches`, {
