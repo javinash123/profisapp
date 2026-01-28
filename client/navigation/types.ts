@@ -11,4 +11,5 @@ export type RootStackParamList = {
   Settings: undefined;
   ManualWeightEdit: { netIndex: number };
   MatchHistory: undefined;
+  MatchSummary: { matchData: any };
 };

@@ -15,6 +15,7 @@ import ManualWeightEditModal from "@/screens/ManualWeightEditModal";
 import LoginScreen from "@/screens/LoginScreen";
 import RegisterScreen from "@/screens/RegisterScreen";
 import MatchHistoryScreen from "@/screens/MatchHistoryScreen";
+import MatchSummaryScreen from "@/screens/MatchSummaryScreen";
 
 export { RootStackParamList };
 
@@ -86,6 +87,11 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="MatchHistory"
         component={MatchHistoryScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="MatchSummary"
+        component={MatchSummaryScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

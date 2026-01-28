@@ -56,15 +56,18 @@ export default function MatchHistoryScreen() {
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <Pressable onPress={() => navigation.navigate("EndMatchSummary", { matchData: item })}>
-      <Card style={styles.card}>
-        <View style={styles.cardHeader}>
-          <ThemedText type="h4">{item.details?.venue || "Unnamed Venue"}</ThemedText>
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            {new Date(item.createdAt).toLocaleDateString()}
+    <Card style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Pressable onPress={() => navigation.navigate("MatchSummary", { matchData: item })}>
+          <ThemedText type="h4" style={{ color: Colors.dark.primary, textDecorationLine: "underline" }}>
+            {item.details?.venue || "Unnamed Venue"}
           </ThemedText>
-        </View>
-        <ThemedText style={styles.summary}>{item.summary}</ThemedText>
+        </Pressable>
+        <ThemedText type="small" style={{ color: theme.textSecondary }}>
+          {new Date(item.createdAt).toLocaleDateString()}
+        </ThemedText>
+      </View>
+      <ThemedText style={styles.summary}>{item.summary}</ThemedText>
         <View style={styles.stats}>
           <View style={styles.statItem}>
             <Feather name="anchor" size={16} color={Colors.dark.primary} />
@@ -76,7 +79,6 @@ export default function MatchHistoryScreen() {
           </View>
         </View>
       </Card>
-    </Pressable>
   );
 
   if (loading) {
