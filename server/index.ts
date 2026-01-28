@@ -6,6 +6,7 @@ import { connectDB } from "./mongodb";
 import * as fs from "fs";
 import * as path from "path";
 import dotenv from "dotenv";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -252,16 +253,25 @@ function setupErrorHandler(app: express.Application | express.Router) {
     });
   });
 
+  // Proxy all non-API requests to Metro bundler for Expo Go mobile preview
+  const metroProxy = createProxyMiddleware({
+    target: 'http://localhost:8081',
+    changeOrigin: true,
+    ws: true,
+    logger: console,
+  });
+
   app.use(`/`, (req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith('/api')) {
       return next();
     }
-    expoRouter(req, res, next);
+    // Proxy to Metro bundler for Expo
+    metroProxy(req, res, next);
   });
 
   setupErrorHandler(app);
 
-  const port = parseInt(process.env.PORT || "6119", 10);
+  const port = parseInt(process.env.PORT || "5000", 10);
   app.listen(
     {
       port,
