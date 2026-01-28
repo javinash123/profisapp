@@ -86,17 +86,16 @@ export default function EndMatchSummaryScreen() {
           console.log("No user found, skipping match save");
           return;
         }
-        const domain = process.env.EXPO_PUBLIC_DOMAIN || '43dca1a0-0ad5-4479-bbd3-f80ea6abf018-00-19wz613fani68.spock.replit.dev';
-        const baseUrl = `https://${domain}`;
-        const apiBaseUrl = baseUrl.includes(':5000') ? baseUrl : `${baseUrl}:5000`;
         
+        const apiPath = "/api/matches";
         const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
-        const response = await fetch(`${apiBaseUrl}/api/matches`, {
+        const response = await fetch(apiPath, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
             "Accept": "application/json"
           },
+          credentials: "include",
           body: JSON.stringify({
             userId: user._id,
             details: {

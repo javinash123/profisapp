@@ -11,6 +11,7 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 
 import { RootStackParamList } from "@/navigation/types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import * as Storage from "../lib/storage";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -26,14 +27,22 @@ export default function MatchHistoryScreen() {
 
   const fetchMatches = async () => {
     try {
-      const baseUrl = "https://pegslam.com/pegpro";
+      const user = await Storage.getUser();
+      if (!user) {
+        console.warn("No user found in storage, cannot fetch matches");
+        setLoading(false);
+        return;
+      }
+      const apiPath = `/api/matches?userId=${user._id}`;
       
-      console.log("Fetching matches from:", `${baseUrl}/api/matches`);
-      const response = await fetch(`${baseUrl}/api/matches`, {
+      console.log("Fetching matches from:", apiPath);
+      const response = await fetch(apiPath, {
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
+          'Pragma': 'no-cache',
+          'Accept': 'application/json'
+        },
+        credentials: "include"
       });
       if (response.ok) {
         const data = await response.json();

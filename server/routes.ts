@@ -5,20 +5,31 @@ import { Match } from "./mongodb";
 export async function registerRoutes(app: Express): Promise<void> {
   app.get("/matches", async (req, res) => {
     try {
-      const userId = req.query.userId as string || (req.isAuthenticated() ? (req.user as any)._id : null);
-      if (!userId) return res.status(401).json({ message: "Unauthorized - userId required" });
+      const authenticatedUser = req.isAuthenticated() ? (req.user as any) : null;
+      const userId = req.query.userId as string || authenticatedUser?._id;
+      
+      if (!userId) {
+        console.warn("Unauthorized access attempt to /matches - no userId provided and not authenticated");
+        return res.status(401).json({ message: "Unauthorized - userId required" });
+      }
       
       const matches = await Match.find({ userId }).sort({ createdAt: -1 });
       res.json(matches);
     } catch (err) {
+      console.error("Error fetching matches:", err);
       res.status(500).json({ message: "Error fetching matches" });
     }
   });
 
   app.post("/matches", async (req, res) => {
     try {
-      const userId = req.body.userId || (req.isAuthenticated() ? (req.user as any)._id : null);
-      if (!userId) return res.status(401).json({ message: "Unauthorized - userId required" });
+      const authenticatedUser = req.isAuthenticated() ? (req.user as any) : null;
+      const userId = req.body.userId || authenticatedUser?._id;
+      
+      if (!userId) {
+        console.warn("Unauthorized access attempt to /matches (POST) - no userId provided");
+        return res.status(401).json({ message: "Unauthorized - userId required" });
+      }
       
       const match = new Match({
         userId,
@@ -37,8 +48,13 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   app.patch("/matches/:id", async (req, res) => {
     try {
-      const userId = req.body.userId || (req.isAuthenticated() ? (req.user as any)._id : null);
-      if (!userId) return res.status(401).json({ message: "Unauthorized - userId required" });
+      const authenticatedUser = req.isAuthenticated() ? (req.user as any) : null;
+      const userId = req.body.userId || authenticatedUser?._id;
+      
+      if (!userId) {
+        console.warn("Unauthorized access attempt to /matches (PATCH) - no userId provided");
+        return res.status(401).json({ message: "Unauthorized - userId required" });
+      }
       
       const match = await Match.findOneAndUpdate(
         { _id: req.params.id, userId },
