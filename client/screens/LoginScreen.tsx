@@ -11,6 +11,7 @@ import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollV
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { saveUser } from "@/lib/storage";
 
 const logoImage = require("../../attached_assets/company_logo.jpg");
 
@@ -58,6 +59,11 @@ export default function LoginScreen() {
       if (contentType && contentType.includes("application/json")) {
         const userData = await response.json();
         console.log("Login success:", userData);
+        await saveUser({
+          _id: userData._id,
+          username: userData.username,
+          email: userData.email,
+        });
         navigation.reset({
           index: 0,
           routes: [{ name: "MatchSetup" }],

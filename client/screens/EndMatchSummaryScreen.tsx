@@ -17,7 +17,7 @@ import { Colors, Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { formatWeight, formatDuration } from "@/lib/utils";
 import { MatchState } from "@/lib/types";
-import { getMatchHistory } from "@/lib/storage";
+import { getMatchHistory, getUser } from "@/lib/storage";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -81,6 +81,11 @@ export default function EndMatchSummaryScreen() {
       
       try {
         setHasSaved(true);
+        const user = await getUser();
+        if (!user) {
+          console.log("No user found, skipping match save");
+          return;
+        }
         const domain = process.env.EXPO_PUBLIC_DOMAIN || '43dca1a0-0ad5-4479-bbd3-f80ea6abf018-00-19wz613fani68.spock.replit.dev';
         const baseUrl = `https://${domain}`;
         const apiBaseUrl = baseUrl.includes(':5000') ? baseUrl : `${baseUrl}:5000`;
@@ -93,6 +98,7 @@ export default function EndMatchSummaryScreen() {
             "Accept": "application/json"
           },
           body: JSON.stringify({
+            userId: user._id,
             details: {
               venue: match.config.name,
               totalWeight: totalWeight,

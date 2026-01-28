@@ -3,13 +3,12 @@ import { createServer, type Server } from "node:http";
 import { Match } from "./mongodb";
 
 export async function registerRoutes(app: Express): Promise<void> {
-  // Use .all to ensure we catch all methods for logging/auth before specific routes if needed
-  // but here we just register the specific endpoints
-  
   app.get("/matches", async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const matches = await Match.find({ userId: (req.user as any)._id }).sort({ createdAt: -1 });
+      const userId = req.query.userId as string || (req.isAuthenticated() ? (req.user as any)._id : null);
+      if (!userId) return res.status(401).json({ message: "Unauthorized - userId required" });
+      
+      const matches = await Match.find({ userId }).sort({ createdAt: -1 });
       res.json(matches);
     } catch (err) {
       res.status(500).json({ message: "Error fetching matches" });
@@ -17,10 +16,12 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   app.post("/matches", async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     try {
+      const userId = req.body.userId || (req.isAuthenticated() ? (req.user as any)._id : null);
+      if (!userId) return res.status(401).json({ message: "Unauthorized - userId required" });
+      
       const match = new Match({
-        userId: (req.user as any)._id,
+        userId,
         details: req.body.details,
         summary: req.body.summary,
         status: req.body.status || 'active'
@@ -35,10 +36,12 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   app.patch("/matches/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     try {
+      const userId = req.body.userId || (req.isAuthenticated() ? (req.user as any)._id : null);
+      if (!userId) return res.status(401).json({ message: "Unauthorized - userId required" });
+      
       const match = await Match.findOneAndUpdate(
-        { _id: req.params.id, userId: (req.user as any)._id },
+        { _id: req.params.id, userId },
         { 
           details: req.body.details,
           summary: req.body.summary,

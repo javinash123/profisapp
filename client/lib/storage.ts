@@ -7,7 +7,35 @@ const KEYS = {
   MATCH_HISTORY: "@pegpro_match_history",
   ALARMS: "@pegpro_alarms",
   WEATHER: "@pegpro_weather",
+  USER: "@pegpro_user",
 };
+
+export interface StoredUser {
+  _id: string;
+  username: string;
+  email: string;
+}
+
+export async function getUser(): Promise<StoredUser | null> {
+  try {
+    const data = await AsyncStorage.getItem(KEYS.USER);
+    return data ? JSON.parse(data) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveUser(user: StoredUser | null): Promise<void> {
+  try {
+    if (user) {
+      await AsyncStorage.setItem(KEYS.USER, JSON.stringify(user));
+    } else {
+      await AsyncStorage.removeItem(KEYS.USER);
+    }
+  } catch (error) {
+    console.error("Failed to save user:", error);
+  }
+}
 
 export async function getSettings(): Promise<AppSettings> {
   try {

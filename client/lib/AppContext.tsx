@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { AppSettings, MatchState, Alarm, WeatherData, DEFAULT_SETTINGS, NetData, MatchConfig } from "./types";
 import * as Storage from "./storage";
 import { generateId } from "./utils";
+import { StoredUser } from "./storage";
 
 interface AppContextType {
   settings: AppSettings;
@@ -32,6 +33,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
 
   useEffect(() => {
     loadInitialData();
@@ -45,16 +47,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const loadInitialData = async () => {
     try {
-      const [loadedSettings, loadedMatch, loadedAlarms, loadedWeather] = await Promise.all([
+      const [loadedSettings, loadedMatch, loadedAlarms, loadedWeather, loadedUser] = await Promise.all([
         Storage.getSettings(),
         Storage.getCurrentMatch(),
         Storage.getAlarms(),
         Storage.getWeather(),
+        Storage.getUser(),
       ]);
       setSettings(loadedSettings);
       setCurrentMatch(loadedMatch);
       setAlarms(loadedAlarms);
       setWeather(loadedWeather);
+      setCurrentUser(loadedUser);
     } catch (error) {
       console.error("Failed to load initial data:", error);
     } finally {
@@ -86,50 +90,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await Storage.saveCurrentMatch(match);
 
     // Auto-save to database
-    try {
-      const apiPath = "/api/matches";
-      console.log("Starting match save to:", apiPath);
-      
-      const response = await fetch(apiPath, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          details: {
-            venue: config.name,
-            totalWeight: 0,
-            duration: config.durationMinutes / 60,
-            nets: nets,
-            pegNumber: config.pegNumber
+    const user = await Storage.getUser();
+    if (user) {
+      try {
+        const apiPath = "/api/matches";
+        console.log("Starting match save to:", apiPath, "for user:", user._id);
+        
+        const response = await fetch(apiPath, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
           },
-          summary: `Match at ${config.name} started`,
-          status: 'active'
-        }),
-      });
+          credentials: "include",
+          body: JSON.stringify({
+            userId: user._id,
+            details: {
+              venue: config.name,
+              totalWeight: 0,
+              duration: config.durationMinutes / 60,
+              nets: nets,
+              pegNumber: config.pegNumber
+            },
+            summary: `Match at ${config.name} started`,
+            status: 'active'
+          }),
+        });
       
-      console.log("Match save status:", response.status);
-      const responseText = await response.text();
-      console.log("Match save response text:", responseText);
+        console.log("Match save status:", response.status);
+        const responseText = await response.text();
+        console.log("Match save response text:", responseText);
 
-      if (response.ok) {
-        try {
-          const savedMatch = JSON.parse(responseText);
-          setCurrentMatch(prev => prev ? { ...prev, dbId: savedMatch._id } : null);
-          console.log("Match saved successfully with ID:", savedMatch._id);
-        } catch (e: any) {
-          console.error("Failed to parse match save JSON error:", e.message);
+        if (response.ok) {
+          try {
+            const savedMatch = JSON.parse(responseText);
+            setCurrentMatch(prev => prev ? { ...prev, dbId: savedMatch._id } : null);
+            console.log("Match saved successfully with ID:", savedMatch._id);
+          } catch (e: any) {
+            console.error("Failed to parse match save JSON error:", e.message);
+          }
+        } else {
+          console.error("Match save failed with status:", response.status, responseText);
         }
-      } else {
-        console.error("Match save failed with status:", response.status, responseText);
+      } catch (error) {
+        console.error("Initial match save failed with error details:", error instanceof Error ? error.message : String(error));
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+          console.error("Network error detected - possible CORS or connectivity issue");
+        }
       }
-    } catch (error) {
-      console.error("Initial match save failed with error details:", error instanceof Error ? error.message : String(error));
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-         console.error("Network error detected - possible CORS or connectivity issue");
-      }
+    } else {
+      console.log("No user found, skipping match save to database");
     }
     
     if (settings.haptics) {
@@ -140,6 +150,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const syncMatchToDb = useCallback(async (match: MatchState) => {
     if (!match.dbId) return;
     try {
+      const user = await Storage.getUser();
+      if (!user) {
+        console.log("No user found, skipping match sync");
+        return;
+      }
       const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
       const response = await fetch(`/api/matches/${match.dbId}`, {
         method: "PATCH",
@@ -149,6 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         },
         credentials: "include",
         body: JSON.stringify({
+          userId: user._id,
           details: {
             venue: match.config.name,
             totalWeight: totalWeight,

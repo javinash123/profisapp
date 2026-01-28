@@ -37,9 +37,8 @@ const MatchSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-MatchSchema.pre('save', function(next: any) {
+MatchSchema.pre('save', function() {
   (this as any).updatedAt = new Date();
-  next();
 });
 
 export const User = mongoose.models.User || mongoose.model('User', UserSchema);

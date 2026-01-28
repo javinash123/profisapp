@@ -1,6 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
+import { RootStackParamList } from "@/navigation/types";
 
 import OnboardingScreen from "@/screens/OnboardingScreen";
 import MatchSetupScreen from "@/screens/MatchSetupScreen";
@@ -13,23 +14,9 @@ import SettingsScreen from "@/screens/SettingsScreen";
 import ManualWeightEditModal from "@/screens/ManualWeightEditModal";
 import LoginScreen from "@/screens/LoginScreen";
 import RegisterScreen from "@/screens/RegisterScreen";
-
 import MatchHistoryScreen from "@/screens/MatchHistoryScreen";
 
-export type RootStackParamList = {
-  Login: undefined;
-  Register: undefined;
-  Onboarding: undefined;
-  MatchSetup: undefined;
-  LiveMatch: undefined;
-  EndMatchSummary: { matchData?: any } | undefined;
-  AlarmManagement: undefined;
-  AddEditAlarm: { alarmId?: string };
-  WeatherDetails: undefined;
-  Settings: undefined;
-  ManualWeightEdit: { netIndex: number };
-  MatchHistory: undefined;
-};
+export { RootStackParamList };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
