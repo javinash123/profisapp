@@ -2,7 +2,16 @@ import type { Express } from "express";
 import { createServer, type Server } from "node:http";
 import { Match } from "./mongodb";
 
-export async function registerRoutes(app: Express): Promise<void> {
+export async function registerRoutes(app: express.Router): Promise<void> {
+  // Health check endpoint
+  app.get("/health", (req, res) => {
+    res.json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || "production"
+    });
+  });
+
   app.get("/matches", async (req, res) => {
     try {
       const authenticatedUser = req.isAuthenticated() ? (req.user as any) : null;
@@ -35,7 +44,8 @@ export async function registerRoutes(app: Express): Promise<void> {
         userId,
         details: req.body.details,
         summary: req.body.summary,
-        status: req.body.status || 'active'
+        status: req.body.status || 'active',
+        totalFish: req.body.details?.totalFish || 0
       });
       await match.save();
       console.log("Match saved successfully to MongoDB:", match._id);
@@ -61,7 +71,8 @@ export async function registerRoutes(app: Express): Promise<void> {
         { 
           details: req.body.details,
           summary: req.body.summary,
-          status: req.body.status
+          status: req.body.status,
+          totalFish: req.body.details?.totalFish // Sync totalFish to top level if needed
         },
         { new: true }
       );

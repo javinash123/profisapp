@@ -68,7 +68,7 @@ export function setupAuth(app: Express | Router) {
     }
   });
 
-  (app as any).post("/api/register", async (req: any, res: any) => {
+  (app as any).post("/register", async (req: any, res: any) => {
     try {
       const body = req.body;
       console.log("Registration request received (Full Body):", JSON.stringify(body, null, 2));
@@ -120,7 +120,7 @@ export function setupAuth(app: Express | Router) {
     }
   });
 
-  (app as any).post("/api/login", (req: any, res: any, next: any) => {
+  (app as any).post("/login", (req: any, res: any, next: any) => {
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) {
         console.error("Auth error:", err);
@@ -141,19 +141,19 @@ export function setupAuth(app: Express | Router) {
     })(req, res, next);
   });
 
-  (app as any).post("/api/logout", (req: any, res: any, next: any) => {
+  (app as any).post("/logout", (req: any, res: any, next: any) => {
     req.logout((err: any) => {
       if (err) return next(err);
       res.sendStatus(200);
     });
   });
 
-  (app as any).get("/api/user", (req: any, res: any) => {
+  (app as any).get("/user", (req: any, res: any) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
     res.json(req.user);
   });
 
-  (app as any).get("/api/check-auth", (req: any, res: any) => {
+  (app as any).get("/check-auth", (req: any, res: any) => {
     res.json({ authenticated: req.isAuthenticated(), user: req.user });
   });
 }
