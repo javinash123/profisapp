@@ -225,7 +225,7 @@ export default function SettingsScreen() {
           </ThemedText>
           <Card elevation={1} style={styles.sectionCard}>
             <Pressable
-              onPress={() => navigation.navigate("MatchHistory" as any)}
+              onPress={() => navigation.navigate("MatchHistory" as never)}
               style={({ pressed }) => [
                 styles.historyButton,
                 { opacity: pressed ? 0.6 : 1 }

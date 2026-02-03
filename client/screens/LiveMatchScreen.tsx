@@ -10,10 +10,10 @@ import { Audio } from "expo-av";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 import * as Speech from 'expo-speech';
-import Voice, {
-  SpeechResultsEvent,
-  SpeechErrorEvent,
-} from '@react-native-voice/voice';
+import { 
+  useSpeechRecognitionEvent, 
+  expoSpeechRecognitionEventEmitter 
+} from 'expo-speech-recognition';
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
@@ -50,13 +50,23 @@ export default function LiveMatchScreen() {
   const soundRef = useRef<any>(null);
 
   useEffect(() => {
-    Voice.onSpeechResults = onSpeechResults;
-    Voice.onSpeechError = onSpeechError;
+    const speechResultsListener = expoSpeechRecognitionEventEmitter.addListener('start', () => setIsListening(true));
+    const speechErrorListener = expoSpeechRecognitionEventEmitter.addListener('error', (e) => {
+      console.error("Speech Recognition Error:", e);
+      setIsListening(false);
+    });
 
     return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
+      speechResultsListener.remove();
+      speechErrorListener.remove();
     };
   }, []);
+
+  useSpeechRecognitionEvent('result', (e) => {
+    if (e.results && e.results.length > 0) {
+      processVoiceCommand(e.results[0].transcript);
+    }
+  });
 
   const processVoiceCommand = useCallback((text: string) => {
     const command = text.toLowerCase();
@@ -92,34 +102,14 @@ export default function LiveMatchScreen() {
     }
   }, [totalFish, updateTotalFish]);
 
-  const onSpeechResults = useCallback((e: SpeechResultsEvent) => {
-    if (e.value && e.value.length > 0) {
-      processVoiceCommand(e.value[0]);
-    }
-  }, [processVoiceCommand]);
-
-  const onSpeechError = useCallback((e: SpeechErrorEvent) => {
-    console.error("Speech Recognition Error:", e);
-    setIsListening(false);
-  }, []);
-
-  useEffect(() => {
-    Voice.onSpeechResults = onSpeechResults;
-    Voice.onSpeechError = onSpeechError;
-
-    return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
-    };
-  }, [onSpeechResults, onSpeechError]);
-
   const handleVoiceCommand = useCallback(async () => {
     try {
       if (isListening) {
-        await Voice.stop();
+        expoSpeechRecognitionEventEmitter.emit('stop');
         setIsListening(false);
       } else {
         setIsListening(true);
-        await Voice.start('en-US');
+        expoSpeechRecognitionEventEmitter.emit('start', { lang: 'en-US' });
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
     } catch (e) {
@@ -288,16 +278,6 @@ export default function LiveMatchScreen() {
   const netHeight = 180;
 
   const GRAMS_PER_OZ = 28.3495;
-
-  const handleVoiceCommandPlaceholder = useCallback(() => {
-    if (isListening) {
-      setIsListening(false);
-      return;
-    }
-    setIsListening(true);
-    Alert.alert("Voice Control", "Try saying 'Add fish'", [{ text: "OK", onPress: () => setIsListening(false) }]);
-    Speech.speak("Voice control active.");
-  }, [isListening]);
 
   return (
     <ThemedView style={styles.container}>

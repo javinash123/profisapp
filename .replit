@@ -1,5 +1,5 @@
 entrypoint = "README.md"
-modules = ["nodejs-20", "web", "postgresql-16"]
+modules = ["nodejs-20", "web", "postgresql-16", "java-graalvm22.3"]
 
 [nix]
 channel = "stable-25_05"
@@ -11,12 +11,12 @@ build = ["sh", "-c", "npm run expo:static:build && npm run server:build"]
 run = ["npm", "run", "server:prod"]
 
 [[ports]]
-localPort = 5000
-externalPort = 80
+localPort = 3000
+externalPort = 3002
 
 [[ports]]
-localPort = 8081
-externalPort = 8081
+localPort = 5000
+externalPort = 80
 
 [[ports]]
 localPort = 8082
@@ -39,10 +39,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Start dev servers"
+args = "Backend API"
 
 [[workflows.workflow]]
-name = "Start dev servers"
+name = "Backend API"
 author = "agent"
 
 [[workflows.workflow.tasks]]

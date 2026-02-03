@@ -23,7 +23,6 @@ const springConfig: WithSpringConfig = {
   mass: 0.3,
   stiffness: 150,
   overshootClamping: true,
-  energyThreshold: 0.001,
 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);

@@ -1,10 +1,9 @@
-import type { Express } from "express";
-import { createServer, type Server } from "node:http";
+import type { Request, Response, Router } from "express";
 import { Match } from "./mongodb";
 
-export async function registerRoutes(app: express.Router): Promise<void> {
+export async function registerRoutes(app: Router): Promise<void> {
   // Health check endpoint
-  app.get("/health", (req, res) => {
+  app.get("/health", (req: Request, res: Response) => {
     res.json({
       status: "ok",
       timestamp: new Date().toISOString(),
@@ -12,9 +11,9 @@ export async function registerRoutes(app: express.Router): Promise<void> {
     });
   });
 
-  app.get("/matches", async (req, res) => {
+  app.get("/matches", async (req: Request, res: Response) => {
     try {
-      const authenticatedUser = req.isAuthenticated() ? (req.user as any) : null;
+      const authenticatedUser = (req as any).isAuthenticated() ? (req.user as any) : null;
       const userId = req.query.userId as string || authenticatedUser?._id;
       
       if (!userId) {
@@ -30,9 +29,9 @@ export async function registerRoutes(app: express.Router): Promise<void> {
     }
   });
 
-  app.post("/matches", async (req, res) => {
+  app.post("/matches", async (req: Request, res: Response) => {
     try {
-      const authenticatedUser = req.isAuthenticated() ? (req.user as any) : null;
+      const authenticatedUser = (req as any).isAuthenticated() ? (req.user as any) : null;
       const userId = req.body.userId || authenticatedUser?._id;
       
       if (!userId) {
@@ -56,9 +55,9 @@ export async function registerRoutes(app: express.Router): Promise<void> {
     }
   });
 
-  app.patch("/matches/:id", async (req, res) => {
+  app.patch("/matches/:id", async (req: Request, res: Response) => {
     try {
-      const authenticatedUser = req.isAuthenticated() ? (req.user as any) : null;
+      const authenticatedUser = (req as any).isAuthenticated() ? (req.user as any) : null;
       const userId = req.body.userId || authenticatedUser?._id;
       
       if (!userId) {
