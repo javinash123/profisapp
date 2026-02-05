@@ -12,6 +12,7 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Storage from "../lib/storage";
+import { getApiUrl } from "../lib/query-client";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -33,7 +34,8 @@ export default function MatchHistoryScreen() {
         setLoading(false);
         return;
       }
-      const apiPath = `/api/matches?userId=${user._id}`;
+      const baseUrl = getApiUrl();
+      const apiPath = `${baseUrl}/api/matches?userId=${user._id}`;
       
       console.log("Fetching matches from:", apiPath);
       const response = await fetch(apiPath, {

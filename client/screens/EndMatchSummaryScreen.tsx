@@ -18,6 +18,7 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { formatWeight, formatDuration } from "@/lib/utils";
 import { MatchState } from "@/lib/types";
 import { getMatchHistory, getUser } from "@/lib/storage";
+import { getApiUrl } from "@/lib/query-client";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -87,7 +88,8 @@ export default function EndMatchSummaryScreen() {
           return;
         }
         
-        const apiPath = "/api/matches";
+        const baseUrl = getApiUrl();
+        const apiPath = `${baseUrl}/api/matches`;
         const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
         const response = await fetch(apiPath, {
           method: "POST",

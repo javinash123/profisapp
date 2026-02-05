@@ -12,6 +12,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { saveUser } from "@/lib/storage";
+import { getApiUrl } from "@/lib/query-client";
 
 const logoImage = require("../../attached_assets/company_logo.jpg");
 
@@ -33,13 +34,16 @@ export default function LoginScreen() {
     
     setLoading(true);
     try {
-      const baseUrl = "https://pegslam.com/pegpro";
+      const baseUrl = getApiUrl();
       
       console.log("Attempting login at:", `${baseUrl}/api/login`);
       
       const response = await fetch(`${baseUrl}/api/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify({ username: email, password }),
       });
 

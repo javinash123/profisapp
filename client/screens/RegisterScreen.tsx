@@ -11,6 +11,7 @@ import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollV
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { getApiUrl } from "@/lib/query-client";
 
 const logoImage = require("../../attached_assets/company_logo.jpg");
 
@@ -51,13 +52,16 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       // Use the live production URL
-      const baseUrl = "https://pegslam.com/pegpro";
+      const baseUrl = getApiUrl();
       
       console.log("Attempting registration at:", `${baseUrl}/api/register`);
       
       const response = await fetch(`${baseUrl}/api/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify({ username: name, email, password }),
       });
 

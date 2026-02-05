@@ -4,6 +4,7 @@ import { AppSettings, MatchState, Alarm, WeatherData, DEFAULT_SETTINGS, NetData,
 import * as Storage from "./storage";
 import { generateId } from "./utils";
 import { StoredUser } from "./storage";
+import { getApiUrl } from "./query-client";
 
 interface AppContextType {
   settings: AppSettings;
@@ -93,7 +94,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const user = await Storage.getUser();
     if (user) {
       try {
-        const apiPath = "/api/matches";
+        const baseUrl = getApiUrl();
+        const apiPath = `${baseUrl}/api/matches`;
         console.log("Starting match save to:", apiPath, "for user:", user._id);
         
         const response = await fetch(apiPath, {
@@ -156,7 +158,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
       const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
-      const response = await fetch(`/api/matches/${match.dbId}`, {
+      const baseUrl = getApiUrl();
+      const response = await fetch(`${baseUrl}/api/matches/${match.dbId}`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
