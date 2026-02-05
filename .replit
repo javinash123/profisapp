@@ -12,15 +12,11 @@ run = ["npm", "run", "server:prod"]
 
 [[ports]]
 localPort = 3000
-externalPort = 3000
+externalPort = 3002
 
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 5001
-externalPort = 3001
 
 [[ports]]
 localPort = 8082
@@ -45,33 +41,17 @@ author = "agent"
 task = "workflow.run"
 args = "Backend API"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Mobile Frontend"
-
 [[workflows.workflow]]
 name = "Backend API"
 author = "agent"
 
-[workflows.workflow.metadata]
-outputType = "console"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "PORT=3000 npm run server:dev"
-waitForPort = 3000
-
-[[workflows.workflow]]
-name = "Mobile Frontend"
-author = "agent"
+args = "npm run all:dev"
+waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "CI=1 npx expo start --port 5000 --tunnel"
-waitForPort = 5000
 
 [userenv]
 

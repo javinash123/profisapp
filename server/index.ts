@@ -160,7 +160,7 @@ function setupErrorHandler(app: express.Application | express.Router) {
 
   setupErrorHandler(app);
 
-  const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+  const port = 5000;
   log(`Listening on port ${port}...`);
   app.listen(port, "0.0.0.0", () => {
     log(`express server serving on port ${port} with BASE_PATH: ${BASE_PATH}`);
