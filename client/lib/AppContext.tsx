@@ -21,8 +21,6 @@ interface AppContextType {
   deleteAlarm: (id: string) => Promise<void>;
   weather: WeatherData | null;
   refreshWeather: () => Promise<void>;
-  totalFish: number;
-  updateTotalFish: (total: number) => void;
   isLoading: boolean;
 }
 
@@ -34,7 +32,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [lastCompletedMatch, setLastCompletedMatch] = useState<MatchState | null>(null);
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [totalFish, setTotalFish] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
 
@@ -59,9 +56,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ]);
       setSettings(loadedSettings);
       setCurrentMatch(loadedMatch);
-      if (loadedMatch) {
-        setTotalFish(loadedMatch.totalFish || 0);
-      }
       setAlarms(loadedAlarms);
       setWeather(loadedWeather);
       setCurrentUser(loadedUser);
@@ -99,8 +93,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const user = await Storage.getUser();
     if (user) {
       try {
-        const baseUrl = "https://pegslam.com/pegpro";
-        const apiPath = `${baseUrl}/api/matches`;
+        const apiPath = "/api/matches";
         console.log("Starting match save to:", apiPath, "for user:", user._id);
         
         const response = await fetch(apiPath, {
@@ -115,7 +108,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
             details: {
               venue: config.name,
               totalWeight: 0,
-              totalFish: 0,
               duration: config.durationMinutes / 60,
               nets: nets,
               pegNumber: config.pegNumber
@@ -164,8 +156,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
       const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
-      const baseUrl = "https://pegslam.com/pegpro";
-      const response = await fetch(`${baseUrl}/api/matches/${match.dbId}`, {
+      const response = await fetch(`/api/matches/${match.dbId}`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
@@ -177,7 +168,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           details: {
             venue: match.config.name,
             totalWeight: totalWeight,
-            totalFish: match.totalFish || 0,
             duration: match.config.durationMinutes / 60,
             nets: match.nets,
             pegNumber: match.config.pegNumber
@@ -313,16 +303,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await Storage.saveWeather(mockWeather);
   }, []);
 
-  const updateTotalFish = useCallback((total: number) => {
-    setTotalFish(total);
-    setCurrentMatch(prev => {
-      if (!prev) return prev;
-      const updated = { ...prev, totalFish: total };
-      syncMatchToDb(updated);
-      return updated;
-    });
-  }, [syncMatchToDb]);
-
   return (
     <AppContext.Provider
       value={{
@@ -341,8 +321,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         deleteAlarm,
         weather,
         refreshWeather,
-        totalFish,
-        updateTotalFish,
         isLoading,
       }}
     >

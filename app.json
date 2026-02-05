@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "pegpro",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.pegpro.app"
@@ -26,7 +26,6 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-speech-recognition",
       [
         "expo-splash-screen",
         {
@@ -39,8 +38,7 @@
           }
         }
       ],
-      "expo-web-browser",
-      "expo-font"
+      "expo-web-browser"
     ],
     "experiments": {
       "reactCompiler": true

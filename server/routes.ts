@@ -1,19 +1,11 @@
-import type { Request, Response, Router } from "express";
+import type { Express } from "express";
+import { createServer, type Server } from "node:http";
 import { Match } from "./mongodb";
 
-export async function registerRoutes(app: Router): Promise<void> {
-  // Health check endpoint
-  app.get("/health", (req: Request, res: Response) => {
-    res.json({
-      status: "ok",
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || "production"
-    });
-  });
-
-  app.get("/matches", async (req: Request, res: Response) => {
+export async function registerRoutes(app: Express): Promise<void> {
+  app.get("/matches", async (req, res) => {
     try {
-      const authenticatedUser = (req as any).isAuthenticated() ? (req.user as any) : null;
+      const authenticatedUser = req.isAuthenticated() ? (req.user as any) : null;
       const userId = req.query.userId as string || authenticatedUser?._id;
       
       if (!userId) {
@@ -29,9 +21,9 @@ export async function registerRoutes(app: Router): Promise<void> {
     }
   });
 
-  app.post("/matches", async (req: Request, res: Response) => {
+  app.post("/matches", async (req, res) => {
     try {
-      const authenticatedUser = (req as any).isAuthenticated() ? (req.user as any) : null;
+      const authenticatedUser = req.isAuthenticated() ? (req.user as any) : null;
       const userId = req.body.userId || authenticatedUser?._id;
       
       if (!userId) {
@@ -43,8 +35,7 @@ export async function registerRoutes(app: Router): Promise<void> {
         userId,
         details: req.body.details,
         summary: req.body.summary,
-        status: req.body.status || 'active',
-        totalFish: req.body.details?.totalFish || 0
+        status: req.body.status || 'active'
       });
       await match.save();
       console.log("Match saved successfully to MongoDB:", match._id);
@@ -55,9 +46,9 @@ export async function registerRoutes(app: Router): Promise<void> {
     }
   });
 
-  app.patch("/matches/:id", async (req: Request, res: Response) => {
+  app.patch("/matches/:id", async (req, res) => {
     try {
-      const authenticatedUser = (req as any).isAuthenticated() ? (req.user as any) : null;
+      const authenticatedUser = req.isAuthenticated() ? (req.user as any) : null;
       const userId = req.body.userId || authenticatedUser?._id;
       
       if (!userId) {
@@ -70,8 +61,7 @@ export async function registerRoutes(app: Router): Promise<void> {
         { 
           details: req.body.details,
           summary: req.body.summary,
-          status: req.body.status,
-          totalFish: req.body.details?.totalFish // Sync totalFish to top level if needed
+          status: req.body.status
         },
         { new: true }
       );

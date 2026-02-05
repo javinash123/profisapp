@@ -10,10 +10,6 @@ import { Audio } from "expo-av";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 import * as Speech from 'expo-speech';
-import { 
-  useSpeechRecognitionEvent, 
-  expoSpeechRecognitionEventEmitter 
-} from 'expo-speech-recognition';
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
@@ -44,79 +40,10 @@ export default function LiveMatchScreen() {
   const [editLb, setEditLb] = useState("0");
   const [editOz, setEditOz] = useState("0");
   const [firedAlarms, setFiredAlarms] = useState<FiredAlarmTracker>({});
-  const { totalFish, updateTotalFish } = useApp();
+  const [totalFish, setTotalFish] = useState(0);
   const [activeAlarmBanner, setActiveAlarmBanner] = useState<Alarm | null>(null);
   const [isListening, setIsListening] = useState(false);
   const soundRef = useRef<any>(null);
-
-  useEffect(() => {
-    const speechResultsListener = expoSpeechRecognitionEventEmitter.addListener('start', () => setIsListening(true));
-    const speechErrorListener = expoSpeechRecognitionEventEmitter.addListener('error', (e) => {
-      console.error("Speech Recognition Error:", e);
-      setIsListening(false);
-    });
-
-    return () => {
-      speechResultsListener.remove();
-      speechErrorListener.remove();
-    };
-  }, []);
-
-  useSpeechRecognitionEvent('result', (e) => {
-    if (e.results && e.results.length > 0) {
-      processVoiceCommand(e.results[0].transcript);
-    }
-  });
-
-  const processVoiceCommand = useCallback((text: string) => {
-    const command = text.toLowerCase();
-    console.log("Processing command:", command);
-    
-    // General synonyms for catching a fish
-    const isCatch = command.includes("add fish") || 
-                    command.includes("plus fish") || 
-                    command.includes("catch") ||
-                    command.includes("one more") ||
-                    command.includes("another") ||
-                    command.includes("got one") ||
-                    command.includes("landed") ||
-                    command.includes("yes");
-
-    // General synonyms for removing/correcting a mistake
-    const isRemove = command.includes("remove fish") || 
-                     command.includes("minus fish") ||
-                     command.includes("undo") ||
-                     command.includes("mistake") ||
-                     command.includes("delete fish");
-
-    if (isCatch) {
-      updateTotalFish(totalFish + 1);
-      Speech.speak("Fish added");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else if (isRemove) {
-      if (totalFish > 0) {
-        updateTotalFish(totalFish - 1);
-        Speech.speak("Fish removed");
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
-    }
-  }, [totalFish, updateTotalFish]);
-
-  const handleVoiceCommand = useCallback(async () => {
-    try {
-      if (isListening) {
-        expoSpeechRecognitionEventEmitter.emit('stop');
-        setIsListening(false);
-      } else {
-        setIsListening(true);
-        expoSpeechRecognitionEventEmitter.emit('start', { lang: 'en-US' });
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
-    } catch (e) {
-      console.error("Voice start/stop error:", e);
-      setIsListening(false);
-    }
-  }, [isListening]);
 
   useEffect(() => {
     if (!currentMatch) {
@@ -279,6 +206,16 @@ export default function LiveMatchScreen() {
 
   const GRAMS_PER_OZ = 28.3495;
 
+  const handleVoiceCommand = useCallback(() => {
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+    setIsListening(true);
+    Alert.alert("Voice Control", "Try saying 'Add fish'", [{ text: "OK", onPress: () => setIsListening(false) }]);
+    Speech.speak("Voice control active.");
+  }, [isListening]);
+
   return (
     <ThemedView style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
@@ -402,7 +339,7 @@ export default function LiveMatchScreen() {
             <ThemedText type="h4" style={{ color: theme.textSecondary }}>Total Fish</ThemedText>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.md }}>
               <Pressable
-                onPress={() => !isLocked && updateTotalFish(Math.max(0, totalFish - 1))}
+                onPress={() => !isLocked && setTotalFish(Math.max(0, totalFish - 1))}
                 disabled={isLocked || totalFish === 0}
                 style={[styles.controlButtonLarge, { backgroundColor: theme.backgroundTertiary, opacity: isLocked || totalFish === 0 ? 0.4 : 1 }]}
               >
@@ -410,7 +347,7 @@ export default function LiveMatchScreen() {
               </Pressable>
               <ThemedText type="h2" style={{ width: 60, textAlign: 'center' }}>{totalFish}</ThemedText>
               <Pressable
-                onPress={() => !isLocked && updateTotalFish(totalFish + 1)}
+                onPress={() => !isLocked && setTotalFish(totalFish + 1)}
                 disabled={isLocked}
                 style={[styles.controlButtonLarge, { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 }]}
               >

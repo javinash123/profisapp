@@ -23,7 +23,6 @@ export interface MatchState {
   endTime?: number;
   nets: NetData[];
   isActive: boolean;
-  totalFish?: number;
 }
 
 export type AlarmMode = "one-time" | "repeat" | "duration-pattern";

@@ -5,8 +5,8 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
  * @returns {string} The API base URL
  */
 export function getApiUrl(): string {
-  // Use production server
-  return "https://pegslam.com/pegpro/";
+  // Use local Replit server
+  return "https://43dca1a0-0ad5-4479-bbd3-f80ea6abf018-00-19wz613fani68.spock.replit.dev";
 }
 
 async function throwIfResNotOk(res: Response) {

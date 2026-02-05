@@ -133,42 +133,11 @@ export async function saveWeather(weather: WeatherData): Promise<void> {
     console.error("Failed to save weather:", error);
   }
 }
-const API_URL = "https://pegslam.com/pegpro/api";
 
-export const loginUser = async (credentials: any): Promise<StoredUser | null> => {
+export async function clearAllData(): Promise<void> {
   try {
-    const response = await fetch(`${API_URL}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
-    });
-    if (response.ok) {
-      const user = await response.json();
-      await saveUser(user);
-      return user;
-    }
-    return null;
+    await AsyncStorage.multiRemove(Object.values(KEYS));
   } catch (error) {
-    console.error("Login failed:", error);
-    return null;
+    console.error("Failed to clear data:", error);
   }
-};
-
-export const registerUser = async (details: any): Promise<StoredUser | null> => {
-  try {
-    const response = await fetch(`${API_URL}/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(details),
-    });
-    if (response.ok) {
-      const user = await response.json();
-      await saveUser(user);
-      return user;
-    }
-    return null;
-  } catch (error) {
-    console.error("Registration failed:", error);
-    return null;
-  }
-};
+}

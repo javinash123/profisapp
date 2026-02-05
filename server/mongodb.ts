@@ -33,7 +33,6 @@ const MatchSchema = new mongoose.Schema({
   details: { type: mongoose.Schema.Types.Mixed, required: true },
   summary: { type: String },
   status: { type: String, enum: ['active', 'completed'], default: 'active' },
-  totalFish: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

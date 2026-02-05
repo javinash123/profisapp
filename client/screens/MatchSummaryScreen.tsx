@@ -29,7 +29,6 @@ export default function MatchSummaryScreen() {
   const duration = matchData.details?.duration ? matchData.details.duration.toFixed(1) : "0";
   const pegNumber = matchData.details?.pegNumber || "N/A";
   const nets = matchData.details?.nets || [];
-  const totalFish = matchData.details?.totalFish || 0;
 
   const GRAMS_PER_LB = 453.592;
   const GRAMS_PER_OZ = 28.3495;
@@ -69,11 +68,6 @@ export default function MatchSummaryScreen() {
               <Feather name="map-pin" size={24} color={Colors.dark.primary} />
               <ThemedText type="h4" style={styles.statValue}>{pegNumber}</ThemedText>
               <ThemedText style={styles.statLabel}>Peg</ThemedText>
-            </View>
-            <View style={styles.statBox}>
-              <Feather name="activity" size={24} color={Colors.dark.primary} />
-              <ThemedText type="h4" style={styles.statValue}>{totalFish}</ThemedText>
-              <ThemedText style={styles.statLabel}>Total Fish</ThemedText>
             </View>
           </View>
         </Card>
