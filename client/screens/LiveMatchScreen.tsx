@@ -18,6 +18,8 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { formatTime, getProgressColor } from "@/lib/utils";
 import { Alarm } from "@/lib/types";
+import { useVoiceRecorder } from "@/replit_integrations/audio/useVoiceRecorder";
+import { useVoiceStream } from "@/replit_integrations/audio/useVoiceStream";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -32,6 +34,29 @@ export default function LiveMatchScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
   const { currentMatch, setNetWeight, endMatch, refreshWeather, settings, alarms } = useApp();
+  const { startRecording, stopRecording, state: recordingState } = useVoiceRecorder();
+  const { streamVoiceResponse } = useVoiceStream({
+    onUserTranscript: (text) => console.log("User said:", text),
+    onTranscript: (delta) => console.log("AI says:", delta),
+    onComplete: (full) => {
+      // Basic intent parsing from AI transcript
+      const lbMatch = full.match(/(\d+)\s*(?:lb|pound)/i);
+      const ozMatch = full.match(/(\d+)\s*(?:oz|ounce)/i);
+      const netMatch = full.match(/net\s*(\d+)/i);
+      
+      let totalGrams = 0;
+      if (lbMatch) totalGrams += parseInt(lbMatch[1]) * GRAMS_PER_LB;
+      if (ozMatch) totalGrams += parseInt(ozMatch[1]) * GRAMS_PER_OZ;
+      
+      const netIdx = netMatch ? parseInt(netMatch[1]) - 1 : (editingNetIndex ?? 0);
+      
+      if (totalGrams > 0 && currentMatch) {
+        setNetWeight(netIdx, currentMatch.nets[netIdx].weight + totalGrams);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Speech.speak(`Added weight to net ${netIdx + 1}`);
+      }
+    }
+  });
 
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
@@ -223,8 +248,17 @@ export default function LiveMatchScreen() {
   const GRAMS_PER_OZ = 28.3495;
 
   const handleVoiceCommand = useCallback(async () => {
-    if (isListening) {
+    if (recordingState === "recording") {
+      const audioBlob = await stopRecording();
       setIsListening(false);
+      try {
+        // We need a conversation ID. For now, using a hardcoded or match-specific one.
+        // In a full implementation, you'd create/fetch a conversation.
+        await streamVoiceResponse("/api/conversations/1/messages", audioBlob);
+      } catch (e) {
+        console.error("Voice streaming error:", e);
+        Alert.alert("Error", "Failed to process voice command.");
+      }
       return;
     }
     
@@ -234,53 +268,12 @@ export default function LiveMatchScreen() {
         Alert.alert("Permission Denied", "Microphone access is required for voice commands.");
         return;
       }
+      await startRecording();
+      setIsListening(true);
     } catch (e) {
-      console.log("Permission request error:", e);
+      console.log("Voice start error:", e);
     }
-
-    setIsListening(true);
-    // Simulate voice command for the current net
-    const activeNetIndex = editingNetIndex !== null ? editingNetIndex : 0;
-    
-    // Improved voice command parser for weights like "1lb 2oz"
-    const parseVoiceWeight = (text: string) => {
-      const lbMatch = text.match(/(\d+)\s*(?:lb|pound|pounds)/i);
-      const ozMatch = text.match(/(\d+)\s*(?:oz|ounce|ounces)/i);
-      
-      let totalGrams = 0;
-      if (lbMatch) totalGrams += parseInt(lbMatch[1]) * GRAMS_PER_LB;
-      if (ozMatch) totalGrams += parseInt(ozMatch[1]) * GRAMS_PER_OZ;
-      
-      return totalGrams > 0 ? totalGrams : null;
-    };
-
-    Alert.alert(
-      "Voice Control",
-      "Microphone access granted. Since full speech recognition requires native modules not fully available in all previews, would you like to simulate the command?",
-      [
-        { text: "Cancel", onPress: () => setIsListening(false), style: "cancel" },
-        { 
-          text: "Simulate '1lb 2oz'", 
-          onPress: () => {
-            const grams = (1 * GRAMS_PER_LB) + (2 * GRAMS_PER_OZ);
-            setNetWeight(activeNetIndex, currentMatch.nets[activeNetIndex].weight + grams);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            Speech.speak(`Added 1 pound 2 ounces to net ${activeNetIndex + 1}`);
-            setIsListening(false);
-          } 
-        },
-        { 
-          text: "Simulate 'Add 1lb'", 
-          onPress: () => {
-            setNetWeight(activeNetIndex, currentMatch.nets[activeNetIndex].weight + GRAMS_PER_LB);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            Speech.speak("Added 1 pound to net " + (activeNetIndex + 1));
-            setIsListening(false);
-          } 
-        }
-      ]
-    );
-  }, [isListening, editingNetIndex, currentMatch, setNetWeight, GRAMS_PER_LB]);
+  }, [recordingState, startRecording, stopRecording, streamVoiceResponse]);
 
   return (
     <ThemedView style={styles.container}>

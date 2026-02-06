@@ -14,17 +14,30 @@ import { queryClient } from "@/lib/query-client";
 import RootStackNavigator from "@/navigation/RootStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AppProvider } from "@/lib/AppContext";
+import { AlarmBanner } from "@/components/AlarmBanner";
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
+  const [activeAlarm, setActiveAlarm] = useState<string | null>(null);
 
   useEffect(() => {
     async function prepare() {
       try {
         await SplashScreen.preventAutoHideAsync();
-        await Font.loadAsync({
-          'Feather': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf'),
-        });
+        // Skip font loading if it fails, as some environments might not have the file accessible
+        try {
+          await Font.loadAsync({
+            'Feather': require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf'),
+          });
+        } catch (fontError) {
+          console.log("Font failed to load, falling back to system fonts:", fontError);
+        }
+        
+        // Mocking an alarm for demonstration purposes
+        // In a real app, this would come from a real-time source or state management
+        setTimeout(() => {
+          setActiveAlarm("Alarm: Weigh-in scheduled in 10 minutes");
+        }, 3000);
       } catch (e) {
         console.warn("Font loading error:", e);
       } finally {
@@ -48,6 +61,12 @@ export default function App() {
             <GestureHandlerRootView style={styles.root}>
               <KeyboardProvider>
                 <NavigationContainer>
+                  {activeAlarm && (
+                    <AlarmBanner 
+                      message={activeAlarm} 
+                      onClose={() => setActiveAlarm(null)} 
+                    />
+                  )}
                   <RootStackNavigator />
                 </NavigationContainer>
                 <StatusBar style="light" />
