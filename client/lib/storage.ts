@@ -92,6 +92,13 @@ export async function getMatchHistory(): Promise<MatchState[]> {
 export async function saveMatchToHistory(match: MatchState): Promise<void> {
   try {
     const history = await getMatchHistory();
+    // Prevent duplicate entries by checking the match ID
+    const exists = history.some(m => m.id === match.id);
+    if (exists) {
+      console.log("Match already exists in history, skipping save to history");
+      return;
+    }
+    
     history.unshift(match);
     const limitedHistory = history.slice(0, 50);
     await AsyncStorage.setItem(KEYS.MATCH_HISTORY, JSON.stringify(limitedHistory));

@@ -22,6 +22,7 @@ interface AppContextType {
   deleteAlarm: (id: string) => Promise<void>;
   weather: WeatherData | null;
   refreshWeather: () => Promise<void>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -306,6 +307,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await Storage.saveWeather(mockWeather);
   }, []);
 
+  const logout = async () => {
+    try {
+      await Storage.saveUser(null);
+      await Storage.saveCurrentMatch(null);
+      // We don't clear settings or history to keep user preferences
+      setCurrentMatch(null);
+      setCurrentUser(null);
+      
+      if (settings.haptics) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -325,6 +342,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         weather,
         refreshWeather,
         isLoading,
+        logout,
       }}
     >
       {children}

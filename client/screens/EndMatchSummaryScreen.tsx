@@ -37,21 +37,17 @@ export default function EndMatchSummaryScreen() {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (hasInitialized.current) return;
-    
     const initializeMatch = async () => {
       // If we have matchData in route params, use it
       const params = route.params as any;
       if (params?.matchData) {
         setMatch(params.matchData);
-        hasInitialized.current = true;
         return;
       }
 
       // If we have a local lastCompletedMatch, use it
       if (lastCompletedMatch) {
         setMatch(lastCompletedMatch);
-        hasInitialized.current = true;
         return;
       }
       
@@ -63,7 +59,6 @@ export default function EndMatchSummaryScreen() {
       } catch (e) {
         console.error("Error loading history:", e);
       }
-      hasInitialized.current = true;
     };
 
     initializeMatch();

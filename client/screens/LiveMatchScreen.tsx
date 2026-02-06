@@ -84,9 +84,9 @@ export default function LiveMatchScreen() {
   const handleMatchEnd = useCallback(async () => {
     try {
       const finalMatch = await endMatch();
-      setTimeout(() => {
-        navigation.replace("EndMatchSummary", { matchData: finalMatch });
-      }, 100);
+      console.log("Match ended, final data:", finalMatch);
+      // Use replace to ensure we can't go back to the live match
+      navigation.replace("EndMatchSummary", { matchData: finalMatch });
     } catch (error) {
       console.error("Error ending match:", error);
       navigation.replace("EndMatchSummary");
@@ -211,10 +211,41 @@ export default function LiveMatchScreen() {
       setIsListening(false);
       return;
     }
+    
+    // Simulate voice command for the current net
+    const activeNetIndex = editingNetIndex !== null ? editingNetIndex : 0;
+    
+    Alert.alert(
+      "Voice Control (Simulated)",
+      "Since real-time microphone access is limited in the web preview, would you like to simulate a voice command?",
+      [
+        { text: "Cancel", onPress: () => setIsListening(false), style: "cancel" },
+        { 
+          text: "Simulate 'Add 1lb'", 
+          onPress: () => {
+            setNetWeight(activeNetIndex, currentMatch.nets[activeNetIndex].weight + GRAMS_PER_LB);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Speech.speak("Added 1 pound to net " + (activeNetIndex + 1));
+            setIsListening(false);
+          } 
+        },
+        { 
+          text: "Simulate 'Remove 1lb'", 
+          onPress: () => {
+            const currentWeight = currentMatch.nets[activeNetIndex].weight;
+            if (currentWeight >= GRAMS_PER_LB) {
+              setNetWeight(activeNetIndex, currentWeight - GRAMS_PER_LB);
+              Speech.speak("Removed 1 pound from net " + (activeNetIndex + 1));
+            } else {
+              Speech.speak("Net " + (activeNetIndex + 1) + " is already empty");
+            }
+            setIsListening(false);
+          } 
+        }
+      ]
+    );
     setIsListening(true);
-    Alert.alert("Voice Control", "Try saying 'Add fish'", [{ text: "OK", onPress: () => setIsListening(false) }]);
-    Speech.speak("Voice control active.");
-  }, [isListening]);
+  }, [isListening, editingNetIndex, currentMatch, setNetWeight, GRAMS_PER_LB]);
 
   return (
     <ThemedView style={styles.container}>
@@ -230,6 +261,9 @@ export default function LiveMatchScreen() {
         <View style={styles.headerRight}>
           <Pressable onPress={handleVoiceCommand} style={styles.headerButton}>
             <Feather name="mic" size={22} color={isListening ? Colors.dark.primary : theme.text} />
+          </Pressable>
+          <Pressable onPress={() => navigation.navigate("Settings")} style={styles.headerButton}>
+            <Feather name="settings" size={22} color={theme.text} />
           </Pressable>
           <Pressable onPress={() => navigation.navigate("AlarmManagement")} style={styles.headerButton}>
             <Feather name="bell" size={22} color={alarms.length > 0 ? Colors.dark.primary : theme.text} />

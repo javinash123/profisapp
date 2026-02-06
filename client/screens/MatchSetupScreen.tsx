@@ -37,7 +37,14 @@ export default function MatchSetupScreen() {
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => null,
+      headerRight: () => (
+        <Pressable 
+          onPress={() => navigation.navigate("Settings")}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, marginRight: Spacing.md })}
+        >
+          <Feather name="settings" size={22} color={theme.text} />
+        </Pressable>
+      ),
     });
   }, [navigation, theme]);
 

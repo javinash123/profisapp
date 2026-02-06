@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Pressable, Switch, ScrollView } from "react-native";
+import { View, StyleSheet, Pressable, Switch, ScrollView, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
@@ -24,8 +24,34 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
-  const { settings, updateSettings } = useApp();
-  const navigation = useNavigation();
+  const { settings, updateSettings, logout } = useApp();
+  const navigation = useNavigation<any>();
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Logout", 
+          style: "destructive", 
+          onPress: async () => {
+            try {
+              await logout();
+              // Use a reset to clear the navigation stack and force redirect to Login
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Login" }],
+              });
+            } catch (err) {
+              console.error("Logout error:", err);
+            }
+          } 
+        },
+      ]
+    );
+  };
 
   const handleUnitChange = (unit: WeightUnit) => {
     updateSettings({ unit });
@@ -242,6 +268,26 @@ export default function SettingsScreen() {
 
         <View style={styles.section}>
           <ThemedText type="small" style={[styles.sectionLabel, { color: theme.textSecondary }]}>
+            Account
+          </ThemedText>
+          <Card elevation={1} style={styles.sectionCard}>
+            <Pressable
+              onPress={handleLogout}
+              style={({ pressed }) => [
+                styles.logoutButton,
+                { opacity: pressed ? 0.6 : 1 }
+              ]}
+            >
+              <Feather name="log-out" size={20} color={Colors.dark.error} />
+              <ThemedText type="body" style={[styles.logoutText, { color: Colors.dark.error }]}>
+                Logout
+              </ThemedText>
+            </Pressable>
+          </Card>
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText type="small" style={[styles.sectionLabel, { color: theme.textSecondary }]}>
             About
           </ThemedText>
           <Card elevation={1} style={styles.sectionCard}>
@@ -317,6 +363,15 @@ const styles = StyleSheet.create({
   historyButtonContent: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: Spacing.xs,
+  },
+  logoutText: {
+    marginLeft: Spacing.md,
+    fontWeight: "600",
   },
   switchRow: {
     flexDirection: "row",
