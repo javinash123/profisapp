@@ -120,10 +120,14 @@ export default function LiveMatchScreen() {
       const finalMatch = await endMatch();
       console.log("Match ended, final data:", finalMatch);
       
-      // Navigate to the summary screen
-      navigation.replace("EndMatchSummary", { 
-        matchData: finalMatch 
-      });
+      if (finalMatch) {
+        // Navigate to the summary screen with the actual completed match data
+        navigation.replace("EndMatchSummary", { 
+          matchData: finalMatch 
+        });
+      } else {
+        navigation.replace("EndMatchSummary");
+      }
     } catch (error) {
       console.error("Error ending match:", error);
       navigation.replace("EndMatchSummary");
@@ -284,27 +288,31 @@ export default function LiveMatchScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Pressable onPress={handleLockTap} style={styles.headerButton} hitSlop={15}>
-          <Feather name={isLocked ? "lock" : "unlock"} size={22} color={theme.text} />
-        </Pressable>
-        <View style={styles.timerContainer}>
-          <ThemedText style={[styles.timer, { color: remainingSeconds < 300 ? Colors.dark.warning : theme.text }]}>
-            {formatTime(remainingSeconds)}
-          </ThemedText>
-        </View>
-        <View style={styles.headerRight}>
-          <Pressable onPress={() => navigation.navigate("WeatherDetails")} style={styles.headerButton} hitSlop={15}>
-            <Feather name="cloud" size={22} color={theme.text} />
+        <View style={styles.headerInner}>
+          <Pressable onPress={handleLockTap} style={styles.headerButton} hitSlop={15}>
+            <Feather name={isLocked ? "lock" : "unlock"} size={22} color={theme.text} />
           </Pressable>
-          <Pressable onPress={handleVoiceCommand} style={styles.headerButton} hitSlop={15}>
-            <Feather name="mic" size={22} color={isListening ? Colors.dark.primary : theme.text} />
-          </Pressable>
-          <Pressable onPress={() => navigation.navigate("Settings")} style={styles.headerButton} hitSlop={15}>
-            <Feather name="settings" size={22} color={theme.text} />
-          </Pressable>
-          <Pressable onPress={() => navigation.navigate("AlarmManagement")} style={styles.headerButton} hitSlop={15}>
-            <Feather name="bell" size={22} color={alarms.length > 0 ? Colors.dark.primary : theme.text} />
-          </Pressable>
+          
+          <View style={styles.timerContainer}>
+            <ThemedText style={[styles.timer, { color: remainingSeconds < 300 ? Colors.dark.warning : theme.text }]}>
+              {formatTime(remainingSeconds)}
+            </ThemedText>
+          </View>
+
+          <View style={styles.headerIcons}>
+            <Pressable onPress={() => navigation.navigate("WeatherDetails")} style={styles.headerButton} hitSlop={15}>
+              <Feather name="cloud" size={22} color={theme.text} />
+            </Pressable>
+            <Pressable onPress={handleVoiceCommand} style={styles.headerButton} hitSlop={15}>
+              <Feather name="mic" size={22} color={isListening ? Colors.dark.primary : theme.text} />
+            </Pressable>
+            <Pressable onPress={() => navigation.navigate("Settings")} style={styles.headerButton} hitSlop={15}>
+              <Feather name="settings" size={22} color={theme.text} />
+            </Pressable>
+            <Pressable onPress={() => navigation.navigate("AlarmManagement")} style={styles.headerButton} hitSlop={15}>
+              <Feather name="bell" size={22} color={alarms.length > 0 ? Colors.dark.primary : theme.text} />
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -580,23 +588,35 @@ export default function LiveMatchScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: 'transparent',
+  },
+  headerInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: 50,
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timer: {
+    fontSize: 24,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
   },
   headerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.05)",
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  timerContainer: { flex: 1, alignItems: "center" },
-  timer: { fontSize: 36, fontWeight: "700" },
-  headerRight: { flexDirection: "row", gap: Spacing.md },
   netsScroll: { flex: 1 },
   netsGrid: {
     paddingHorizontal: Spacing.lg,
