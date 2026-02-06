@@ -59,3 +59,17 @@
 - Express server serving on port 5000
 - MongoDB connected
 - Expo Metro bundler running and ready
+
+## Import Re-verified (Feb 6, 2026)
+- [x] Cleaned node_modules/react-native/React conflict and re-ran npm install
+- [x] All dependencies restored including tsx
+- [x] Workflow "Start dev servers" running successfully
+- [x] Express server serving on port 5000
+- [x] MongoDB connected
+- [x] Expo Metro bundler running and ready
+
+## Session Persistence Fix (Feb 6, 2026)
+- [x] Exposed `currentUser` in `AppContext`
+- [x] Implemented conditional navigation in `RootStackNavigator`
+- [x] Added loading state to prevent navigation flickering during session recovery
+- [x] Verified session persistence across app restarts

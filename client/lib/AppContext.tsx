@@ -25,6 +25,7 @@ interface AppContextType {
   refreshWeather: () => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
+  currentUser: StoredUser | null;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -201,13 +202,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         endTime: Date.now(),
         isActive: false,
       };
-      setLastCompletedMatch(completedMatch);
-      await Storage.saveMatchToHistory(completedMatch);
       
-      // Sync completion to DB
-      await syncMatchToDb(completedMatch);
-
+      // Update state first
+      setLastCompletedMatch(completedMatch);
       setCurrentMatch(null);
+      
+      // Persist changes
+      await Storage.saveMatchToHistory(completedMatch);
+      await syncMatchToDb(completedMatch);
       await Storage.saveCurrentMatch(null);
       
       if (settings.haptics) {
@@ -358,6 +360,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         refreshWeather,
         isLoading,
         logout,
+        currentUser,
       }}
     >
       {children}

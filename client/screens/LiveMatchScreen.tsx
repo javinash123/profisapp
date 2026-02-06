@@ -35,11 +35,14 @@ export default function LiveMatchScreen() {
   const { theme } = useTheme();
   const { currentMatch, setNetWeight, updateNetName, endMatch, refreshWeather, settings, alarms } = useApp();
   const { startRecording, stopRecording, state: recordingState } = useVoiceRecorder();
+  
+  const GRAMS_PER_OZ = 28.3495;
+  const GRAMS_PER_LB = 453.592;
+
   const { streamVoiceResponse } = useVoiceStream({
     onUserTranscript: (text) => console.log("User said:", text),
     onTranscript: (delta) => console.log("AI says:", delta),
     onComplete: (full) => {
-      // Basic intent parsing from AI transcript
       const lbMatch = full.match(/(\d+)\s*(?:lb|pound)/i);
       const ozMatch = full.match(/(\d+)\s*(?:oz|ounce)/i);
       const netMatch = full.match(/net\s*(\d+)/i);
@@ -71,12 +74,9 @@ export default function LiveMatchScreen() {
   const [editNetName, setEditNetName] = useState("");
   const [firedAlarms, setFiredAlarms] = useState<FiredAlarmTracker>({});
   const [totalFish, setTotalFish] = useState(0);
-  const [activeAlarmBanner, setActiveAlarmBanner] = useState<Alarm | null>(0);
+  const [activeAlarmBanner, setActiveAlarmBanner] = useState<Alarm | null>(null);
   const [isListening, setIsListening] = useState(false);
   const soundRef = useRef<any>(null);
-
-  const GRAMS_PER_OZ = 28.3495;
-  const GRAMS_PER_LB = 453.592;
 
   useEffect(() => {
     if (!currentMatch) {
@@ -117,17 +117,8 @@ export default function LiveMatchScreen() {
   const handleMatchEnd = useCallback(async () => {
     try {
       console.log("Ending match...");
-      const finalMatch = await endMatch();
-      console.log("Match ended, final data:", finalMatch);
-      
-      if (finalMatch) {
-        // Navigate to the summary screen with the actual completed match data
-        navigation.replace("EndMatchSummary", { 
-          matchData: finalMatch 
-        });
-      } else {
-        navigation.replace("EndMatchSummary");
-      }
+      await endMatch();
+      navigation.replace("EndMatchSummary");
     } catch (error) {
       console.error("Error ending match:", error);
       navigation.replace("EndMatchSummary");
@@ -235,7 +226,6 @@ export default function LiveMatchScreen() {
   }, [currentMatch, alarms, firedAlarms, settings]);
 
   const totalWeight = currentMatch?.nets.reduce((sum, net) => sum + net.weight, 0) || 0;
-  const enabledAlarms = alarms.filter((a) => a.enabled);
 
   const getNetLb = (weightGrams: number) => {
     const totalOz = Math.round(weightGrams / GRAMS_PER_OZ);
@@ -243,17 +233,8 @@ export default function LiveMatchScreen() {
     return lb;
   };
 
-  const setNetLb = (netIndex: number, lb: number) => {
-    const currentWeight = currentMatch?.nets[netIndex]?.weight || 0;
-    const currentOz = Math.round(currentWeight / GRAMS_PER_OZ) % 16;
-    const newTotalOz = (lb * 16) + currentOz;
-    setNetWeight(netIndex, newTotalOz * GRAMS_PER_OZ);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
-
   if (!currentMatch) return null;
 
-  const netCount = currentMatch.nets.length;
   const netWidth = (SCREEN_WIDTH - Spacing.lg * 3) / 2;
   const netHeight = 180;
 
@@ -262,8 +243,6 @@ export default function LiveMatchScreen() {
       const audioBlob = await stopRecording();
       setIsListening(false);
       try {
-        // We need a conversation ID. For now, using a hardcoded or match-specific one.
-        // In a full implementation, you'd create/fetch a conversation.
         await streamVoiceResponse("/api/conversations/1/messages", audioBlob);
       } catch (e) {
         console.error("Voice streaming error:", e);
@@ -389,14 +368,11 @@ export default function LiveMatchScreen() {
                       <Pressable
                         onPress={() => {
                           if (!isLocked) {
-                            const currentWeight = net.weight;
-                            const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
                             const newOz = Math.max(0, totalOz - 16);
                             setNetWeight(index, newOz * GRAMS_PER_OZ);
                           }
                         }}
                         disabled={isLocked || net.weight < GRAMS_PER_LB}
-                        hitSlop={10}
                         style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < GRAMS_PER_LB ? 0.4 : 1 }]}
                       >
                         <Feather name="minus" size={20} color={theme.text} />
@@ -405,7 +381,6 @@ export default function LiveMatchScreen() {
                       <Pressable
                         onPress={() => !isLocked && setNetWeight(index, net.weight + GRAMS_PER_LB)}
                         disabled={isLocked}
-                        hitSlop={10}
                         style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 }]}
                       >
                         <Feather name="plus" size={20} color={theme.text} />
@@ -416,14 +391,11 @@ export default function LiveMatchScreen() {
                       <Pressable
                         onPress={() => {
                           if (!isLocked) {
-                            const currentWeight = net.weight;
-                            const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
                             const newOz = Math.max(0, totalOz - 1);
                             setNetWeight(index, newOz * GRAMS_PER_OZ);
                           }
                         }}
                         disabled={isLocked || net.weight < (GRAMS_PER_OZ - 1)}
-                        hitSlop={10}
                         style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < (GRAMS_PER_OZ - 1) ? 0.4 : 1 }]}
                       >
                         <Feather name="minus" size={20} color={theme.text} />
@@ -432,7 +404,6 @@ export default function LiveMatchScreen() {
                       <Pressable
                         onPress={() => !isLocked && setNetWeight(index, net.weight + GRAMS_PER_OZ)}
                         disabled={isLocked}
-                        hitSlop={10}
                         style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 }]}
                       >
                         <Feather name="plus" size={20} color={theme.text} />
@@ -454,7 +425,7 @@ export default function LiveMatchScreen() {
         </View>
 
         <Animated.View
-          entering={FadeIn.delay(netCount * 50)}
+          entering={FadeIn.delay(currentMatch.nets.length * 50)}
           style={[styles.netTile, { width: SCREEN_WIDTH - Spacing.lg * 2, height: 100, backgroundColor: theme.backgroundDefault, justifyContent: 'center' }]}
         >
           <View style={[styles.controlRow, { paddingHorizontal: Spacing.md, width: '100%', justifyContent: 'space-between' }]}>
@@ -531,19 +502,15 @@ export default function LiveMatchScreen() {
                   if (editingNetIndex !== null) {
                     const lb = Math.floor(parseFloat(editLb) || 0);
                     let oz = Math.floor(parseFloat(editOz) || 0);
-                    
-                    // Correctly handle ounce overflow
                     const extraLb = Math.floor(oz / 16);
                     const finalOz = oz % 16;
                     const finalLb = lb + extraLb;
-                    
                     const totalOz = (finalLb * 16) + finalOz;
                     setNetWeight(editingNetIndex, totalOz * GRAMS_PER_OZ);
                     setEditingNetIndex(null);
                   }
-                }}
-              >
-                <ThemedText style={{ color: Colors.dark.background }}>Save</ThemedText>
+                }}>
+                <ThemedText style={{ color: '#000', fontWeight: '600' }}>Save</ThemedText>
               </Pressable>
             </View>
           </ThemedView>
@@ -558,9 +525,8 @@ export default function LiveMatchScreen() {
               style={[styles.editInput, { color: theme.text, borderColor: theme.border, width: '100%', marginBottom: Spacing.lg }]}
               value={editNetName}
               onChangeText={setEditNetName}
-              placeholder="Enter net name..."
-              placeholderTextColor={theme.textSecondary}
-              autoFocus
+              placeholder="Enter net name"
+              placeholderTextColor={theme.textMuted}
             />
             <View style={styles.editButtonRow}>
               <Pressable style={[styles.editButton, { backgroundColor: theme.backgroundTertiary }]} onPress={() => setEditingNetNameIndex(null)}>
@@ -573,9 +539,8 @@ export default function LiveMatchScreen() {
                     updateNetName(editingNetNameIndex, editNetName);
                     setEditingNetNameIndex(null);
                   }
-                }}
-              >
-                <ThemedText style={{ color: Colors.dark.background }}>Save</ThemedText>
+                }}>
+                <ThemedText style={{ color: '#000', fontWeight: '600' }}>Save</ThemedText>
               </Pressable>
             </View>
           </ThemedView>
@@ -586,166 +551,143 @@ export default function LiveMatchScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+  },
   header: {
-    paddingHorizontal: Spacing.md,
-    backgroundColor: 'transparent',
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.dark.border,
   },
   headerInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 50,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  headerButton: {
+    padding: 8,
   },
   timerContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
   },
   timer: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
   },
-  headerButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+  headerIcons: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  netsScroll: { flex: 1 },
-  netsGrid: {
+  alarmBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    paddingBottom: 150,
+  },
+  alarmBannerText: {
+    flex: 1,
+    marginLeft: Spacing.sm,
+    color: "#000",
+    fontWeight: "600",
+  },
+  alarmBannerClose: {
+    padding: 4,
+  },
+  netsScroll: {
+    flex: 1,
+  },
+  netsGrid: {
+    padding: Spacing.lg,
+    paddingBottom: 120,
   },
   netsGridInner: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.lg,
   },
   netTile: {
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.md,
     padding: Spacing.md,
-    marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    justifyContent: "space-between",
   },
   netHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: Spacing.xs,
   },
   netContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  controlGroup: {
-    width: '100%',
-    gap: Spacing.xs,
-  },
-  controlGroupRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: '100%',
+    gap: Spacing.sm,
   },
   weightDisplay: {
     flexDirection: "row",
-    alignItems: "baseline",
-    marginBottom: Spacing.sm,
+    alignItems: "flex-end",
   },
   controlValue: {
     fontSize: 28,
     fontWeight: "700",
   },
+  controlGroup: {
+    width: '100%',
+    gap: 4,
+  },
+  controlGroupRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   controlButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
   controlButtonLarge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
+  },
+  progressContainer: {
+    height: 4,
+    width: '100%',
+    marginTop: Spacing.sm,
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
   },
   controlRow: {
     flexDirection: "row",
     alignItems: "center",
   },
-  progressContainer: {
-    marginTop: Spacing.md,
-  },
-  capacityLabel: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-  },
   footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     paddingHorizontal: Spacing.lg,
-  },
-  statsSummary: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: Spacing.sm,
-  },
-  statBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: 'transparent',
   },
   totalCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     padding: Spacing.lg,
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-  },
-  alarmBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.md,
-    marginHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
-    borderRadius: BorderRadius.md,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  alarmBannerText: {
-    flex: 1,
-    color: '#000',
-    fontWeight: '700',
-    marginLeft: Spacing.md,
-  },
-  alarmBannerClose: {
-    padding: Spacing.xs,
+    borderColor: Colors.dark.border,
   },
   totalContent: {
     flex: 1,
@@ -753,39 +695,43 @@ const styles = StyleSheet.create({
   endButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 10,
+    borderRadius: BorderRadius.sm,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.8)",
     alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.xl,
   },
   editModal: {
-    width: "80%",
-    padding: Spacing.xl,
+    width: "100%",
     borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    alignItems: "center",
   },
   editInputRow: {
     flexDirection: "row",
-    gap: Spacing.md,
+    gap: Spacing.lg,
     marginBottom: Spacing.xl,
   },
   editInputGroup: {
     flex: 1,
   },
   editInput: {
-    height: 50,
+    height: 56,
     borderWidth: 1,
     borderRadius: BorderRadius.sm,
     paddingHorizontal: Spacing.md,
-    fontSize: 18,
+    fontSize: 24,
+    textAlign: "center",
   },
   editButtonRow: {
     flexDirection: "row",
     gap: Spacing.md,
+    width: "100%",
   },
   editButton: {
     flex: 1,

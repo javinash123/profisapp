@@ -39,28 +39,29 @@ export default function EndMatchSummaryScreen() {
   useEffect(() => {
     const initializeMatch = async () => {
       try {
-        // If we have matchData in route params, use it
+        // First try to use the last completed match from global context
+        if (lastCompletedMatch) {
+          console.log("Using last completed match from context");
+          setMatch(lastCompletedMatch);
+          return;
+        }
+
+        // Fallback to route params
         const params = route.params as any;
         if (params?.matchData) {
           console.log("Using match data from params");
           setMatch(params.matchData);
           return;
         }
-
-        // If we have a local lastCompletedMatch, use it
-        if (lastCompletedMatch) {
-          console.log("Using last completed match from context");
-          setMatch(lastCompletedMatch);
-          return;
-        }
         
+        // Final fallback to history
         console.log("Fetching from history...");
         const history = await getMatchHistory();
         if (history && history.length > 0) {
           console.log("Found match in history:", history[0].id);
           setMatch(history[0]);
         } else {
-          console.warn("No match data found in params, context, or history");
+          console.warn("No match data found in context, params, or history");
         }
       } catch (e) {
         console.error("Error loading match data in summary:", e);
@@ -68,7 +69,7 @@ export default function EndMatchSummaryScreen() {
     };
 
     initializeMatch();
-  }, [route.params, lastCompletedMatch]);
+  }, [lastCompletedMatch, route.params]);
 
   const [hasSaved, setHasSaved] = useState(false);
 

@@ -2,6 +2,8 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { RootStackParamList } from "@/navigation/types";
+import { useApp } from "@/lib/AppContext";
+import { View, ActivityIndicator } from "react-native";
 
 import OnboardingScreen from "@/screens/OnboardingScreen";
 import MatchSetupScreen from "@/screens/MatchSetupScreen";
@@ -23,77 +25,93 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootStackNavigator() {
   const screenOptions = useScreenOptions();
+  const { currentUser, isLoading } = useApp();
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212' }}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
-    <Stack.Navigator screenOptions={screenOptions} initialRouteName="Login">
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Register"
-        component={RegisterScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Onboarding"
-        component={OnboardingScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="MatchSetup"
-        component={MatchSetupScreen}
-        options={{ headerTitle: "New Match" }}
-      />
-      <Stack.Screen
-        name="LiveMatch"
-        component={LiveMatchScreen}
-        options={{ headerShown: false, gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="EndMatchSummary"
-        component={EndMatchSummaryScreen}
-        options={{ headerTitle: "Match Complete", gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="AlarmManagement"
-        component={AlarmManagementScreen}
-        options={{ headerTitle: "Alarms" }}
-      />
-      <Stack.Screen
-        name="AddEditAlarm"
-        component={AddEditAlarmScreen}
-        options={{ headerTitle: "New Alarm", presentation: "modal" }}
-      />
-      <Stack.Screen
-        name="WeatherDetails"
-        component={WeatherDetailsScreen}
-        options={{ headerTitle: "Weather" }}
-      />
-      <Stack.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{ headerTitle: "Settings" }}
-      />
-      <Stack.Screen
-        name="ManualWeightEdit"
-        component={ManualWeightEditModal}
-        options={{ 
-          headerTitle: "Edit Weight",
-          presentation: "modal",
-        }}
-      />
-      <Stack.Screen
-        name="MatchHistory"
-        component={MatchHistoryScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="MatchSummary"
-        component={MatchSummaryScreen}
-        options={{ headerShown: false }}
-      />
+    <Stack.Navigator screenOptions={screenOptions}>
+      {!currentUser ? (
+        <>
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Register"
+            component={RegisterScreen}
+            options={{ headerShown: false }}
+          />
+        </>
+      ) : (
+        <>
+          <Stack.Screen
+            name="MatchSetup"
+            component={MatchSetupScreen}
+            options={{ headerTitle: "New Match" }}
+          />
+          <Stack.Screen
+            name="Onboarding"
+            component={OnboardingScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="LiveMatch"
+            component={LiveMatchScreen}
+            options={{ headerShown: false, gestureEnabled: false }}
+          />
+          <Stack.Screen
+            name="EndMatchSummary"
+            component={EndMatchSummaryScreen}
+            options={{ headerTitle: "Match Complete", gestureEnabled: false }}
+          />
+          <Stack.Screen
+            name="AlarmManagement"
+            component={AlarmManagementScreen}
+            options={{ headerTitle: "Alarms" }}
+          />
+          <Stack.Screen
+            name="AddEditAlarm"
+            component={AddEditAlarmScreen}
+            options={{ headerTitle: "New Alarm", presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="WeatherDetails"
+            component={WeatherDetailsScreen}
+            options={{ headerTitle: "Weather" }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{ headerTitle: "Settings" }}
+          />
+          <Stack.Screen
+            name="ManualWeightEdit"
+            component={ManualWeightEditModal}
+            options={{ 
+              headerTitle: "Edit Weight",
+              presentation: "modal",
+            }}
+          />
+          <Stack.Screen
+            name="MatchHistory"
+            component={MatchHistoryScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="MatchSummary"
+            component={MatchSummaryScreen}
+            options={{ headerShown: false }}
+          />
+        </>
+      )}
     </Stack.Navigator>
   );
 }
