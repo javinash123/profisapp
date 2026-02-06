@@ -15,6 +15,7 @@ interface AppContextType {
   endMatch: () => Promise<MatchState | null>;
   updateNetWeight: (netIndex: number, delta: number) => void;
   setNetWeight: (netIndex: number, weight: number) => void;
+  updateNetName: (netIndex: number, name: string) => void;
   updateMatchUnit: (unit: "lb/oz" | "kg/g") => void;
   alarms: Alarm[];
   addAlarm: (alarm: Omit<Alarm, "id">) => Promise<void>;
@@ -75,7 +76,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const startMatch = async (config: MatchConfig) => {
-    const nets: NetData[] = Array.from({ length: config.numberOfNets }, () => ({
+    const nets: NetData[] = Array.from({ length: config.numberOfNets }, (_, i) => ({
+      id: generateId(),
+      name: `Net ${i + 1}`,
       weight: 0,
       capacity: config.netCapacity,
     }));
@@ -247,6 +250,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, [syncMatchToDb]);
 
+  const updateNetName = useCallback((netIndex: number, name: string) => {
+    setCurrentMatch((prev) => {
+      if (!prev) return prev;
+      const newNets = [...prev.nets];
+      newNets[netIndex] = { ...newNets[netIndex], name };
+      const updated = { ...prev, nets: newNets };
+      syncMatchToDb(updated);
+      return updated;
+    });
+  }, [syncMatchToDb]);
+
   const updateMatchUnit = useCallback((unit: "lb/oz" | "kg/g") => {
     setCurrentMatch((prev) => {
       if (!prev) return prev;
@@ -334,6 +348,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         endMatch,
         updateNetWeight,
         setNetWeight,
+        updateNetName,
         updateMatchUnit,
         alarms,
         addAlarm,

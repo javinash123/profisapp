@@ -33,7 +33,7 @@ export default function LiveMatchScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
-  const { currentMatch, setNetWeight, endMatch, refreshWeather, settings, alarms } = useApp();
+  const { currentMatch, setNetWeight, updateNetName, endMatch, refreshWeather, settings, alarms } = useApp();
   const { startRecording, stopRecording, state: recordingState } = useVoiceRecorder();
   const { streamVoiceResponse } = useVoiceStream({
     onUserTranscript: (text) => console.log("User said:", text),
@@ -51,7 +51,10 @@ export default function LiveMatchScreen() {
       const netIdx = netMatch ? parseInt(netMatch[1]) - 1 : (editingNetIndex ?? 0);
       
       if (totalGrams > 0 && currentMatch) {
-        setNetWeight(netIdx, currentMatch.nets[netIdx].weight + totalGrams);
+        const currentWeight = currentMatch.nets[netIdx].weight;
+        const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
+        const addedOz = Math.round(totalGrams / GRAMS_PER_OZ);
+        setNetWeight(netIdx, (totalOz + addedOz) * GRAMS_PER_OZ);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Speech.speak(`Added weight to net ${netIdx + 1}`);
       }
@@ -64,11 +67,16 @@ export default function LiveMatchScreen() {
   const [editingNetIndex, setEditingNetIndex] = useState<number | null>(null);
   const [editLb, setEditLb] = useState("0");
   const [editOz, setEditOz] = useState("0");
+  const [editingNetNameIndex, setEditingNetNameIndex] = useState<number | null>(null);
+  const [editNetName, setEditNetName] = useState("");
   const [firedAlarms, setFiredAlarms] = useState<FiredAlarmTracker>({});
   const [totalFish, setTotalFish] = useState(0);
-  const [activeAlarmBanner, setActiveAlarmBanner] = useState<Alarm | null>(null);
+  const [activeAlarmBanner, setActiveAlarmBanner] = useState<Alarm | null>(0);
   const [isListening, setIsListening] = useState(false);
   const soundRef = useRef<any>(null);
+
+  const GRAMS_PER_OZ = 28.3495;
+  const GRAMS_PER_LB = 453.592;
 
   useEffect(() => {
     if (!currentMatch) {
@@ -113,13 +121,11 @@ export default function LiveMatchScreen() {
       console.log("Match ended, final data:", finalMatch);
       
       // Navigate to the summary screen
-      // We pass the data in both ways to be safe
       navigation.replace("EndMatchSummary", { 
         matchData: finalMatch 
       });
     } catch (error) {
       console.error("Error ending match:", error);
-      // Even if saving fails, we want to show the summary screen if possible
       navigation.replace("EndMatchSummary");
     }
   }, [endMatch, navigation]);
@@ -226,16 +232,18 @@ export default function LiveMatchScreen() {
 
   const totalWeight = currentMatch?.nets.reduce((sum, net) => sum + net.weight, 0) || 0;
   const enabledAlarms = alarms.filter((a) => a.enabled);
-  const GRAMS_PER_LB = 453.592;
 
   const getNetLb = (weightGrams: number) => {
-    const lb = Math.round(weightGrams / GRAMS_PER_LB);
-    return Math.min(Math.max(0, lb), 100);
+    const totalOz = Math.round(weightGrams / GRAMS_PER_OZ);
+    const lb = Math.floor(totalOz / 16);
+    return lb;
   };
 
   const setNetLb = (netIndex: number, lb: number) => {
-    const weightGrams = lb * GRAMS_PER_LB;
-    setNetWeight(netIndex, weightGrams);
+    const currentWeight = currentMatch?.nets[netIndex]?.weight || 0;
+    const currentOz = Math.round(currentWeight / GRAMS_PER_OZ) % 16;
+    const newTotalOz = (lb * 16) + currentOz;
+    setNetWeight(netIndex, newTotalOz * GRAMS_PER_OZ);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
@@ -244,8 +252,6 @@ export default function LiveMatchScreen() {
   const netCount = currentMatch.nets.length;
   const netWidth = (SCREEN_WIDTH - Spacing.lg * 3) / 2;
   const netHeight = 180;
-
-  const GRAMS_PER_OZ = 28.3495;
 
   const handleVoiceCommand = useCallback(async () => {
     if (recordingState === "recording") {
@@ -330,8 +336,9 @@ export default function LiveMatchScreen() {
               warning: Colors.dark.warning,
               error: Colors.dark.error,
             });
-            const lb = Math.floor(net.weight / GRAMS_PER_LB);
-            const oz = Math.round((net.weight % GRAMS_PER_LB) / GRAMS_PER_OZ);
+            const totalOz = Math.round(net.weight / GRAMS_PER_OZ);
+            const lb = Math.floor(totalOz / 16);
+            const oz = totalOz % 16;
 
             return (
               <Animated.View
@@ -340,7 +347,16 @@ export default function LiveMatchScreen() {
                 style={[styles.netTile, { width: netWidth, height: netHeight, backgroundColor: theme.backgroundDefault }]}
               >
                 <View style={styles.netHeader}>
-                  <ThemedText type="small" style={{ color: theme.textSecondary }}>Net {index + 1}</ThemedText>
+                  <Pressable 
+                    onPress={() => {
+                      setEditingNetNameIndex(index);
+                      setEditNetName(net.name || `Net ${index + 1}`);
+                    }}
+                    style={{ flexDirection: 'row', alignItems: 'center' }}
+                  >
+                    <ThemedText type="small" style={{ color: theme.textSecondary }}>{net.name || `Net ${index + 1}`}</ThemedText>
+                    {!isLocked && <Feather name="edit-3" size={10} color={theme.textSecondary} style={{ marginLeft: 4 }} />}
+                  </Pressable>
                   {!isLocked && (
                     <Pressable onPress={() => {
                       setEditingNetIndex(index);
@@ -363,7 +379,14 @@ export default function LiveMatchScreen() {
                   <View style={styles.controlGroup}>
                     <View style={styles.controlGroupRow}>
                       <Pressable
-                        onPress={() => !isLocked && setNetWeight(index, Math.max(0, net.weight - GRAMS_PER_LB))}
+                        onPress={() => {
+                          if (!isLocked) {
+                            const currentWeight = net.weight;
+                            const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
+                            const newOz = Math.max(0, totalOz - 16);
+                            setNetWeight(index, newOz * GRAMS_PER_OZ);
+                          }
+                        }}
                         disabled={isLocked || net.weight < GRAMS_PER_LB}
                         hitSlop={10}
                         style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < GRAMS_PER_LB ? 0.4 : 1 }]}
@@ -383,10 +406,17 @@ export default function LiveMatchScreen() {
 
                     <View style={styles.controlGroupRow}>
                       <Pressable
-                        onPress={() => !isLocked && setNetWeight(index, Math.max(0, net.weight - GRAMS_PER_OZ))}
-                        disabled={isLocked || net.weight < GRAMS_PER_OZ}
+                        onPress={() => {
+                          if (!isLocked) {
+                            const currentWeight = net.weight;
+                            const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
+                            const newOz = Math.max(0, totalOz - 1);
+                            setNetWeight(index, newOz * GRAMS_PER_OZ);
+                          }
+                        }}
+                        disabled={isLocked || net.weight < (GRAMS_PER_OZ - 1)}
                         hitSlop={10}
-                        style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < GRAMS_PER_OZ ? 0.4 : 1 }]}
+                        style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < (GRAMS_PER_OZ - 1) ? 0.4 : 1 }]}
                       >
                         <Feather name="minus" size={20} color={theme.text} />
                       </Pressable>
@@ -488,17 +518,56 @@ export default function LiveMatchScreen() {
                 <ThemedText>Cancel</ThemedText>
               </Pressable>
               <Pressable 
-                style={[styles.editButton, { backgroundColor: Colors.dark.primary }]} 
+                style={[styles.editButton, { backgroundColor: Colors.dark.primary }]}
                 onPress={() => {
                   if (editingNetIndex !== null) {
-                    const lb = parseFloat(editLb) || 0;
-                    const oz = parseFloat(editOz) || 0;
-                    setNetWeight(editingNetIndex, (lb * GRAMS_PER_LB) + (oz * 28.3495));
+                    const lb = Math.floor(parseFloat(editLb) || 0);
+                    let oz = Math.floor(parseFloat(editOz) || 0);
+                    
+                    // Correctly handle ounce overflow
+                    const extraLb = Math.floor(oz / 16);
+                    const finalOz = oz % 16;
+                    const finalLb = lb + extraLb;
+                    
+                    const totalOz = (finalLb * 16) + finalOz;
+                    setNetWeight(editingNetIndex, totalOz * GRAMS_PER_OZ);
                     setEditingNetIndex(null);
                   }
                 }}
               >
-                <ThemedText style={{ color: "#000" }}>Save</ThemedText>
+                <ThemedText style={{ color: Colors.dark.background }}>Save</ThemedText>
+              </Pressable>
+            </View>
+          </ThemedView>
+        </View>
+      </Modal>
+
+      <Modal visible={editingNetNameIndex !== null} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <ThemedView style={styles.editModal}>
+            <ThemedText type="h3" style={{ marginBottom: Spacing.lg }}>Edit Net Name</ThemedText>
+            <TextInput
+              style={[styles.editInput, { color: theme.text, borderColor: theme.border, width: '100%', marginBottom: Spacing.lg }]}
+              value={editNetName}
+              onChangeText={setEditNetName}
+              placeholder="Enter net name..."
+              placeholderTextColor={theme.textSecondary}
+              autoFocus
+            />
+            <View style={styles.editButtonRow}>
+              <Pressable style={[styles.editButton, { backgroundColor: theme.backgroundTertiary }]} onPress={() => setEditingNetNameIndex(null)}>
+                <ThemedText>Cancel</ThemedText>
+              </Pressable>
+              <Pressable 
+                style={[styles.editButton, { backgroundColor: Colors.dark.primary }]}
+                onPress={() => {
+                  if (editingNetNameIndex !== null) {
+                    updateNetName(editingNetNameIndex, editNetName);
+                    setEditingNetNameIndex(null);
+                  }
+                }}
+              >
+                <ThemedText style={{ color: Colors.dark.background }}>Save</ThemedText>
               </Pressable>
             </View>
           </ThemedView>

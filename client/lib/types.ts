@@ -1,6 +1,8 @@
 export type WeightUnit = "lb/oz" | "kg/g";
 
 export interface NetData {
+  id: string;
+  name: string;
   weight: number;
   capacity?: number;
 }

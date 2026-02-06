@@ -34,8 +34,11 @@ export default function ManualWeightEditModal() {
   const unit = currentMatch?.config.unit || settings.unit;
   const isImperial = unit === "lb/oz";
 
-  const currentLb = Math.floor(currentWeight / 453.592);
-  const currentOz = Math.round((currentWeight % 453.592) / 28.3495);
+  const GRAMS_PER_OZ = 28.3495;
+  const GRAMS_PER_LB = 453.592;
+
+  const currentLb = Math.floor(currentWeight / GRAMS_PER_LB);
+  const currentOz = Math.round((currentWeight % GRAMS_PER_LB) / GRAMS_PER_OZ);
   
   const getInitialKgG = () => {
     const kg = Math.floor(currentWeight / 1000);
@@ -60,7 +63,7 @@ export default function ManualWeightEditModal() {
     if (hasChanged) {
       let weightInGrams: number;
       if (isImperial) {
-        weightInGrams = (selectedLb * 16 + selectedOz) * 28.3495;
+        weightInGrams = (selectedLb * 16 + selectedOz) * GRAMS_PER_OZ;
       } else {
         weightInGrams = selectedKg * 1000 + selectedG;
       }
