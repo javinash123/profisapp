@@ -14,7 +14,7 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { saveUser } from "@/lib/storage";
 import { getApiUrl } from "@/lib/query-client";
 
-const logoImage = require("../../attached_assets/company_logo.jpg");
+const logoImage = require("@/assets/images/logo.png");
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -86,7 +86,7 @@ export default function LoginScreen() {
     <ThemedView style={styles.container}>
       <KeyboardAwareScrollViewCompat contentContainerStyle={styles.content}>
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.header}>
-          <View style={[styles.logoContainer, { backgroundColor: "#1A2332" }]}>
+          <View style={[styles.logoContainer, { backgroundColor: 'transparent' }]}>
             <Image source={logoImage} style={styles.logoImage} resizeMode="contain" />
           </View>
           <ThemedText type="h1" style={styles.title}>Welcome Back</ThemedText>
@@ -152,15 +152,15 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.xl, paddingTop: 60 },
   header: { alignItems: "center", marginBottom: Spacing.xl },
   logoContainer: {
-    width: 80,
-    height: 80,
+    width: 200,
+    height: 100,
     borderRadius: BorderRadius.md,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.md,
     overflow: "hidden",
   },
-  logoImage: { width: 70, height: 70 },
+  logoImage: { width: 180, height: 90 },
   title: { marginBottom: Spacing.xs },
   subtitle: { marginBottom: Spacing.xl, textAlign: "center" },
   form: { gap: Spacing.lg },

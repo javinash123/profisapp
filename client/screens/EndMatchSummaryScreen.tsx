@@ -38,26 +38,29 @@ export default function EndMatchSummaryScreen() {
 
   useEffect(() => {
     const initializeMatch = async () => {
-      // If we have matchData in route params, use it
-      const params = route.params as any;
-      if (params?.matchData) {
-        setMatch(params.matchData);
-        return;
-      }
-
-      // If we have a local lastCompletedMatch, use it
-      if (lastCompletedMatch) {
-        setMatch(lastCompletedMatch);
-        return;
-      }
-      
       try {
+        // If we have matchData in route params, use it
+        const params = route.params as any;
+        if (params?.matchData) {
+          console.log("Using match data from params");
+          setMatch(params.matchData);
+          return;
+        }
+
+        // If we have a local lastCompletedMatch, use it
+        if (lastCompletedMatch) {
+          console.log("Using last completed match from context");
+          setMatch(lastCompletedMatch);
+          return;
+        }
+        
+        console.log("Fetching from history...");
         const history = await getMatchHistory();
-        if (history.length > 0) {
+        if (history && history.length > 0) {
           setMatch(history[0]);
         }
       } catch (e) {
-        console.error("Error loading history:", e);
+        console.error("Error loading match data in summary:", e);
       }
     };
 

@@ -87,6 +87,8 @@ export default function LiveMatchScreen() {
       console.log("Match ended, final data:", finalMatch);
       // Ensure we have a valid finalMatch object before navigating
       if (finalMatch) {
+        // Navigation params in React Navigation 7 might be slightly different or strict
+        // We ensure we're using the correct structure
         navigation.replace("EndMatchSummary", { matchData: finalMatch });
       } else {
         navigation.replace("EndMatchSummary");
