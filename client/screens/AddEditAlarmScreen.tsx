@@ -381,6 +381,9 @@ export default function AddEditAlarmScreen() {
           <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
             Alarm Tone
           </ThemedText>
+          <ThemedText type="caption" style={{ color: theme.textSecondary, marginBottom: Spacing.sm }}>
+            Select a ringtone from your device
+          </ThemedText>
           <View style={styles.modeSelector}>
             {["default", "ringtone", "soft", "alert"].map((t) => (
               <Pressable

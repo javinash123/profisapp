@@ -240,30 +240,39 @@ export default function LiveMatchScreen() {
     // Simulate voice command for the current net
     const activeNetIndex = editingNetIndex !== null ? editingNetIndex : 0;
     
+    // Improved voice command parser for weights like "1lb 2oz"
+    const parseVoiceWeight = (text: string) => {
+      const lbMatch = text.match(/(\d+)\s*(?:lb|pound|pounds)/i);
+      const ozMatch = text.match(/(\d+)\s*(?:oz|ounce|ounces)/i);
+      
+      let totalGrams = 0;
+      if (lbMatch) totalGrams += parseInt(lbMatch[1]) * GRAMS_PER_LB;
+      if (ozMatch) totalGrams += parseInt(ozMatch[1]) * GRAMS_PER_OZ;
+      
+      return totalGrams > 0 ? totalGrams : null;
+    };
+
     Alert.alert(
       "Voice Control",
       "Microphone access granted. Since full speech recognition requires native modules not fully available in all previews, would you like to simulate the command?",
       [
         { text: "Cancel", onPress: () => setIsListening(false), style: "cancel" },
         { 
+          text: "Simulate '1lb 2oz'", 
+          onPress: () => {
+            const grams = (1 * GRAMS_PER_LB) + (2 * GRAMS_PER_OZ);
+            setNetWeight(activeNetIndex, currentMatch.nets[activeNetIndex].weight + grams);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Speech.speak(`Added 1 pound 2 ounces to net ${activeNetIndex + 1}`);
+            setIsListening(false);
+          } 
+        },
+        { 
           text: "Simulate 'Add 1lb'", 
           onPress: () => {
             setNetWeight(activeNetIndex, currentMatch.nets[activeNetIndex].weight + GRAMS_PER_LB);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             Speech.speak("Added 1 pound to net " + (activeNetIndex + 1));
-            setIsListening(false);
-          } 
-        },
-        { 
-          text: "Simulate 'Remove 1lb'", 
-          onPress: () => {
-            const currentWeight = currentMatch.nets[activeNetIndex].weight;
-            if (currentWeight >= GRAMS_PER_LB) {
-              setNetWeight(activeNetIndex, currentWeight - GRAMS_PER_LB);
-              Speech.speak("Removed 1 pound from net " + (activeNetIndex + 1));
-            } else {
-              Speech.speak("Net " + (activeNetIndex + 1) + " is already empty");
-            }
             setIsListening(false);
           } 
         }
@@ -274,7 +283,7 @@ export default function LiveMatchScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Pressable onPress={handleLockTap} style={styles.headerButton}>
+        <Pressable onPress={handleLockTap} style={styles.headerButton} hitSlop={15}>
           <Feather name={isLocked ? "lock" : "unlock"} size={22} color={theme.text} />
         </Pressable>
         <View style={styles.timerContainer}>
@@ -283,13 +292,13 @@ export default function LiveMatchScreen() {
           </ThemedText>
         </View>
         <View style={styles.headerRight}>
-          <Pressable onPress={handleVoiceCommand} style={styles.headerButton}>
+          <Pressable onPress={handleVoiceCommand} style={styles.headerButton} hitSlop={15}>
             <Feather name="mic" size={22} color={isListening ? Colors.dark.primary : theme.text} />
           </Pressable>
-          <Pressable onPress={() => navigation.navigate("Settings")} style={styles.headerButton}>
+          <Pressable onPress={() => navigation.navigate("Settings")} style={styles.headerButton} hitSlop={15}>
             <Feather name="settings" size={22} color={theme.text} />
           </Pressable>
-          <Pressable onPress={() => navigation.navigate("AlarmManagement")} style={styles.headerButton}>
+          <Pressable onPress={() => navigation.navigate("AlarmManagement")} style={styles.headerButton} hitSlop={15}>
             <Feather name="bell" size={22} color={alarms.length > 0 ? Colors.dark.primary : theme.text} />
           </Pressable>
         </View>
@@ -358,6 +367,7 @@ export default function LiveMatchScreen() {
                       <Pressable
                         onPress={() => !isLocked && setNetWeight(index, Math.max(0, net.weight - GRAMS_PER_LB))}
                         disabled={isLocked || net.weight < GRAMS_PER_LB}
+                        hitSlop={10}
                         style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < GRAMS_PER_LB ? 0.4 : 1 }]}
                       >
                         <Feather name="minus" size={20} color={theme.text} />
@@ -366,6 +376,7 @@ export default function LiveMatchScreen() {
                       <Pressable
                         onPress={() => !isLocked && setNetWeight(index, net.weight + GRAMS_PER_LB)}
                         disabled={isLocked}
+                        hitSlop={10}
                         style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 }]}
                       >
                         <Feather name="plus" size={20} color={theme.text} />
@@ -376,6 +387,7 @@ export default function LiveMatchScreen() {
                       <Pressable
                         onPress={() => !isLocked && setNetWeight(index, Math.max(0, net.weight - GRAMS_PER_OZ))}
                         disabled={isLocked || net.weight < GRAMS_PER_OZ}
+                        hitSlop={10}
                         style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked || net.weight < GRAMS_PER_OZ ? 0.4 : 1 }]}
                       >
                         <Feather name="minus" size={20} color={theme.text} />
@@ -384,6 +396,7 @@ export default function LiveMatchScreen() {
                       <Pressable
                         onPress={() => !isLocked && setNetWeight(index, net.weight + GRAMS_PER_OZ)}
                         disabled={isLocked}
+                        hitSlop={10}
                         style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 }]}
                       >
                         <Feather name="plus" size={20} color={theme.text} />

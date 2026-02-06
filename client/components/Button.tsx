@@ -26,6 +26,8 @@ const springConfig: WithSpringConfig = {
   energyThreshold: 0.001,
 };
 
+const hitSlop = { top: 10, bottom: 10, left: 10, right: 10 };
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function Button({
@@ -59,6 +61,7 @@ export function Button({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       disabled={disabled}
+      hitSlop={hitSlop}
       style={[
         styles.button,
         {

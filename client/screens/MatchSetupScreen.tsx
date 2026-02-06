@@ -298,8 +298,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 200,
+    height: 100,
   },
   section: {
     marginBottom: Spacing.xl,

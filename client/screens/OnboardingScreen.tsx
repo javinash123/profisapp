@@ -15,7 +15,7 @@ import { useApp } from "@/lib/AppContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
-const logoImage = require("../../attached_assets/company_logo.jpg");
+const logoImage = require("@/assets/images/logo.png");
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
