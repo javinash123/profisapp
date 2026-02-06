@@ -13,6 +13,7 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { saveUser } from "@/lib/storage";
 import { getApiUrl } from "@/lib/query-client";
+import { useApp } from "@/lib/AppContext";
 
 const logoImage = require("@/assets/images/logo.png");
 
@@ -21,6 +22,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 export default function LoginScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
+  const { login } = useApp();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,15 +65,7 @@ export default function LoginScreen() {
       if (contentType && contentType.includes("application/json")) {
         const userData = await response.json();
         console.log("Login success:", userData);
-        await saveUser({
-          _id: userData._id,
-          username: userData.username,
-          email: userData.email,
-        });
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "MatchSetup" }],
-        });
+        await login(userData);
       } else {
         throw new Error("Server returned an unexpected response format");
       }

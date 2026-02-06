@@ -24,6 +24,7 @@ interface AppContextType {
   weather: WeatherData | null;
   refreshWeather: () => Promise<void>;
   logout: () => Promise<void>;
+  login: (user: StoredUser) => Promise<void>;
   isLoading: boolean;
   currentUser: StoredUser | null;
 }
@@ -339,6 +340,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const login = async (user: StoredUser) => {
+    try {
+      await Storage.saveUser(user);
+      setCurrentUser(user);
+      
+      if (settings.haptics) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -360,6 +374,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         refreshWeather,
         isLoading,
         logout,
+        login,
         currentUser,
       }}
     >
