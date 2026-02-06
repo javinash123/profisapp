@@ -382,7 +382,7 @@ export default function AddEditAlarmScreen() {
             Alarm Tone
           </ThemedText>
           <View style={styles.modeSelector}>
-            {["default", "soft", "alert"].map((t) => (
+            {["default", "ringtone", "soft", "alert"].map((t) => (
               <Pressable
                 key={t}
                 onPress={() => setTone(t)}

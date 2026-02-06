@@ -85,8 +85,12 @@ export default function LiveMatchScreen() {
     try {
       const finalMatch = await endMatch();
       console.log("Match ended, final data:", finalMatch);
-      // Use replace to ensure we can't go back to the live match
-      navigation.replace("EndMatchSummary", { matchData: finalMatch });
+      // Ensure we have a valid finalMatch object before navigating
+      if (finalMatch) {
+        navigation.replace("EndMatchSummary", { matchData: finalMatch });
+      } else {
+        navigation.replace("EndMatchSummary");
+      }
     } catch (error) {
       console.error("Error ending match:", error);
       navigation.replace("EndMatchSummary");
@@ -106,14 +110,24 @@ export default function LiveMatchScreen() {
 
   const playAlarmSound = useCallback(async () => {
     try {
-      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
-      if (!soundRef.current) {
-        const { sound } = await Audio.Sound.createAsync({
-          uri: "data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==",
-        });
-        soundRef.current = sound;
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+      
+      if (soundRef.current) {
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
       }
-      await soundRef.current.replayAsync();
+
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: 'https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3' },
+        { shouldPlay: true, isLooping: false, volume: 1.0 }
+      );
+      soundRef.current = sound;
+      await sound.playAsync();
     } catch (e) {
       console.log("Audio playback error:", e);
     }
@@ -206,18 +220,29 @@ export default function LiveMatchScreen() {
 
   const GRAMS_PER_OZ = 28.3495;
 
-  const handleVoiceCommand = useCallback(() => {
+  const handleVoiceCommand = useCallback(async () => {
     if (isListening) {
       setIsListening(false);
       return;
     }
     
+    try {
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert("Permission Denied", "Microphone access is required for voice commands.");
+        return;
+      }
+    } catch (e) {
+      console.log("Permission request error:", e);
+    }
+
+    setIsListening(true);
     // Simulate voice command for the current net
     const activeNetIndex = editingNetIndex !== null ? editingNetIndex : 0;
     
     Alert.alert(
-      "Voice Control (Simulated)",
-      "Since real-time microphone access is limited in the web preview, would you like to simulate a voice command?",
+      "Voice Control",
+      "Microphone access granted. Since full speech recognition requires native modules not fully available in all previews, would you like to simulate the command?",
       [
         { text: "Cancel", onPress: () => setIsListening(false), style: "cancel" },
         { 
@@ -244,7 +269,6 @@ export default function LiveMatchScreen() {
         }
       ]
     );
-    setIsListening(true);
   }, [isListening, editingNetIndex, currentMatch, setNetWeight, GRAMS_PER_LB]);
 
   return (
@@ -270,6 +294,21 @@ export default function LiveMatchScreen() {
           </Pressable>
         </View>
       </View>
+
+      {activeAlarmBanner && (
+        <Animated.View 
+          entering={FadeIn}
+          style={[styles.alarmBanner, { backgroundColor: Colors.dark.primary }]}
+        >
+          <Feather name="bell" size={20} color="#000" />
+          <ThemedText style={styles.alarmBannerText}>
+            {activeAlarmBanner.label || "Alarm Triggered!"}
+          </ThemedText>
+          <Pressable onPress={() => setActiveAlarmBanner(null)} style={styles.alarmBannerClose}>
+            <Feather name="x" size={20} color="#000" />
+          </Pressable>
+        </Animated.View>
+      )}
 
       <ScrollView 
         style={styles.netsScroll} 
@@ -585,6 +624,28 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
+  },
+  alarmBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+    borderRadius: BorderRadius.md,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  alarmBannerText: {
+    flex: 1,
+    color: '#000',
+    fontWeight: '700',
+    marginLeft: Spacing.md,
+  },
+  alarmBannerClose: {
+    padding: Spacing.xs,
   },
   totalContent: {
     flex: 1,
