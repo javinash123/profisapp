@@ -108,18 +108,18 @@ export default function LiveMatchScreen() {
 
   const handleMatchEnd = useCallback(async () => {
     try {
+      console.log("Ending match...");
       const finalMatch = await endMatch();
       console.log("Match ended, final data:", finalMatch);
-      // Ensure we have a valid finalMatch object before navigating
-      if (finalMatch) {
-        // Navigation params in React Navigation 7 might be slightly different or strict
-        // We ensure we're using the correct structure
-        navigation.replace("EndMatchSummary", { matchData: finalMatch });
-      } else {
-        navigation.replace("EndMatchSummary");
-      }
+      
+      // Navigate to the summary screen
+      // We pass the data in both ways to be safe
+      navigation.replace("EndMatchSummary", { 
+        matchData: finalMatch 
+      });
     } catch (error) {
       console.error("Error ending match:", error);
+      // Even if saving fails, we want to show the summary screen if possible
       navigation.replace("EndMatchSummary");
     }
   }, [endMatch, navigation]);
@@ -287,6 +287,9 @@ export default function LiveMatchScreen() {
           </ThemedText>
         </View>
         <View style={styles.headerRight}>
+          <Pressable onPress={() => navigation.navigate("WeatherDetails")} style={styles.headerButton} hitSlop={15}>
+            <Feather name="cloud" size={22} color={theme.text} />
+          </Pressable>
           <Pressable onPress={handleVoiceCommand} style={styles.headerButton} hitSlop={15}>
             <Feather name="mic" size={22} color={isListening ? Colors.dark.primary : theme.text} />
           </Pressable>

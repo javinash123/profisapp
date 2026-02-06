@@ -57,7 +57,10 @@ export default function EndMatchSummaryScreen() {
         console.log("Fetching from history...");
         const history = await getMatchHistory();
         if (history && history.length > 0) {
+          console.log("Found match in history:", history[0].id);
           setMatch(history[0]);
+        } else {
+          console.warn("No match data found in params, context, or history");
         }
       } catch (e) {
         console.error("Error loading match data in summary:", e);
