@@ -77,8 +77,12 @@ export default function AddEditAlarmScreen() {
       headerLeft: () => (
         <Pressable
           onPress={() => navigation.goBack()}
-          hitSlop={8}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          hitSlop={20}
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.6 : 1,
+            padding: 8,
+            marginLeft: -8,
+          })}
         >
           <ThemedText type="body" style={{ color: theme.link }}>Cancel</ThemedText>
         </Pressable>
