@@ -33,11 +33,13 @@ export default function App() {
           console.log("Font failed to load, falling back to system fonts:", fontError);
         }
         
+        /* 
         // Mocking an alarm for demonstration purposes
         // In a real app, this would come from a real-time source or state management
         setTimeout(() => {
           setActiveAlarm("Alarm: Weigh-in scheduled in 10 minutes");
         }, 3000);
+        */
       } catch (e) {
         console.warn("Font loading error:", e);
       } finally {

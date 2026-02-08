@@ -393,12 +393,9 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
     backgroundColor: Colors.dark.backgroundRoot,
   },
   shareButton: {

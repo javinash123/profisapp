@@ -459,7 +459,7 @@ export default function LiveMatchScreen() {
             style={[styles.endButton, { backgroundColor: Colors.dark.primary, opacity: isLocked ? 0.6 : 1 }]}
           >
             <Feather name="list" size={20} color="#000000" />
-            <ThemedText type="small" style={{ color: "#000000", marginLeft: 6, fontWeight: "600" }}>Summary</ThemedText>
+            <ThemedText type="small" style={{ color: "#000000", marginLeft: 6, fontWeight: "600" }}>End</ThemedText>
           </Pressable>
         </View>
       </View>
