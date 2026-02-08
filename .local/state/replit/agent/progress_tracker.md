@@ -54,11 +54,11 @@
 - Cleaned up unused LB_OPTIONS and OZ_OPTIONS constants
 
 ## Import Re-verified (Feb 5, 2026)
-- Re-ran npm install to restore all dependencies including tsx
-- Workflow "Start dev servers" running successfully
-- Express server serving on port 5000
-- MongoDB connected
-- Expo Metro bundler running and ready
+- [x] Re-ran npm install to restore all dependencies including tsx
+- [x] Workflow "Start dev servers" running successfully
+- [x] Express server serving on port 5000
+- [x] MongoDB connected
+- [x] Expo Metro bundler running and ready
 
 ## Import Re-verified (Feb 6, 2026)
 - [x] Cleaned node_modules/react-native/React conflict and re-ran npm install
@@ -80,3 +80,15 @@
 - [x] Express server serving on port 5000
 - [x] MongoDB connected
 - [x] Expo Metro bundler running and ready
+
+## End Match to Summary Rename (Feb 6, 2026)
+- [x] Renamed "End" button to "Summary" on Live Match screen
+- [x] Removed confirmation alert when ending match
+- [x] Updated button icon and styling
+
+## Summary Screen Fix & Share Feature (Feb 6, 2026)
+- [x] Fixed "Invalid hook call" error in LiveMatchScreen by removing duplicate code
+- [x] Improved match summary loading logic to use route params correctly
+- [x] Added prominent "Share Summary" button to End Match Summary screen
+- [x] Added fallback for text-only sharing if image capture fails
+- [x] Fixed layout and styling on summary screen for better readability

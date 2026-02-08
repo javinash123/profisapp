@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, StyleSheet, Pressable, ScrollView, Share, Platform } from "react-native";
+import { View, StyleSheet, Pressable, ScrollView, Share, Platform, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
@@ -28,43 +28,37 @@ export default function EndMatchSummaryScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute();
   const { theme } = useTheme();
-  const { settings, lastCompletedMatch } = useApp();
+  const { lastCompletedMatch } = useApp();
   const summaryRef = useRef<View>(null);
   
   const [match, setMatch] = useState<MatchState | null>(null);
-
-  // Use a ref to track if we've already tried to load/save to prevent extra renders/calls
-  const hasInitialized = useRef(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const initializeMatch = async () => {
+      setLoading(true);
       try {
-        // First try to use the last completed match from global context
-        if (lastCompletedMatch) {
-          console.log("Using last completed match from context");
-          setMatch(lastCompletedMatch);
+        const params = route.params as any;
+        if (params?.matchData) {
+          setMatch(params.matchData);
+          setLoading(false);
           return;
         }
 
-        // Fallback to route params
-        const params = route.params as any;
-        if (params?.matchData) {
-          console.log("Using match data from params");
-          setMatch(params.matchData);
+        if (lastCompletedMatch) {
+          setMatch(lastCompletedMatch);
+          setLoading(false);
           return;
         }
         
-        // Final fallback to history
-        console.log("Fetching from history...");
         const history = await getMatchHistory();
         if (history && history.length > 0) {
-          console.log("Found match in history:", history[0].id);
           setMatch(history[0]);
-        } else {
-          console.warn("No match data found in context, params, or history");
         }
       } catch (e) {
         console.error("Error loading match data in summary:", e);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -76,7 +70,6 @@ export default function EndMatchSummaryScreen() {
   useEffect(() => {
     const saveMatch = async () => {
       if (!match || hasSaved) return;
-      // Don't save if it's already in DB
       if ((match as any)._id || (match as any).dbId) {
         setHasSaved(true);
         return;
@@ -85,15 +78,12 @@ export default function EndMatchSummaryScreen() {
       try {
         setHasSaved(true);
         const user = await getUser();
-        if (!user) {
-          console.log("No user found, skipping match save");
-          return;
-        }
+        if (!user) return;
         
         const baseUrl = getApiUrl();
         const apiPath = `${baseUrl}/api/matches`;
         const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
-        const response = await fetch(apiPath, {
+        await fetch(apiPath, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
@@ -112,12 +102,6 @@ export default function EndMatchSummaryScreen() {
             status: 'completed'
           }),
         });
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Match save failed:", response.status, errorText);
-        } else {
-          console.log("Match saved successfully to server");
-        }
       } catch (error) {
         console.error("Error saving match:", error);
       }
@@ -126,29 +110,22 @@ export default function EndMatchSummaryScreen() {
     saveMatch();
   }, [match, hasSaved]);
 
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <Pressable
-          onPress={handleShare}
-          hitSlop={8}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-        >
-          <Feather name="share" size={22} color={theme.text} />
-        </Pressable>
-      ),
-    });
-  }, [navigation, theme, match]);
-
   const handleShare = async () => {
-    if (!match || !summaryRef.current) return;
+    if (!match) return;
     
     try {
-      const uri = await captureRef(summaryRef, {
-        format: "png",
-        quality: 1,
-        result: "tmpfile",
-      });
+      let shareUri = "";
+      if (summaryRef.current && Platform.OS !== "web") {
+        try {
+          shareUri = await captureRef(summaryRef, {
+            format: "png",
+            quality: 1,
+            result: "tmpfile",
+          });
+        } catch (captureError) {
+          console.warn("Capture failed, falling back to text-only share:", captureError);
+        }
+      }
       
       const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
       const summaryText = `PegPro Match Summary\n\n` +
@@ -162,21 +139,13 @@ export default function EndMatchSummaryScreen() {
         await Share.share({ message: summaryText });
       } else {
         await Share.share({
-          url: uri,
+          url: shareUri || undefined,
           message: summaryText,
           title: "PegPro Match Summary",
         });
       }
     } catch (error) {
       console.error("Share error:", error);
-      const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
-      const summaryText = `PegPro Match Summary\n\n` +
-        `Match: ${match.config.name}\n` +
-        `Peg: ${match.config.pegNumber}\n` +
-        `Duration: ${formatDuration(match.config.durationMinutes)}\n` +
-        `Total Weight: ${formatWeight(totalWeight, match.config.unit)}\n\n` +
-        match.nets.map((net, i) => `Net ${i + 1}: ${formatWeight(net.weight, match.config.unit)}`).join("\n");
-      await Share.share({ message: summaryText });
     }
   };
 
@@ -186,11 +155,26 @@ export default function EndMatchSummaryScreen() {
 
   const totalWeight = match ? match.nets.reduce((sum, net) => sum + net.weight, 0) : 0;
 
+  if (loading) {
+    return (
+      <ThemedView style={styles.container}>
+        <View style={styles.loading}>
+          <ActivityIndicator size="large" color={Colors.dark.primary} />
+          <ThemedText style={{ marginTop: Spacing.md }}>Loading Summary...</ThemedText>
+        </View>
+      </ThemedView>
+    );
+  }
+
   if (!match) {
     return (
       <ThemedView style={styles.container}>
         <View style={styles.loading}>
-          <ThemedText>Loading...</ThemedText>
+          <Feather name="alert-circle" size={48} color={theme.textSecondary} />
+          <ThemedText style={{ marginTop: Spacing.md }}>No match data found</ThemedText>
+          <Pressable onPress={handleNewMatch} style={[styles.newMatchButton, { backgroundColor: Colors.dark.primary, marginTop: Spacing.xl, paddingHorizontal: Spacing.xl }]}>
+            <ThemedText style={{ color: '#000', fontWeight: '600' }}>Back to Setup</ThemedText>
+          </Pressable>
         </View>
       </ThemedView>
     );
@@ -203,7 +187,7 @@ export default function EndMatchSummaryScreen() {
           styles.content,
           {
             paddingTop: headerHeight + Spacing.lg,
-            paddingBottom: insets.bottom + Spacing.xl + 80,
+            paddingBottom: insets.bottom + Spacing.xl + 140,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -297,13 +281,26 @@ export default function EndMatchSummaryScreen() {
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
         <Pressable
+          onPress={handleShare}
+          style={({ pressed }) => [
+            styles.shareButton,
+            { backgroundColor: theme.backgroundTertiary, opacity: pressed ? 0.8 : 1, marginBottom: Spacing.sm },
+          ]}
+        >
+          <Feather name="share-2" size={20} color={theme.text} />
+          <ThemedText type="body" style={{ color: theme.text, fontWeight: "600", marginLeft: Spacing.sm }}>
+            Share Summary
+          </ThemedText>
+        </Pressable>
+        
+        <Pressable
           onPress={handleNewMatch}
           style={({ pressed }) => [
             styles.newMatchButton,
             { backgroundColor: Colors.dark.primary, opacity: pressed ? 0.8 : 1 },
           ]}
         >
-          <Feather name="plus" size={22} color="#FFFFFF" />
+          <Feather name="plus" size={22} color="#000000" />
           <ThemedText type="body" style={styles.newMatchButtonText}>
             New Match
           </ThemedText>
@@ -404,6 +401,13 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.lg,
     backgroundColor: Colors.dark.backgroundRoot,
   },
+  shareButton: {
+    height: 50,
+    borderRadius: BorderRadius.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   newMatchButton: {
     height: 56,
     borderRadius: BorderRadius.sm,
@@ -413,7 +417,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   newMatchButtonText: {
-    color: "#FFFFFF",
+    color: "#000000",
     fontWeight: "600",
   },
 });

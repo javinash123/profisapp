@@ -39,6 +39,20 @@ export default function LiveMatchScreen() {
   const GRAMS_PER_OZ = 28.3495;
   const GRAMS_PER_LB = 453.592;
 
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockTaps, setLockTaps] = useState(0);
+  const [editingNetIndex, setEditingNetIndex] = useState<number | null>(null);
+  const [editLb, setEditLb] = useState("0");
+  const [editOz, setEditOz] = useState("0");
+  const [editingNetNameIndex, setEditingNetNameIndex] = useState<number | null>(null);
+  const [editNetName, setEditNetName] = useState("");
+  const [firedAlarms, setFiredAlarms] = useState<FiredAlarmTracker>({});
+  const [totalFish, setTotalFish] = useState(0);
+  const [activeAlarmBanner, setActiveAlarmBanner] = useState<Alarm | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const soundRef = useRef<any>(null);
+
   const { streamVoiceResponse } = useVoiceStream({
     onUserTranscript: (text) => console.log("User said:", text),
     onTranscript: (delta) => console.log("AI says:", delta),
@@ -64,19 +78,38 @@ export default function LiveMatchScreen() {
     }
   });
 
-  const [remainingSeconds, setRemainingSeconds] = useState(0);
-  const [isLocked, setIsLocked] = useState(false);
-  const [lockTaps, setLockTaps] = useState(0);
-  const [editingNetIndex, setEditingNetIndex] = useState<number | null>(null);
-  const [editLb, setEditLb] = useState("0");
-  const [editOz, setEditOz] = useState("0");
-  const [editingNetNameIndex, setEditingNetNameIndex] = useState<number | null>(null);
-  const [editNetName, setEditNetName] = useState("");
-  const [firedAlarms, setFiredAlarms] = useState<FiredAlarmTracker>({});
-  const [totalFish, setTotalFish] = useState(0);
-  const [activeAlarmBanner, setActiveAlarmBanner] = useState<Alarm | null>(null);
-  const [isListening, setIsListening] = useState(false);
-  const soundRef = useRef<any>(null);
+  const handleMatchEnd = useCallback(async () => {
+    Alert.alert(
+      "End Match",
+      "Are you sure you want to end this match and see the summary?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "End Match",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              console.log("Ending match...");
+              const matchData = await endMatch();
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "EndMatchSummary", params: { matchData } }],
+              });
+            } catch (error) {
+              console.error("Error ending match:", error);
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "EndMatchSummary" }],
+              });
+            }
+          }
+        }
+      ]
+    );
+  }, [endMatch, navigation]);
 
   useEffect(() => {
     if (!currentMatch) {
@@ -112,35 +145,7 @@ export default function LiveMatchScreen() {
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [currentMatch]);
-
-  const handleMatchEnd = useCallback(async () => {
-    try {
-      console.log("Ending match...");
-      await endMatch();
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "EndMatchSummary" }],
-      });
-    } catch (error) {
-      console.error("Error ending match:", error);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "EndMatchSummary" }],
-      });
-    }
-  }, [endMatch, navigation]);
-
-  const confirmEndMatch = () => {
-    Alert.alert(
-      "End Match",
-      "Are you sure you want to end the match?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "End Match", style: "destructive", onPress: handleMatchEnd },
-      ]
-    );
-  };
+  }, [currentMatch, handleMatchEnd]);
 
   const playAlarmSound = useCallback(async () => {
     try {
@@ -229,7 +234,7 @@ export default function LiveMatchScreen() {
 
     const interval = setInterval(checkAlarms, 1000);
     return () => clearInterval(interval);
-  }, [currentMatch, alarms, firedAlarms, settings]);
+  }, [currentMatch, alarms, firedAlarms, settings, playAlarmSound]);
 
   const totalWeight = currentMatch?.nets.reduce((sum, net) => sum + net.weight, 0) || 0;
 
@@ -300,21 +305,6 @@ export default function LiveMatchScreen() {
           </View>
         </View>
       </View>
-
-      {activeAlarmBanner && (
-        <Animated.View 
-          entering={FadeIn}
-          style={[styles.alarmBanner, { backgroundColor: Colors.dark.primary }]}
-        >
-          <Feather name="bell" size={20} color="#000" />
-          <ThemedText style={styles.alarmBannerText}>
-            {activeAlarmBanner.label || "Alarm Triggered!"}
-          </ThemedText>
-          <Pressable onPress={() => setActiveAlarmBanner(null)} style={styles.alarmBannerClose}>
-            <Feather name="x" size={20} color="#000" />
-          </Pressable>
-        </Animated.View>
-      )}
 
       <ScrollView 
         style={styles.netsScroll} 
@@ -464,12 +454,12 @@ export default function LiveMatchScreen() {
             <ThemedText type="h2">{getNetLb(totalWeight)}lb</ThemedText>
           </View>
           <Pressable
-            onPress={confirmEndMatch}
+            onPress={handleMatchEnd}
             disabled={isLocked}
-            style={[styles.endButton, { backgroundColor: Colors.dark.errorDark, opacity: isLocked ? 0.6 : 1 }]}
+            style={[styles.endButton, { backgroundColor: Colors.dark.primary, opacity: isLocked ? 0.6 : 1 }]}
           >
-            <Feather name="stop-circle" size={20} color="#FFFFFF" />
-            <ThemedText type="small" style={{ color: "#FFFFFF", marginLeft: 6, fontWeight: "600" }}>End</ThemedText>
+            <Feather name="list" size={20} color="#000000" />
+            <ThemedText type="small" style={{ color: "#000000", marginLeft: 6, fontWeight: "600" }}>Summary</ThemedText>
           </Pressable>
         </View>
       </View>
@@ -572,32 +562,34 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   headerButton: {
-    padding: 8,
+    padding: Spacing.xs,
   },
   timerContainer: {
     flex: 1,
     alignItems: "center",
   },
   timer: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
   },
   headerIcons: {
     flexDirection: "row",
-    alignItems: "center",
+    gap: Spacing.sm,
   },
   alarmBanner: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: Spacing.md,
-    paddingHorizontal: Spacing.lg,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
   },
   alarmBannerText: {
     flex: 1,
-    marginLeft: Spacing.sm,
-    color: "#000",
-    fontWeight: "600",
+    color: '#000',
+    fontWeight: '600',
   },
   alarmBannerClose: {
     padding: 4,
@@ -607,17 +599,22 @@ const styles = StyleSheet.create({
   },
   netsGrid: {
     padding: Spacing.lg,
-    paddingBottom: 120,
   },
   netsGridInner: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "space-between",
     gap: Spacing.lg,
   },
   netTile: {
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   netHeader: {
     flexDirection: "row",
@@ -631,28 +628,47 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   weightDisplay: {
-    flexDirection: "row",
-    alignItems: "flex-end",
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   controlValue: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "700",
+    lineHeight: 38,
   },
   controlGroup: {
     width: '100%',
-    gap: 4,
+    gap: Spacing.xs,
   },
   controlGroupRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
   },
   controlButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
+  },
+  progressContainer: {
+    marginTop: Spacing.sm,
+  },
+  progressBar: {
+    height: 4,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+  },
+  controlRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
   },
   controlButtonLarge: {
     width: 44,
@@ -661,89 +677,70 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  progressContainer: {
-    height: 4,
-    width: '100%',
-    marginTop: Spacing.sm,
-  },
-  progressBar: {
-    height: '100%',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-  },
-  controlRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
   footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     paddingHorizontal: Spacing.lg,
-    backgroundColor: 'transparent',
+    borderTopWidth: 1,
+    borderTopColor: Colors.dark.border,
   },
   totalCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    marginTop: Spacing.md,
   },
   totalContent: {
-    flex: 1,
+    gap: 2,
   },
   endButton: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: Spacing.lg,
-    paddingVertical: 10,
-    borderRadius: BorderRadius.sm,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.full,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.8)",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: Spacing.xl,
   },
   editModal: {
-    width: "100%",
-    borderRadius: BorderRadius.lg,
+    width: '100%',
+    borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
-    alignItems: "center",
+    alignItems: 'center',
   },
   editInputRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: Spacing.lg,
     marginBottom: Spacing.xl,
   },
   editInputGroup: {
     flex: 1,
+    alignItems: 'center',
   },
   editInput: {
-    height: 56,
+    width: '100%',
+    height: 50,
     borderWidth: 1,
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.md,
-    fontSize: 24,
-    textAlign: "center",
+    borderRadius: BorderRadius.md,
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: '600',
   },
   editButtonRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: Spacing.md,
-    width: "100%",
+    width: '100%',
   },
   editButton: {
     flex: 1,
     height: 50,
-    borderRadius: BorderRadius.sm,
-    alignItems: "center",
-    justifyContent: "center",
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
