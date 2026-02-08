@@ -62,10 +62,20 @@ export default function LiveMatchScreen() {
       const lowerFull = full.toLowerCase();
       
       // Handle "add a fish" or "add fish"
-      if (lowerFull.includes("add") && lowerFull.includes("fish")) {
+      if ((lowerFull.includes("add") || lowerFull.includes("plus")) && lowerFull.includes("fish")) {
         setTotalFish(prev => prev + 1);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Speech.speak("Added a fish");
+        return;
+      }
+      
+      // Handle "total fish 20" or "fish count 15"
+      const totalFishMatch = lowerFull.match(/(?:total|count|set)\s*fish\s*(?:to|is)?\s*(\d+)/i) || lowerFull.match(/fish\s*(?:total|count|set)\s*(?:to|is)?\s*(\d+)/i);
+      if (totalFishMatch) {
+        const count = parseInt(totalFishMatch[1]);
+        setTotalFish(count);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Speech.speak(`Total fish set to ${count}`);
         return;
       }
       
@@ -78,32 +88,37 @@ export default function LiveMatchScreen() {
       }
 
       // Handle weight commands
-      const lbMatch = full.match(/(\d+)\s*(?:lb|pound)/i);
-      const ozMatch = full.match(/(\d+)\s*(?:oz|ounce)/i);
+      // Matches "add 5 lb to net 1", "plus 10 oz net 2", "5 pound net 3", "2oz net 1"
+      const lbMatch = full.match(/(\d+)\s*(?:lb|pound|lbs)/i);
+      const ozMatch = full.match(/(\d+)\s*(?:oz|ounce|ounces)/i);
       const netMatch = full.match(/net\s*(\d+)/i);
+      const weightMentioned = full.match(/(\d+)\s*(?:lb|pound|lbs|oz|ounce|ounces)/i);
       
       let totalGrams = 0;
       if (lbMatch) totalGrams += parseInt(lbMatch[1]) * GRAMS_PER_LB;
       if (ozMatch) totalGrams += parseInt(ozMatch[1]) * GRAMS_PER_OZ;
       
+      // Default to net 1 if no net mentioned and no net is being edited
       const netIdx = netMatch ? parseInt(netMatch[1]) - 1 : (editingNetIndex ?? 0);
       
-      if (totalGrams > 0 && currentMatch) {
-        const isAdding = lowerFull.includes("add") || lowerFull.includes("plus") || (!lowerFull.includes("remove") && !lowerFull.includes("reduce") && !lowerFull.includes("minus"));
+      if (weightMentioned && currentMatch && netIdx >= 0 && netIdx < currentMatch.nets.length) {
+        const isAdding = lowerFull.includes("add") || lowerFull.includes("plus") || lowerFull.includes("put") || (!lowerFull.includes("remove") && !lowerFull.includes("reduce") && !lowerFull.includes("minus") && !lowerFull.includes("take"));
         
         const currentWeight = currentMatch.nets[netIdx].weight;
         if (isAdding) {
           const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
           const addedOz = Math.round(totalGrams / GRAMS_PER_OZ);
           setNetWeight(netIdx, (totalOz + addedOz) * GRAMS_PER_OZ);
-          Speech.speak(`Added weight to net ${netIdx + 1}`);
+          Speech.speak(`Added ${lbMatch ? lbMatch[1] + ' pounds ' : ''}${ozMatch ? ozMatch[1] + ' ounces ' : ''}to net ${netIdx + 1}`);
         } else {
           const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
           const removedOz = Math.round(totalGrams / GRAMS_PER_OZ);
           setNetWeight(netIdx, Math.max(0, (totalOz - removedOz) * GRAMS_PER_OZ));
-          Speech.speak(`Removed weight from net ${netIdx + 1}`);
+          Speech.speak(`Removed ${lbMatch ? lbMatch[1] + ' pounds ' : ''}${ozMatch ? ozMatch[1] + ' ounces ' : ''}from net ${netIdx + 1}`);
         }
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else if (weightMentioned) {
+        Speech.speak("I heard the weight but couldn't identify which net to update.");
       }
     }
   });
