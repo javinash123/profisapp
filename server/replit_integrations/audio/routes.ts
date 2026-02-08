@@ -94,11 +94,16 @@ export function registerAudioRoutes(app: Express): void {
       res.write(`data: ${JSON.stringify({ type: "user_transcript", data: userTranscript })}\n\n`);
 
       // 6. Stream audio response from gpt-audio
+      const systemPrompt = "You are a fishing match assistant. Users will give commands like 'add a fish', 'remove a fish', 'add 2lb 4oz to net 1', 'remove 1lb from net 2'. Respond concisely confirming the action, e.g., 'Added one fish' or 'Added 2 pounds 4 ounces to net 1'. If they say remove, use the word 'removed' in your response. Always include the specific units and net numbers if provided.";
+      
       const stream = await openai.chat.completions.create({
-        model: "gpt-audio",
+        model: "gpt-4o-audio-preview", // Use a model that supports audio/text modalities
         modalities: ["text", "audio"],
         audio: { voice, format: "pcm16" },
-        messages: chatHistory,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...chatHistory
+        ],
         stream: true,
       });
 

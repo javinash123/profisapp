@@ -57,6 +57,27 @@ export default function LiveMatchScreen() {
     onUserTranscript: (text) => console.log("User said:", text),
     onTranscript: (delta) => console.log("AI says:", delta),
     onComplete: (full) => {
+      console.log("Voice processing complete. AI full response:", full);
+      
+      const lowerFull = full.toLowerCase();
+      
+      // Handle "add a fish" or "add fish"
+      if (lowerFull.includes("add") && lowerFull.includes("fish")) {
+        setTotalFish(prev => prev + 1);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Speech.speak("Added a fish");
+        return;
+      }
+      
+      // Handle "remove a fish" or "remove fish"
+      if ((lowerFull.includes("remove") || lowerFull.includes("delete") || lowerFull.includes("minus")) && lowerFull.includes("fish")) {
+        setTotalFish(prev => Math.max(0, prev - 1));
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Speech.speak("Removed a fish");
+        return;
+      }
+
+      // Handle weight commands
       const lbMatch = full.match(/(\d+)\s*(?:lb|pound)/i);
       const ozMatch = full.match(/(\d+)\s*(?:oz|ounce)/i);
       const netMatch = full.match(/net\s*(\d+)/i);
@@ -68,12 +89,21 @@ export default function LiveMatchScreen() {
       const netIdx = netMatch ? parseInt(netMatch[1]) - 1 : (editingNetIndex ?? 0);
       
       if (totalGrams > 0 && currentMatch) {
+        const isAdding = lowerFull.includes("add") || lowerFull.includes("plus") || (!lowerFull.includes("remove") && !lowerFull.includes("reduce") && !lowerFull.includes("minus"));
+        
         const currentWeight = currentMatch.nets[netIdx].weight;
-        const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
-        const addedOz = Math.round(totalGrams / GRAMS_PER_OZ);
-        setNetWeight(netIdx, (totalOz + addedOz) * GRAMS_PER_OZ);
+        if (isAdding) {
+          const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
+          const addedOz = Math.round(totalGrams / GRAMS_PER_OZ);
+          setNetWeight(netIdx, (totalOz + addedOz) * GRAMS_PER_OZ);
+          Speech.speak(`Added weight to net ${netIdx + 1}`);
+        } else {
+          const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
+          const removedOz = Math.round(totalGrams / GRAMS_PER_OZ);
+          setNetWeight(netIdx, Math.max(0, (totalOz - removedOz) * GRAMS_PER_OZ));
+          Speech.speak(`Removed weight from net ${netIdx + 1}`);
+        }
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Speech.speak(`Added weight to net ${netIdx + 1}`);
       }
     }
   });

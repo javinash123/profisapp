@@ -75,30 +75,34 @@ export default function AddEditAlarmScreen() {
     navigation.setOptions({
       headerTitle: isEditing ? "Edit Alarm" : "New Alarm",
       headerLeft: () => (
-        <Pressable
-          onPress={() => navigation.goBack()}
-          hitSlop={20}
-          style={({ pressed }) => ({
-            opacity: pressed ? 0.6 : 1,
-            padding: 8,
-            marginLeft: -8,
-          })}
-        >
-          <ThemedText type="body" style={{ color: theme.link }}>Cancel</ThemedText>
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            hitSlop={30}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.6 : 1,
+              padding: 12,
+              marginLeft: -12,
+            })}
+          >
+            <ThemedText type="body" style={{ color: theme.link }}>Cancel</ThemedText>
+          </Pressable>
+        </View>
       ),
       headerRight: () => (
-        <Pressable
-          onPress={handleSavePress}
-          hitSlop={20}
-          style={({ pressed }) => ({
-            opacity: pressed ? 0.6 : 1,
-            padding: 8,
-            marginRight: -8,
-          })}
-        >
-          <ThemedText type="body" style={{ color: theme.link, fontWeight: "600" }}>Save</ThemedText>
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Pressable
+            onPress={handleSavePress}
+            hitSlop={30}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.6 : 1,
+              padding: 12,
+              marginRight: -12,
+            })}
+          >
+            <ThemedText type="body" style={{ color: theme.link, fontWeight: "600" }}>Save</ThemedText>
+          </Pressable>
+        </View>
       ),
     });
   }, [navigation, theme, handleSavePress, isEditing]);

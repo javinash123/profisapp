@@ -29,17 +29,19 @@ export default function AlarmManagementScreen() {
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Pressable
-          onPress={() => navigation.navigate("AddEditAlarm", {})}
-          hitSlop={20}
-          style={({ pressed }) => ({
-            opacity: pressed ? 0.6 : 1,
-            padding: 8,
-            marginRight: -8,
-          })}
-        >
-          <Feather name="plus" size={22} color={theme.text} />
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Pressable
+            onPress={() => navigation.navigate("AddEditAlarm", {})}
+            hitSlop={30}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.6 : 1,
+              padding: 12,
+              marginRight: -12,
+            })}
+          >
+            <Feather name="plus" size={24} color={theme.text} />
+          </Pressable>
+        </View>
       ),
     });
   }, [navigation, theme]);
