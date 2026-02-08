@@ -94,16 +94,10 @@ export default function LiveMatchScreen() {
             try {
               console.log("Ending match...");
               const matchData = await endMatch();
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "EndMatchSummary", params: { matchData } }],
-              });
+              navigation.replace("EndMatchSummary", { matchData });
             } catch (error) {
               console.error("Error ending match:", error);
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "EndMatchSummary" }],
-              });
+              navigation.replace("EndMatchSummary");
             }
           }
         }
