@@ -87,8 +87,21 @@ export default function AddEditAlarmScreen() {
           <ThemedText type="body" style={{ color: theme.link }}>Cancel</ThemedText>
         </Pressable>
       ),
+      headerRight: () => (
+        <Pressable
+          onPress={handleSavePress}
+          hitSlop={20}
+          style={({ pressed }) => ({
+            opacity: pressed ? 0.6 : 1,
+            padding: 8,
+            marginRight: -8,
+          })}
+        >
+          <ThemedText type="body" style={{ color: theme.link, fontWeight: "600" }}>Save</ThemedText>
+        </Pressable>
+      ),
     });
-  }, [navigation, theme]);
+  }, [navigation, theme, handleSavePress, isEditing]);
 
   const getAlarmTime = () => {
     const now = new Date();
