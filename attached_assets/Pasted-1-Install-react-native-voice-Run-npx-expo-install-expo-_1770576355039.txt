@@ -1,0 +1,208 @@
+1) Install react-native-voice
+
+Run:
+
+npx expo install expo-dev-client
+npm install @react-native-voice/voice
+
+2) Add config plugin in app.json or app.config.js
+app.json
+{
+  "expo": {
+    "name": "YourApp",
+    "slug": "yourapp",
+    "plugins": ["@react-native-voice/voice"]
+  }
+}
+
+3) Add microphone permissions
+app.json
+{
+  "expo": {
+    "android": {
+      "permissions": ["RECORD_AUDIO"]
+    },
+    "ios": {
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "We need microphone access for voice commands while fishing.",
+        "NSSpeechRecognitionUsageDescription": "We need speech recognition for voice commands."
+      }
+    }
+  }
+}
+
+4) Prebuild (required)
+
+Run:
+
+npx expo prebuild
+
+
+If it asks:
+
+yes for android folder generation
+
+5) Create a custom dev build (important)
+eas build --profile development --platform android
+
+
+Install that build on your phone.
+
+✅ 6) Working voice code for Expo (Copy Paste)
+
+Create file:
+
+useVoiceCommands.js
+import { useEffect, useRef, useState } from "react";
+import Voice from "@react-native-voice/voice";
+
+export function useVoiceCommands(onCommand) {
+  const [isListening, setIsListening] = useState(false);
+  const [lastText, setLastText] = useState("");
+  const isStartingRef = useRef(false);
+
+  useEffect(() => {
+    Voice.onSpeechStart = () => {
+      console.log("Speech started");
+      setIsListening(true);
+    };
+
+    Voice.onSpeechEnd = () => {
+      console.log("Speech ended");
+      setIsListening(false);
+    };
+
+    Voice.onSpeechError = (e) => {
+      console.log("Speech error:", e);
+      setIsListening(false);
+    };
+
+    Voice.onSpeechResults = (e) => {
+      const text = (e.value?.[0] || "").toLowerCase().trim();
+      console.log("Final text:", text);
+      setLastText(text);
+
+      if (text) {
+        onCommand(text);
+      }
+    };
+
+    Voice.onSpeechPartialResults = (e) => {
+      const text = (e.value?.[0] || "").toLowerCase().trim();
+      setLastText(text);
+    };
+
+    return () => {
+      Voice.destroy().then(Voice.removeAllListeners);
+    };
+  }, [onCommand]);
+
+  const startListening = async () => {
+    if (isStartingRef.current) return;
+    isStartingRef.current = true;
+
+    try {
+      await Voice.start("en-US");
+      setIsListening(true);
+    } catch (e) {
+      console.log("Start error:", e);
+    }
+
+    setTimeout(() => {
+      isStartingRef.current = false;
+    }, 500);
+  };
+
+  const stopListening = async () => {
+    try {
+      await Voice.stop();
+      setIsListening(false);
+    } catch (e) {
+      console.log("Stop error:", e);
+    }
+  };
+
+  return { startListening, stopListening, isListening, lastText };
+}
+
+✅ 7) Use it in your Live Match Screen
+
+Example:
+
+import React, { useCallback, useState } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import { useVoiceCommands } from "./useVoiceCommands";
+
+export default function LiveMatchScreen() {
+  const [weight, setWeight] = useState("");
+  const [fishCount, setFishCount] = useState(0);
+
+  const handleCommand = useCallback((text) => {
+    console.log("Command received:", text);
+
+    // add weight 2.5
+    // set weight 1.8
+    const weightMatch = text.match(/(add|set)\s+weight\s+([\d.]+)/);
+    if (weightMatch) {
+      setWeight(weightMatch[2]);
+      return;
+    }
+
+    // fish plus / add fish
+    if (
+      text.includes("add fish") ||
+      text.includes("fish plus") ||
+      text.includes("increase fish")
+    ) {
+      setFishCount((prev) => prev + 1);
+      return;
+    }
+
+    // fish minus
+    if (
+      text.includes("remove fish") ||
+      text.includes("fish minus") ||
+      text.includes("decrease fish")
+    ) {
+      setFishCount((prev) => Math.max(0, prev - 1));
+      return;
+    }
+
+    // reset weight
+    if (text.includes("reset weight") || text.includes("clear weight")) {
+      setWeight("");
+      return;
+    }
+  }, []);
+
+  const { startListening, stopListening, isListening, lastText } =
+    useVoiceCommands(handleCommand);
+
+  return (
+    <View style={{ padding: 20 }}>
+      <TouchableOpacity
+        onPress={() => {
+          if (isListening) stopListening();
+          else startListening();
+        }}
+        style={{
+          padding: 15,
+          backgroundColor: "#222",
+          borderRadius: 10,
+          marginBottom: 10,
+        }}
+      >
+        <Text style={{ color: "white", fontSize: 16 }}>
+          {isListening ? "🎙 Stop Listening" : "🎤 Start Voice Control"}
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={{ marginBottom: 10 }}>
+        Heard: {lastText}
+      </Text>
+
+      <Text style={{ fontSize: 18 }}>Weight: {weight}</Text>
+      <Text style={{ fontSize: 18 }}>Fish Count: {fishCount}</Text>
+    </View>
+  );
+}

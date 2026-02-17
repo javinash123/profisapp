@@ -1,50 +1,59 @@
 /**
- * React hook for voice recording using MediaRecorder API.
- * Records audio in WebM/Opus format for efficient streaming.
+ * React hook for voice recording using Expo Audio API.
+ * Records audio in a format suitable for the backend.
  */
 import { useRef, useCallback, useState } from "react";
+import { Audio } from "expo-av";
 
 export type RecordingState = "idle" | "recording" | "stopped";
 
 export function useVoiceRecorder() {
   const [state, setState] = useState<RecordingState>("idle");
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const recordingRef = useRef<Audio.Recording | null>(null);
 
   const startRecording = useCallback(async (): Promise<void> => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const recorder = new MediaRecorder(stream, {
-      mimeType: "audio/webm;codecs=opus",
-    });
-
-    mediaRecorderRef.current = recorder;
-    chunksRef.current = [];
-
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunksRef.current.push(e.data);
-    };
-
-    recorder.start(100); // Collect chunks every 100ms
-    setState("recording");
-  }, []);
-
-  const stopRecording = useCallback((): Promise<Blob> => {
-    return new Promise((resolve) => {
-      const recorder = mediaRecorderRef.current;
-      if (!recorder || recorder.state !== "recording") {
-        resolve(new Blob());
-        return;
+    try {
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') {
+        throw new Error('Microphone permission not granted');
       }
 
-      recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        recorder.stream.getTracks().forEach((t) => t.stop());
-        setState("stopped");
-        resolve(blob);
-      };
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
 
-      recorder.stop();
-    });
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      recordingRef.current = recording;
+      setState("recording");
+    } catch (err) {
+      console.error('Failed to start recording', err);
+    }
+  }, []);
+
+  const stopRecording = useCallback(async (): Promise<Blob> => {
+    try {
+      const recording = recordingRef.current;
+      if (!recording) {
+        setState("idle");
+        return new Blob();
+      }
+
+      await recording.stopAndUnloadAsync();
+      const uri = recording.getURI();
+      recordingRef.current = null;
+      setState("stopped");
+
+      if (uri) {
+        const response = await fetch(uri);
+        return await response.blob();
+      }
+    } catch (err) {
+      console.error('Failed to stop recording', err);
+    }
+    return new Blob();
   }, []);
 
   return { state, startRecording, stopRecording };
