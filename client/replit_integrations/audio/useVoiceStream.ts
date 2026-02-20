@@ -30,7 +30,10 @@ export function useVoiceStream(callbacks: StreamCallbacks = {}) {
         fileReader.readAsDataURL(audioBlob);
       });
 
-      const response = await fetch(url, {
+      const apiUrl = url.startsWith('http') ? url : `https://${process.env.EXPO_PUBLIC_DOMAIN}${url}`;
+      console.log("Streaming to:", apiUrl);
+
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ audio: base64Audio }),

@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "93a62e1e-e128-4437-bc1d-8977dc49a96a"
+      }
+    },
+    "android": {
+      "package": "com.expo2aarna.myapp"
+    }
+  }
+}
