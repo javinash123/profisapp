@@ -25,7 +25,12 @@ const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
+  loginAttempts: { type: Number, required: true, default: 0 },
+  lockUntil: { type: Date },
+  biometricsEnabled: { type: Boolean, default: false }
 });
 
 const MatchSchema = new mongoose.Schema({

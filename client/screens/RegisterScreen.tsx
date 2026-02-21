@@ -26,6 +26,8 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -150,8 +152,11 @@ export default function RegisterScreen() {
                 onChangeText={setPassword}
                 placeholder="Create a password"
                 placeholderTextColor={theme.textSecondary}
-                secureTextEntry
+                secureTextEntry={!showPassword}
               />
+              <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                <Feather name={showPassword ? "eye" : "eye-off"} size={20} color={theme.textSecondary} />
+              </Pressable>
             </View>
           </View>
 
@@ -165,8 +170,11 @@ export default function RegisterScreen() {
                 onChangeText={setConfirmPassword}
                 placeholder="Repeat your password"
                 placeholderTextColor={theme.textSecondary}
-                secureTextEntry
+                secureTextEntry={!showConfirmPassword}
               />
+              <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
+                <Feather name={showConfirmPassword ? "eye" : "eye-off"} size={20} color={theme.textSecondary} />
+              </Pressable>
             </View>
           </View>
 
@@ -219,6 +227,7 @@ const styles = StyleSheet.create({
   },
   inputIcon: { marginRight: Spacing.sm },
   input: { flex: 1, height: "100%", fontSize: 16 },
+  eyeIcon: { padding: Spacing.xs },
   button: { height: 56, borderRadius: BorderRadius.sm, alignItems: "center", justifyContent: "center", marginTop: Spacing.md },
   buttonText: { color: "#FFFFFF", fontWeight: "600", fontSize: 16 },
   linkButton: { alignItems: "center", padding: Spacing.md },

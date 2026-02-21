@@ -61,6 +61,7 @@ export interface AppSettings {
   displayName: string;
   avatarPreset: number;
   onboardingComplete: boolean;
+  biometricsEnabled?: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -70,4 +71,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   displayName: "Angler",
   avatarPreset: 0,
   onboardingComplete: false,
+  biometricsEnabled: false,
 };

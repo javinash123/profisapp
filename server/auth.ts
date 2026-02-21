@@ -43,11 +43,32 @@ export function setupAuth(app: Express | Router) {
           return done(null, false, { message: "Invalid username or password" });
         }
 
+        // Check if account is locked
+        if (user.lockUntil && user.lockUntil > Date.now()) {
+          const remainingMinutes = Math.ceil((user.lockUntil - Date.now()) / (60 * 1000));
+          return done(null, false, { message: `Account is locked. Try again in ${remainingMinutes} minutes or reset your password.` });
+        }
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
           console.log("Password mismatch for:", username);
+          
+          // Increment login attempts
+          user.loginAttempts = (user.loginAttempts || 0) + 1;
+          if (user.loginAttempts >= 5) {
+            user.lockUntil = Date.now() + 2 * 60 * 60 * 1000; // Lock for 2 hours
+            await user.save();
+            return done(null, false, { message: "Too many failed attempts. Account locked for 2 hours. Please reset your password to continue." });
+          }
+          await user.save();
+          
           return done(null, false, { message: "Invalid username or password" });
         }
+
+        // Reset login attempts on successful login
+        user.loginAttempts = 0;
+        user.lockUntil = undefined;
+        await user.save();
 
         console.log("Login successful for:", username);
         return done(null, user);
@@ -155,5 +176,66 @@ export function setupAuth(app: Express | Router) {
 
   (app as any).get("/api/check-auth", (req: any, res: any) => {
     res.json({ authenticated: req.isAuthenticated(), user: req.user });
+  });
+
+  // Password Reset Routes
+  (app as any).post("/api/password-reset/request", async (req: any, res: any) => {
+    try {
+      const { email } = req.body;
+      const user = await User.findOne({ email: email.toLowerCase() });
+      if (!user) {
+        // Return 200 even if user not found for security
+        return res.json({ message: "If an account with that email exists, a reset link has been sent." });
+      }
+
+      const token = Math.random().toString(36).slice(-8); // Simple token for demo
+      user.resetPasswordToken = token;
+      user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+      await user.save();
+
+      console.log(`Password reset token for ${email}: ${token}`);
+      res.json({ message: "If an account with that email exists, a reset link has been sent.", token }); // Including token for demo/testing
+    } catch (err) {
+      res.status(500).json({ error: "Error requesting password reset" });
+    }
+  });
+
+  (app as any).post("/api/password-reset/reset", async (req: any, res: any) => {
+    try {
+      const { token, password } = req.body;
+      const user = await User.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpires: { $gt: Date.now() }
+      });
+
+      if (!user) {
+        return res.status(400).json({ error: "Password reset token is invalid or has expired." });
+      }
+
+      user.password = await bcrypt.hash(password, 10);
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      user.loginAttempts = 0;
+      user.lockUntil = undefined;
+      await user.save();
+
+      res.json({ message: "Password has been reset successfully." });
+    } catch (err) {
+      res.status(500).json({ error: "Error resetting password" });
+    }
+  });
+
+  // Biometric Settings
+  (app as any).post("/api/user/biometrics", async (req: any, res: any) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
+    try {
+      const { enabled } = req.body;
+      const user = await User.findById(req.user._id);
+      user.biometricsEnabled = enabled;
+      await user.save();
+      res.json({ biometricsEnabled: user.biometricsEnabled });
+    } catch (err) {
+      res.status(500).json({ error: "Error updating biometric settings" });
+    }
   });
 }

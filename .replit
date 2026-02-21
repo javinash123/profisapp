@@ -18,14 +18,6 @@ externalPort = 3000
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 8081
-externalPort = 8081
-
-[[ports]]
-localPort = 8082
-externalPort = 3000
-
 [env]
 PORT = "5000"
 
@@ -55,7 +47,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run all:dev"
+args = "npm run dev"
 waitForPort = 5000
 
 [userenv]

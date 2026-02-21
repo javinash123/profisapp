@@ -13,6 +13,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useApp } from "@/lib/AppContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { WeightUnit } from "@/lib/types";
+import { getApiUrl } from "@/lib/query-client";
 
 const AVATAR_PRESETS = [
   { icon: "user", color: Colors.dark.primary },
@@ -196,6 +197,48 @@ export default function SettingsScreen() {
                   Metric
                 </ThemedText>
               </Pressable>
+            </View>
+          </Card>
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText type="small" style={[styles.sectionLabel, { color: theme.textSecondary }]}>
+            Security
+          </ThemedText>
+          <Card elevation={1} style={styles.sectionCard}>
+            <View style={styles.switchRow}>
+              <View style={styles.switchLabel}>
+                <Feather name="shield" size={20} color={theme.textSecondary} />
+                <View style={{ marginLeft: Spacing.md }}>
+                  <ThemedText type="body">Biometric Login</ThemedText>
+                  <ThemedText type="caption" style={{ color: theme.textSecondary }}>
+                    Use fingerprint or face recognition
+                  </ThemedText>
+                </View>
+              </View>
+              <Switch
+                value={settings.biometricsEnabled || false}
+                onValueChange={async (value) => {
+                  try {
+                    const baseUrl = getApiUrl();
+                    const resp = await fetch(`${baseUrl}/api/user/biometrics`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ enabled: value })
+                    });
+                    if (resp.ok) {
+                      updateSettings({ biometricsEnabled: value });
+                      if (settings.haptics) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    } else {
+                      Alert.alert("Error", "Failed to update biometric settings");
+                    }
+                  } catch (e) {
+                    Alert.alert("Error", "Network error updating biometrics");
+                  }
+                }}
+                trackColor={{ false: theme.border, true: Colors.dark.primary }}
+                thumbColor="#FFFFFF"
+              />
             </View>
           </Card>
         </View>
