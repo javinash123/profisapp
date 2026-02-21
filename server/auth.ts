@@ -94,7 +94,7 @@ export function setupAuth(app: Express | Router) {
       const body = req.body;
       console.log("Registration request received (Full Body):", JSON.stringify(body, null, 2));
       
-      const { username, email, password } = body;
+      const { username, email, password, biometricsEnabled } = body;
       
       if (!username || !email || !password) {
         console.log("Validation failed: missing fields", { username, email, hasPassword: !!password });
@@ -120,6 +120,7 @@ export function setupAuth(app: Express | Router) {
         username: username.toLowerCase(),
         email: email.toLowerCase(),
         password: hashedPassword,
+        biometricsEnabled: biometricsEnabled || false,
       });
       await user.save();
       console.log("User saved successfully in MongoDB:", user._id);

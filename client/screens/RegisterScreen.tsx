@@ -41,8 +41,13 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters long");
+    // Stronger password rules: min 8 chars, uppercase, lowercase, number, and symbol
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      Alert.alert(
+        "Invalid Password",
+        "Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&)."
+      );
       return;
     }
 
@@ -53,18 +58,43 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      // Use the live production URL
+      // Ask for biometrics before proceeding with registration
+      Alert.alert(
+        "Biometric Login",
+        "Would you like to enable biometric login (FaceID/Fingerprint) for faster access?",
+        [
+          {
+            text: "No",
+            onPress: () => completeRegistration(false),
+            style: "cancel"
+          },
+          {
+            text: "Yes, Enable",
+            onPress: () => completeRegistration(true)
+          }
+        ]
+      );
+    } catch (error: any) {
+      Alert.alert("Registration Failed", error.message);
+      setLoading(false);
+    }
+  };
+
+  const completeRegistration = async (enableBiometrics: boolean) => {
+    try {
       const baseUrl = getApiUrl();
-      
-      console.log("Attempting registration at:", `${baseUrl}/api/register`);
-      
       const response = await fetch(`${baseUrl}/api/register`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
-        body: JSON.stringify({ username: name, email, password }),
+        body: JSON.stringify({ 
+          username: name, 
+          email, 
+          password,
+          biometricsEnabled: enableBiometrics 
+        }),
       });
 
       const contentType = response.headers.get("content-type");
@@ -158,6 +188,9 @@ export default function RegisterScreen() {
                 <Feather name={showPassword ? "eye" : "eye-off"} size={20} color={theme.textSecondary} />
               </Pressable>
             </View>
+            <ThemedText type="small" style={[styles.requirements, { color: theme.textSecondary }]}>
+              At least 8 characters, uppercase, lowercase, number, and symbol required.
+            </ThemedText>
           </View>
 
           <View style={styles.inputGroup}>
@@ -228,6 +261,7 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: Spacing.sm },
   input: { flex: 1, height: "100%", fontSize: 16 },
   eyeIcon: { padding: Spacing.xs },
+  requirements: { fontSize: 12, marginTop: 4, marginLeft: 4 },
   button: { height: 56, borderRadius: BorderRadius.sm, alignItems: "center", justifyContent: "center", marginTop: Spacing.md },
   buttonText: { color: "#FFFFFF", fontWeight: "600", fontSize: 16 },
   linkButton: { alignItems: "center", padding: Spacing.md },

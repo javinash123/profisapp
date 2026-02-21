@@ -90,6 +90,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       config,
       startTime: Date.now(),
       nets,
+      catches: [],
       isActive: true,
     };
     
@@ -114,12 +115,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({
             userId: user._id,
             details: {
-              venue: config.name,
-              totalWeight: 0,
-              duration: config.durationMinutes / 60,
-              nets: nets,
-              pegNumber: config.pegNumber
-            },
+            venue: config.name,
+            lakeName: config.lakeName,
+            weatherDescription: config.weatherDescription,
+            totalWeight: 0,
+            duration: config.durationMinutes / 60,
+            nets: nets,
+            pegNumber: config.pegNumber
+          },
             summary: `Match at ${config.name} started`,
             status: 'active'
           }),
@@ -176,6 +179,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           userId: user._id,
           details: {
             venue: match.config.name,
+            lakeName: match.config.lakeName,
+            weatherDescription: match.config.weatherDescription,
             totalWeight: totalWeight,
             duration: match.config.durationMinutes / 60,
             nets: match.nets,
@@ -227,11 +232,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const newNets = [...prev.nets];
       const newWeight = Math.max(0, newNets[netIndex].weight + delta);
       newNets[netIndex] = { ...newNets[netIndex], weight: newWeight };
-      const updated = { ...prev, nets: newNets };
       
-      // Throttle/debounce this in a real app, but for now:
+      const newCatches = [...prev.catches];
+      if (delta > 0) {
+        newCatches.push({
+          id: generateId(),
+          weight: delta,
+          timestamp: Date.now(),
+          netIndex,
+        });
+      }
+      
+      const updated = { ...prev, nets: newNets, catches: newCatches };
       syncMatchToDb(updated);
-      
       return updated;
     });
     
@@ -244,11 +257,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCurrentMatch((prev) => {
       if (!prev) return prev;
       const newNets = [...prev.nets];
+      const oldWeight = newNets[netIndex].weight;
+      const diff = weight - oldWeight;
+      
       newNets[netIndex] = { ...newNets[netIndex], weight: Math.max(0, weight) };
-      const updated = { ...prev, nets: newNets };
       
+      const newCatches = [...prev.catches];
+      if (diff > 0) {
+        newCatches.push({
+          id: generateId(),
+          weight: diff,
+          timestamp: Date.now(),
+          netIndex,
+        });
+      }
+      
+      const updated = { ...prev, nets: newNets, catches: newCatches };
       syncMatchToDb(updated);
-      
       return updated;
     });
   }, [syncMatchToDb]);

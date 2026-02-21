@@ -127,7 +127,7 @@ export default function LoginScreen() {
                 placeholderTextColor={theme.textSecondary}
                 secureTextEntry={!showPassword}
               />
-              <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+              <Pressable onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon} hitSlop={10}>
                 <Feather name={showPassword ? "eye" : "eye-off"} size={20} color={theme.textSecondary} />
               </Pressable>
             </View>

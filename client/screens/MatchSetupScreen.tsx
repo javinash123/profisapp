@@ -27,6 +27,7 @@ export default function MatchSetupScreen() {
   const { settings, startMatch } = useApp();
 
   const [matchName, setMatchName] = useState("");
+  const [lakeName, setLakeName] = useState("");
   const [hours, setHours] = useState("5");
   const [minutes, setMinutes] = useState("0");
   const [pegNumber, setPegNumber] = useState("");
@@ -34,6 +35,7 @@ export default function MatchSetupScreen() {
   const [netCapacity, setNetCapacity] = useState("");
   const [unit, setUnit] = useState<WeightUnit>(settings.unit);
   const [keepScreenOn, setKeepScreenOn] = useState(true);
+  const [weatherDescription, setWeatherDescription] = useState("");
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -61,12 +63,14 @@ export default function MatchSetupScreen() {
     }
     const config: MatchConfig = {
       name: matchName || `Match ${new Date().toLocaleDateString()}`,
+      lakeName: lakeName || "Unknown Lake",
       durationMinutes: durationMinutes || 300,
       pegNumber: pegNumber || "1",
       numberOfNets,
       netCapacity: capacityInGrams,
       unit,
       keepScreenOn,
+      weatherDescription: weatherDescription || "Sunny",
     };
     await startMatch(config);
     navigation.replace("LiveMatch");
@@ -93,7 +97,7 @@ export default function MatchSetupScreen() {
               Match Name
             </ThemedText>
             <Pressable 
-              onPress={() => navigation.navigate("MatchHistory")}
+              onPress={() => navigation.navigate("MatchHistory" as any)}
               style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1, flexDirection: 'row', alignItems: 'center' }]}
             >
               <Feather name="clock" size={14} color={Colors.dark.primary} />
@@ -111,6 +115,38 @@ export default function MatchSetupScreen() {
             placeholderTextColor={theme.textSecondary}
             value={matchName}
             onChangeText={setMatchName}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
+            Lake / Pond Name
+          </ThemedText>
+          <TextInput
+            style={[
+              styles.textInput,
+              { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border },
+            ]}
+            placeholder="e.g., Willow Pond"
+            placeholderTextColor={theme.textSecondary}
+            value={lakeName}
+            onChangeText={setLakeName}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText type="small" style={[styles.label, { color: theme.textSecondary }]}>
+            Weather (e.g., Sunny, Overcast)
+          </ThemedText>
+          <TextInput
+            style={[
+              styles.textInput,
+              { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border },
+            ]}
+            placeholder="e.g., Sunny"
+            placeholderTextColor={theme.textSecondary}
+            value={weatherDescription}
+            onChangeText={setWeatherDescription}
           />
         </View>
 

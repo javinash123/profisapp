@@ -323,6 +323,9 @@ export default function LiveMatchScreen() {
           </Pressable>
           
           <View style={styles.timerContainer}>
+            <ThemedText type="small" style={{ color: theme.textSecondary, textAlign: 'center' }}>
+              {currentMatch.config.lakeName} - Peg {currentMatch.config.pegNumber}
+            </ThemedText>
             <ThemedText style={[styles.timer, { color: remainingSeconds < 300 ? Colors.dark.warning : theme.text }]}>
               {formatTime(remainingSeconds)}
             </ThemedText>

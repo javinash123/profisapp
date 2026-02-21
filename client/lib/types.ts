@@ -9,12 +9,21 @@ export interface NetData {
 
 export interface MatchConfig {
   name: string;
+  lakeName?: string;
   durationMinutes: number;
   pegNumber: string;
   numberOfNets: number;
   netCapacity?: number;
   unit: WeightUnit;
   keepScreenOn: boolean;
+  weatherDescription?: string;
+}
+
+export interface CatchData {
+  id: string;
+  weight: number; // in grams
+  timestamp: number;
+  netIndex: number;
 }
 
 export interface MatchState {
@@ -24,6 +33,7 @@ export interface MatchState {
   startTime: number;
   endTime?: number;
   nets: NetData[];
+  catches: CatchData[];
   isActive: boolean;
 }
 

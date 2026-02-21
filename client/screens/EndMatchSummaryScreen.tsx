@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { View, StyleSheet, Pressable, ScrollView, Share, Platform, ActivityIndicator } from "react-native";
+import { View, StyleSheet, Pressable, ScrollView, Share, Platform, ActivityIndicator, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
@@ -15,12 +15,17 @@ import { useTheme } from "@/hooks/useTheme";
 import { useApp } from "@/lib/AppContext";
 import { Colors, Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { VictoryBar, VictoryChart, VictoryTheme, VictoryAxis, VictoryLine } from "victory-native";
+
+// ... after imports
 import { formatWeight, formatDuration } from "@/lib/utils";
 import { MatchState } from "@/lib/types";
 import { getMatchHistory, getUser } from "@/lib/storage";
 import { getApiUrl } from "@/lib/query-client";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function EndMatchSummaryScreen() {
   const insets = useSafeAreaInsets();
@@ -153,7 +158,45 @@ export default function EndMatchSummaryScreen() {
     navigation.replace("MatchSetup");
   };
 
-  const totalWeight = match ? match.nets.reduce((sum, net) => sum + net.weight, 0) : 0;
+  const catchChartData = match.catches?.map(c => ({
+    time: new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    weight: c.weight / 453.592 // lb
+  })) || [];
+
+  const cumulativeData: any[] = [];
+  let currentTotal = 0;
+  [...(match.catches || [])].sort((a, b) => a.timestamp - b.timestamp).forEach(c => {
+    currentTotal += c.weight;
+    cumulativeData.push({
+      time: new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      total: currentTotal / 453.592 // lb
+    });
+  });
+
+  const generateReport = () => {
+    const start = match.startTime;
+    const end = match.endTime || Date.now();
+    const durationMins = Math.floor((end - start) / 60000);
+    const report = [];
+    
+    for (let i = 0; i <= durationMins; i++) {
+      const minuteTime = start + i * 60000;
+      const minuteCatches = (match.catches || []).filter(c => 
+        c.timestamp >= minuteTime && c.timestamp < minuteTime + 60000
+      );
+      if (minuteCatches.length > 0) {
+        const weight = minuteCatches.reduce((sum, c) => sum + c.weight, 0);
+        report.push({
+          minute: i,
+          time: new Date(minuteTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          weight: formatWeight(weight, match.config.unit)
+        });
+      }
+    }
+    return report;
+  };
+
+  const minuteReport = generateReport();
 
   if (loading) {
     return (
@@ -195,6 +238,7 @@ export default function EndMatchSummaryScreen() {
         <View ref={summaryRef} collapsable={false} style={[styles.summaryContainer, { backgroundColor: Colors.dark.backgroundRoot }]}>
           <View style={styles.summaryHeader}>
             <ThemedText type="h3" style={styles.summaryTitle}>PegPro Match Summary</ThemedText>
+            <ThemedText type="body" style={{ color: theme.textSecondary }}>{match.config.lakeName}</ThemedText>
             <ThemedText type="small" style={{ color: theme.textSecondary }}>{match.config.name}</ThemedText>
           </View>
 
@@ -219,19 +263,46 @@ export default function EndMatchSummaryScreen() {
                 </ThemedText>
               </View>
               <View style={styles.infoItem}>
+                <Feather name="sun" size={18} color={theme.textSecondary} />
+                <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: Spacing.xs }}>
+                  {match.config.weatherDescription}
+                </ThemedText>
+              </View>
+              <View style={styles.infoItem}>
                 <Feather name="clock" size={18} color={theme.textSecondary} />
                 <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: Spacing.xs }}>
                   {formatDuration(match.config.durationMinutes)}
                 </ThemedText>
               </View>
-              <View style={styles.infoItem}>
-                <Feather name="grid" size={18} color={theme.textSecondary} />
-                <ThemedText type="small" style={{ color: theme.textSecondary, marginLeft: Spacing.xs }}>
-                  {match.config.numberOfNets} Nets
-                </ThemedText>
-              </View>
             </View>
           </View>
+
+          <ThemedText type="h4" style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Catch Progression</ThemedText>
+          <Card elevation={1} style={{ padding: Spacing.md, marginBottom: Spacing.md }}>
+            {catchChartData.length > 0 ? (
+              <VictoryChart theme={VictoryTheme.material} domainPadding={20} width={SCREEN_WIDTH - Spacing.xl * 4}>
+                <VictoryAxis fixLabelOverlap />
+                <VictoryAxis dependentAxis tickFormat={(x) => `${x}lb`} />
+                <VictoryBar data={catchChartData} x="time" y="weight" style={{ data: { fill: Colors.dark.primary } }} />
+              </VictoryChart>
+            ) : (
+              <ThemedText style={{ textAlign: 'center', padding: Spacing.lg, color: theme.textSecondary }}>No catch data recorded</ThemedText>
+            )}
+          </Card>
+
+          <ThemedText type="h4" style={styles.sectionTitle}>Minute-by-Minute Activity</ThemedText>
+          <Card elevation={1} style={{ padding: Spacing.md, marginBottom: Spacing.md }}>
+            {minuteReport.length > 0 ? (
+              minuteReport.map((item, idx) => (
+                <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: theme.border }}>
+                  <ThemedText type="small" style={{ color: theme.textSecondary }}>Min {item.minute} ({item.time})</ThemedText>
+                  <ThemedText type="small" style={{ fontWeight: '600' }}>{item.weight}</ThemedText>
+                </View>
+              ))
+            ) : (
+              <ThemedText style={{ textAlign: 'center', padding: Spacing.lg, color: theme.textSecondary }}>No activity recorded</ThemedText>
+            )}
+          </Card>
 
           <ThemedText type="h4" style={styles.sectionTitle}>Per-Net Breakdown</ThemedText>
 
