@@ -1,0 +1,15 @@
+Error Details
+Error: Rendered fewer hooks than expected. This may be caused by an accidental early return statement.
+
+Stack Trace:
+Error: Rendered fewer hooks than expected. This may be caused by an accidental early return statement.
+    at finishRenderingHooks (https://34f82792-3dcb-4419-a8ea-69b1677c6277-00-2hsbwvfzux357.spock.replit.dev/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:8080:39)
+    at renderWithHooks (https://34f82792-3dcb-4419-a8ea-69b1677c6277-00-2hsbwvfzux357.spock.replit.dev/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:8061:7)
+    at updateFunctionComponent (https://34f82792-3dcb-4419-a8ea-69b1677c6277-00-2hsbwvfzux357.spock.replit.dev/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:9743:19)
+    at beginWork (https://34f82792-3dcb-4419-a8ea-69b1677c6277-00-2hsbwvfzux357.spock.replit.dev/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:10329:18)
+    at runWithFiberInDEV (https://34f82792-3dcb-4419-a8ea-69b1677c6277-00-2hsbwvfzux357.spock.replit.dev/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:5822:70)
+    at performUnitOfWork (https://34f82792-3dcb-4419-a8ea-69b1677c6277-00-2hsbwvfzux357.spock.replit.dev/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:12402:95)
+    at workLoopSync (https://34f82792-3dcb-4419-a8ea-69b1677c6277-00-2hsbwvfzux357.spock.replit.dev/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:12295:40)
+    at renderRootSync (https://34f82792-3dcb-4419-a8ea-69b1677c6277-00-2hsbwvfzux357.spock.replit.dev/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:12279:9)
+    at performWorkOnRoot (https://34f82792-3dcb-4419-a8ea-69b1677c6277-00-2hsbwvfzux357.spock.replit.dev/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:12043:44)
+    at performSyncWorkOnRoot (https://34f82792-3dcb-4419-a8ea-69b1677c6277-00-2hsbwvfzux357.spock.replit.dev/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable:13007:7)

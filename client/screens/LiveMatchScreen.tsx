@@ -269,11 +269,6 @@ export default function LiveMatchScreen() {
     return lb;
   };
 
-  if (!currentMatch) return null;
-
-  const netWidth = (SCREEN_WIDTH - Spacing.lg * 3) / 2;
-  const netHeight = 180;
-
   const handleVoiceCommand = useCallback(async () => {
     if (recordingState === "recording") {
       const audioBlob = await stopRecording();
@@ -299,6 +294,11 @@ export default function LiveMatchScreen() {
       console.log("Voice start error:", e);
     }
   }, [recordingState, startRecording, stopRecording, streamVoiceResponse]);
+
+  if (!currentMatch) return null;
+
+  const netWidth = (SCREEN_WIDTH - Spacing.lg * 3) / 2;
+  const netHeight = 180;
 
   return (
     <ThemedView style={styles.container}>
