@@ -258,7 +258,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!prev) return prev;
       const newNets = [...prev.nets];
       const oldWeight = newNets[netIndex].weight;
+      const capacity = newNets[netIndex].capacity;
       const diff = weight - oldWeight;
+      
+      if (capacity && weight > capacity) {
+        // We allow it, but we could trigger a warning here if we had a UI for it.
+        // For now, we just ensure the weight is set as requested.
+        console.warn(`Net ${netIndex + 1} exceeds capacity: ${weight} > ${capacity}`);
+      }
       
       newNets[netIndex] = { ...newNets[netIndex], weight: Math.max(0, weight) };
       

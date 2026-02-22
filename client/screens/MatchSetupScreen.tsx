@@ -31,7 +31,7 @@ export default function MatchSetupScreen() {
   const [hours, setHours] = useState("5");
   const [minutes, setMinutes] = useState("0");
   const [pegNumber, setPegNumber] = useState("");
-  const [numberOfNets, setNumberOfNets] = useState(4);
+  const [numberOfNets, setNumberOfNets] = useState(2);
   const [netCapacity, setNetCapacity] = useState("");
   const [unit, setUnit] = useState<WeightUnit>(settings.unit);
   const [keepScreenOn, setKeepScreenOn] = useState(true);

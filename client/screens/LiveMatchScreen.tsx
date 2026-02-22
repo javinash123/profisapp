@@ -20,6 +20,7 @@ import { formatTime, getProgressColor } from "@/lib/utils";
 import { Alarm } from "@/lib/types";
 import { useVoiceRecorder } from "@/replit_integrations/audio/useVoiceRecorder";
 import { useVoiceStream } from "@/replit_integrations/audio/useVoiceStream";
+import { AlarmBanner } from "@/components/AlarmBanner";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -33,7 +34,7 @@ export default function LiveMatchScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
-  const { currentMatch, setNetWeight, updateNetName, endMatch, refreshWeather, settings, alarms } = useApp();
+  const { currentMatch, setNetWeight, updateNetName, endMatch, refreshWeather, settings, alarms, weather } = useApp();
   const { startRecording, stopRecording, state: recordingState } = useVoiceRecorder();
   
   const GRAMS_PER_OZ = 28.3495;
@@ -124,30 +125,14 @@ export default function LiveMatchScreen() {
   });
 
   const handleMatchEnd = useCallback(async () => {
-    Alert.alert(
-      "End Match",
-      "Are you sure you want to end this match and see the summary?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "End Match",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              console.log("Ending match...");
-              const matchData = await endMatch();
-              navigation.replace("EndMatchSummary", { matchData });
-            } catch (error) {
-              console.error("Error ending match:", error);
-              navigation.replace("EndMatchSummary");
-            }
-          }
-        }
-      ]
-    );
+    try {
+      console.log("Ending match...");
+      const matchData = await endMatch();
+      navigation.navigate("EndMatchSummary", { matchData });
+    } catch (error) {
+      console.error("Error ending match:", error);
+      navigation.navigate("EndMatchSummary", { matchData: null });
+    }
   }, [endMatch, navigation]);
 
   useEffect(() => {
@@ -200,9 +185,10 @@ export default function LiveMatchScreen() {
         soundRef.current = null;
       }
 
+      // Softer, more user-friendly tone
       const { sound } = await Audio.Sound.createAsync(
-        { uri: 'https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3' },
-        { shouldPlay: true, isLooping: false, volume: 1.0 }
+        { uri: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3' },
+        { shouldPlay: true, isLooping: false, volume: 0.7 }
       );
       soundRef.current = sound;
       await sound.playAsync();
@@ -323,6 +309,11 @@ export default function LiveMatchScreen() {
           </Pressable>
           
           <View style={styles.timerContainer}>
+            {weather && (
+              <ThemedText type="caption" style={{ color: Colors.dark.secondary, textAlign: 'center' }}>
+                {weather.temperature}°C {weather.description}
+              </ThemedText>
+            )}
             <ThemedText type="small" style={{ color: theme.textSecondary, textAlign: 'center' }}>
               {currentMatch.config.lakeName} - Peg {currentMatch.config.pegNumber}
             </ThemedText>
@@ -488,6 +479,15 @@ export default function LiveMatchScreen() {
           </View>
         </Animated.View>
       </ScrollView>
+
+      {activeAlarmBanner && (
+        <View style={{ position: 'absolute', top: insets.top + 60, left: 0, right: 0, zIndex: 1000 }}>
+          <AlarmBanner 
+            message={`ALARM: ${activeAlarmBanner.label || 'Timer'}`} 
+            onClose={() => setActiveAlarmBanner(null)}
+          />
+        </View>
+      )}
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
         <View style={[styles.totalCard, { backgroundColor: theme.backgroundDefault }]}>

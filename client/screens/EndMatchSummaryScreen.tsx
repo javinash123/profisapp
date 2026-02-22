@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { View, StyleSheet, Pressable, ScrollView, Share, Platform, ActivityIndicator, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -17,7 +17,6 @@ import { Colors, Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { VictoryBar, VictoryChart, VictoryTheme, VictoryAxis, VictoryLine } from "victory-native";
 
-// ... after imports
 import { formatWeight, formatDuration } from "@/lib/utils";
 import { MatchState } from "@/lib/types";
 import { getMatchHistory, getUser } from "@/lib/storage";
@@ -44,21 +43,26 @@ export default function EndMatchSummaryScreen() {
       setLoading(true);
       try {
         const params = route.params as any;
+        let activeMatch: MatchState | null = null;
+        
+        console.log("Initializing match summary with params:", !!params?.matchData, "lastCompleted:", !!lastCompletedMatch);
+        
         if (params?.matchData) {
-          setMatch(params.matchData);
-          setLoading(false);
-          return;
-        }
-
-        if (lastCompletedMatch) {
-          setMatch(lastCompletedMatch);
-          setLoading(false);
-          return;
+          activeMatch = params.matchData;
+        } else if (lastCompletedMatch) {
+          activeMatch = lastCompletedMatch;
+        } else {
+          const history = await getMatchHistory();
+          if (history && history.length > 0) {
+            activeMatch = history[0];
+          }
         }
         
-        const history = await getMatchHistory();
-        if (history && history.length > 0) {
-          setMatch(history[0]);
+        if (activeMatch) {
+          console.log("Match data found:", activeMatch.id);
+          setMatch(activeMatch);
+        } else {
+          console.log("No match data found in initialization");
         }
       } catch (e) {
         console.error("Error loading match data in summary:", e);
@@ -87,7 +91,7 @@ export default function EndMatchSummaryScreen() {
         
         const baseUrl = getApiUrl();
         const apiPath = `${baseUrl}/api/matches`;
-        const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
+        const totalWeightValue = match.nets.reduce((sum, net) => sum + net.weight, 0);
         await fetch(apiPath, {
           method: "POST",
           headers: { 
@@ -99,11 +103,11 @@ export default function EndMatchSummaryScreen() {
             userId: user._id,
             details: {
               venue: match.config.name,
-              totalWeight: totalWeight,
+              totalWeight: totalWeightValue,
               duration: match.config.durationMinutes / 60,
               nets: match.nets
             },
-            summary: `Match at ${match.config.name} finished with total weight ${formatWeight(totalWeight, match.config.unit)}`,
+            summary: `Match at ${match.config.name} finished with total weight ${formatWeight(totalWeightValue, match.config.unit)}`,
             status: 'completed'
           }),
         });
@@ -132,12 +136,12 @@ export default function EndMatchSummaryScreen() {
         }
       }
       
-      const totalWeight = match.nets.reduce((sum, net) => sum + net.weight, 0);
+      const totalWeightValue = match.nets.reduce((sum, net) => sum + net.weight, 0);
       const summaryText = `PegPro Match Summary\n\n` +
         `Match: ${match.config.name}\n` +
         `Peg: ${match.config.pegNumber}\n` +
         `Duration: ${formatDuration(match.config.durationMinutes)}\n` +
-        `Total Weight: ${formatWeight(totalWeight, match.config.unit)}\n\n` +
+        `Total Weight: ${formatWeight(totalWeightValue, match.config.unit)}\n\n` +
         match.nets.map((net, i) => `Net ${i + 1}: ${formatWeight(net.weight, match.config.unit)}`).join("\n");
       
       if (Platform.OS === "web") {
@@ -158,22 +162,37 @@ export default function EndMatchSummaryScreen() {
     navigation.replace("MatchSetup");
   };
 
-  const catchChartData = match.catches?.map(c => ({
-    time: new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    weight: c.weight / 453.592 // lb
-  })) || [];
+  const catchChartData = useMemo(() => {
+    if (!match) return [];
+    return (match.catches?.map(c => {
+      const elapsedMins = Math.floor((c.timestamp - match.startTime) / 60000);
+      return {
+        time: elapsedMins,
+        weight: match.config.unit === "lb/oz" ? c.weight / 453.592 : c.weight / 1000,
+        label: new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+    }) || []);
+  }, [match]);
 
-  const cumulativeData: any[] = [];
-  let currentTotal = 0;
-  [...(match.catches || [])].sort((a, b) => a.timestamp - b.timestamp).forEach(c => {
-    currentTotal += c.weight;
-    cumulativeData.push({
-      time: new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      total: currentTotal / 453.592 // lb
-    });
-  });
+  const cumulativeData = useMemo(() => {
+    const data: any[] = [];
+    if (match) {
+      let currentTotal = 0;
+      [...(match.catches || [])].sort((a, b) => a.timestamp - b.timestamp).forEach(c => {
+        currentTotal += c.weight;
+        const elapsedMins = Math.floor((c.timestamp - match.startTime) / 60000);
+        data.push({
+          time: elapsedMins,
+          total: match.config.unit === "lb/oz" ? currentTotal / 453.592 : currentTotal / 1000,
+          label: new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+      });
+    }
+    return data;
+  }, [match]);
 
-  const generateReport = () => {
+  const minuteReport = useMemo(() => {
+    if (!match) return [];
     const start = match.startTime;
     const end = match.endTime || Date.now();
     const durationMins = Math.floor((end - start) / 60000);
@@ -194,9 +213,11 @@ export default function EndMatchSummaryScreen() {
       }
     }
     return report;
-  };
+  }, [match]);
 
-  const minuteReport = generateReport();
+  const totalWeight = useMemo(() => {
+    return match ? match.nets.reduce((sum, net) => sum + net.weight, 0) : 0;
+  }, [match]);
 
   if (loading) {
     return (
@@ -277,16 +298,48 @@ export default function EndMatchSummaryScreen() {
             </View>
           </View>
 
-          <ThemedText type="h4" style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Catch Progression</ThemedText>
+          <ThemedText type="h4" style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Catch Progression (Total Weight)</ThemedText>
+          <Card elevation={1} style={{ padding: Spacing.md, marginBottom: Spacing.md }}>
+            {cumulativeData.length > 0 ? (
+              <VictoryChart theme={VictoryTheme.material} domainPadding={20} width={SCREEN_WIDTH - Spacing.xl * 4}>
+                <VictoryAxis 
+                  label="Match Minute" 
+                  style={{ axisLabel: { padding: 30 } }}
+                />
+                <VictoryAxis 
+                  dependentAxis 
+                  label={match.config.unit === "lb/oz" ? "Total lb" : "Total kg"}
+                  style={{ axisLabel: { padding: 40 } }}
+                />
+                <VictoryLine 
+                  data={cumulativeData} 
+                  x="time" 
+                  y="total" 
+                  style={{ data: { stroke: Colors.dark.primary, strokeWidth: 3 } }} 
+                />
+              </VictoryChart>
+            ) : (
+              <ThemedText style={{ textAlign: 'center', padding: Spacing.lg, color: theme.textSecondary }}>No progression data recorded</ThemedText>
+            )}
+          </Card>
+
+          <ThemedText type="h4" style={styles.sectionTitle}>Individual Catch Weights</ThemedText>
           <Card elevation={1} style={{ padding: Spacing.md, marginBottom: Spacing.md }}>
             {catchChartData.length > 0 ? (
               <VictoryChart theme={VictoryTheme.material} domainPadding={20} width={SCREEN_WIDTH - Spacing.xl * 4}>
-                <VictoryAxis fixLabelOverlap />
-                <VictoryAxis dependentAxis tickFormat={(x) => `${x}lb`} />
-                <VictoryBar data={catchChartData} x="time" y="weight" style={{ data: { fill: Colors.dark.primary } }} />
+                <VictoryAxis 
+                  label="Match Minute"
+                  style={{ axisLabel: { padding: 30 } }}
+                />
+                <VictoryAxis 
+                  dependentAxis 
+                  label={match.config.unit === "lb/oz" ? "lb" : "kg"}
+                  style={{ axisLabel: { padding: 40 } }}
+                />
+                <VictoryBar data={catchChartData} x="time" y="weight" style={{ data: { fill: Colors.dark.secondary } }} />
               </VictoryChart>
             ) : (
-              <ThemedText style={{ textAlign: 'center', padding: Spacing.lg, color: theme.textSecondary }}>No catch data recorded</ThemedText>
+              <ThemedText style={{ textAlign: 'center', padding: Spacing.lg, color: theme.textSecondary }}>No individual catch data recorded</ThemedText>
             )}
           </Card>
 
@@ -314,7 +367,7 @@ export default function EndMatchSummaryScreen() {
               <Card key={index} elevation={1} style={styles.netCard}>
                 <View style={styles.netCardContent}>
                   <View style={styles.netInfo}>
-                    <ThemedText type="body" style={{ fontWeight: "600" }}>Net {index + 1}</ThemedText>
+                    <ThemedText type="body" style={{ fontWeight: "600" }}>{net.name || `Net ${index + 1}`}</ThemedText>
                     {isOverCapacity ? (
                       <View style={[styles.overCapacityBadge, { backgroundColor: Colors.dark.error + "30" }]}>
                         <Feather name="alert-circle" size={12} color={Colors.dark.error} />
