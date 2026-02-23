@@ -149,68 +149,7 @@ export default function LoginScreen() {
           </Pressable>
 
           <Pressable 
-            onPress={() => {
-              Alert.prompt(
-                "Reset Password",
-                "Enter your email address to receive a reset token",
-                [
-                  { text: "Cancel", style: "cancel" },
-                  { 
-                    text: "Reset", 
-                    onPress: async (email: string | undefined) => {
-                      if (!email) return;
-                      try {
-                        const baseUrl = getApiUrl();
-                        const resp = await fetch(`${baseUrl}/api/password-reset/request`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ email })
-                        });
-                        const data = await resp.json();
-                        if (data.token) {
-                          Alert.alert("Demo Info", `Token: ${data.token}\nIn a real app, this would be emailed.`);
-                          
-                          Alert.prompt(
-                            "Complete Reset",
-                            "Enter the token and your new password (token:password)",
-                            [
-                              { text: "Cancel", style: "cancel" },
-                              {
-                                text: "Submit",
-                                onPress: async (input: string | undefined) => {
-                                  if (!input) return;
-                                  const [token, newPassword] = input.split(':');
-                                  if (!token || !newPassword) {
-                                    Alert.alert("Error", "Format must be token:password");
-                                    return;
-                                  }
-                                  const resetResp = await fetch(`${baseUrl}/api/password-reset/reset`, {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ token, password: newPassword })
-                                  });
-                                  if (resetResp.ok) {
-                                    Alert.alert("Success", "Password reset successfully");
-                                  } else {
-                                    const err = await resetResp.json();
-                                    Alert.alert("Error", err.error || "Failed to reset password");
-                                  }
-                                }
-                              }
-                            ]
-                          );
-                        } else {
-                          Alert.alert("Success", data.message);
-                        }
-                      } catch (e) {
-                        Alert.alert("Error", "Failed to request reset");
-                      }
-                    }
-                  }
-                ],
-                "plain-text"
-              );
-            }} 
+            onPress={() => navigation.navigate("PasswordReset" as any)} 
             style={styles.linkButton}
           >
             <ThemedText style={{ color: theme.textSecondary }}>Forgot Password?</ThemedText>

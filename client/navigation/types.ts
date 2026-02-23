@@ -12,4 +12,5 @@ export type RootStackParamList = {
   ManualWeightEdit: { netIndex: number };
   MatchHistory: undefined;
   MatchSummary: { matchData: any };
+  PasswordReset: { email?: string; token?: string };
 };

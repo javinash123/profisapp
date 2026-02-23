@@ -198,17 +198,24 @@ export default function EndMatchSummaryScreen() {
     const durationMins = Math.floor((end - start) / 60000);
     const report = [];
     
+    // Group catches by minute
+    const catchesByMinute: { [key: number]: any[] } = {};
+    (match.catches || []).forEach(c => {
+      const minute = Math.floor((c.timestamp - start) / 60000);
+      if (!catchesByMinute[minute]) catchesByMinute[minute] = [];
+      catchesByMinute[minute].push(c);
+    });
+
     for (let i = 0; i <= durationMins; i++) {
-      const minuteTime = start + i * 60000;
-      const minuteCatches = (match.catches || []).filter(c => 
-        c.timestamp >= minuteTime && c.timestamp < minuteTime + 60000
-      );
+      const minuteCatches = catchesByMinute[i] || [];
       if (minuteCatches.length > 0) {
         const weight = minuteCatches.reduce((sum, c) => sum + c.weight, 0);
+        const minuteTime = start + i * 60000;
         report.push({
           minute: i,
           time: new Date(minuteTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          weight: formatWeight(weight, match.config.unit)
+          weight: formatWeight(weight, match.config.unit),
+          fishCount: minuteCatches.length
         });
       }
     }
@@ -298,18 +305,18 @@ export default function EndMatchSummaryScreen() {
             </View>
           </View>
 
-          <ThemedText type="h4" style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Catch Progression (Total Weight)</ThemedText>
+          <ThemedText type="h4" style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Catch Progression (Cumulative Weight)</ThemedText>
           <Card elevation={1} style={{ padding: Spacing.md, marginBottom: Spacing.md }}>
             {cumulativeData.length > 0 ? (
               <VictoryChart theme={VictoryTheme.material} domainPadding={20} width={SCREEN_WIDTH - Spacing.xl * 4}>
                 <VictoryAxis 
                   label="Match Minute" 
-                  style={{ axisLabel: { padding: 30 } }}
+                  style={{ axisLabel: { padding: 30, fill: theme.textSecondary }, tickLabels: { fill: theme.textSecondary } }}
                 />
                 <VictoryAxis 
                   dependentAxis 
                   label={match.config.unit === "lb/oz" ? "Total lb" : "Total kg"}
-                  style={{ axisLabel: { padding: 40 } }}
+                  style={{ axisLabel: { padding: 40, fill: theme.textSecondary }, tickLabels: { fill: theme.textSecondary } }}
                 />
                 <VictoryLine 
                   data={cumulativeData} 
@@ -323,18 +330,18 @@ export default function EndMatchSummaryScreen() {
             )}
           </Card>
 
-          <ThemedText type="h4" style={styles.sectionTitle}>Individual Catch Weights</ThemedText>
+          <ThemedText type="h4" style={styles.sectionTitle}>Catch Distribution (Per Minute)</ThemedText>
           <Card elevation={1} style={{ padding: Spacing.md, marginBottom: Spacing.md }}>
             {catchChartData.length > 0 ? (
               <VictoryChart theme={VictoryTheme.material} domainPadding={20} width={SCREEN_WIDTH - Spacing.xl * 4}>
                 <VictoryAxis 
                   label="Match Minute"
-                  style={{ axisLabel: { padding: 30 } }}
+                  style={{ axisLabel: { padding: 30, fill: theme.textSecondary }, tickLabels: { fill: theme.textSecondary } }}
                 />
                 <VictoryAxis 
                   dependentAxis 
                   label={match.config.unit === "lb/oz" ? "lb" : "kg"}
-                  style={{ axisLabel: { padding: 40 } }}
+                  style={{ axisLabel: { padding: 40, fill: theme.textSecondary }, tickLabels: { fill: theme.textSecondary } }}
                 />
                 <VictoryBar data={catchChartData} x="time" y="weight" style={{ data: { fill: Colors.dark.secondary } }} />
               </VictoryChart>
@@ -347,9 +354,12 @@ export default function EndMatchSummaryScreen() {
           <Card elevation={1} style={{ padding: Spacing.md, marginBottom: Spacing.md }}>
             {minuteReport.length > 0 ? (
               minuteReport.map((item, idx) => (
-                <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: theme.border }}>
-                  <ThemedText type="small" style={{ color: theme.textSecondary }}>Min {item.minute} ({item.time})</ThemedText>
-                  <ThemedText type="small" style={{ fontWeight: '600' }}>{item.weight}</ThemedText>
+                <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: theme.border }}>
+                  <View>
+                    <ThemedText type="small" style={{ color: theme.textSecondary }}>Min {item.minute} ({item.time})</ThemedText>
+                    <ThemedText type="caption" style={{ color: theme.textSecondary }}>{item.fishCount} catch{item.fishCount > 1 ? 'es' : ''}</ThemedText>
+                  </View>
+                  <ThemedText type="body" style={{ fontWeight: '600', color: Colors.dark.primary }}>{item.weight}</ThemedText>
                 </View>
               ))
             ) : (

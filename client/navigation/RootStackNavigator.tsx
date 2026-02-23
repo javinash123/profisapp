@@ -18,6 +18,7 @@ import LoginScreen from "@/screens/LoginScreen";
 import RegisterScreen from "@/screens/RegisterScreen";
 import MatchHistoryScreen from "@/screens/MatchHistoryScreen";
 import MatchSummaryScreen from "@/screens/MatchSummaryScreen";
+import PasswordResetScreen from "@/screens/PasswordResetScreen";
 
 export { RootStackParamList };
 
@@ -48,6 +49,11 @@ export default function RootStackNavigator() {
             name="Register"
             component={RegisterScreen}
             options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PasswordReset"
+            component={PasswordResetScreen}
+            options={{ headerTitle: "Reset Password" }}
           />
         </>
       ) : (
