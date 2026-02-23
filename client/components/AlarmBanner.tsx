@@ -33,13 +33,17 @@ export const AlarmBanner: React.FC<AlarmBannerProps> = ({ message, onPress, onCl
 
 const styles = StyleSheet.create({
   container: {
+    position: 'absolute',
+    top: 50,
+    left: 10,
+    right: 10,
+    zIndex: 9999,
     backgroundColor: "#D32F2F", // Clear red banner
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 12,
-    marginHorizontal: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
