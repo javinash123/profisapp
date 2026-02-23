@@ -1,6 +1,7 @@
 import React from "react";
-import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity, Dimensions } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import Animated, { FadeInDown, FadeOutUp } from "react-native-reanimated";
 
 interface AlarmBannerProps {
   message: string;
@@ -10,37 +11,40 @@ interface AlarmBannerProps {
 
 export const AlarmBanner: React.FC<AlarmBannerProps> = ({ message, onPress, onClose }) => {
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.content} onPress={onPress}>
-        <Feather name="bell" size={20} color="#FFFFFF" style={styles.icon} />
-        <Text style={styles.message} numberOfLines={1}>
+    <Animated.View 
+      entering={FadeInDown} 
+      exiting={FadeOutUp}
+      style={styles.container}
+    >
+      <TouchableOpacity style={styles.content} onPress={onPress} activeOpacity={0.9}>
+        <Feather name="bell" size={24} color="#FFFFFF" style={styles.icon} />
+        <Text style={styles.message}>
           {message}
         </Text>
       </TouchableOpacity>
       {onClose && (
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Feather name="x" size={20} color="#FFFFFF" />
+        <TouchableOpacity style={styles.closeButton} onPress={onClose} hitSlop={20}>
+          <Feather name="x" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       )}
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#FF3B30",
+    backgroundColor: "#D32F2F", // Clear red banner
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginHorizontal: 10,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   content: {
     flex: 1,
@@ -48,15 +52,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   icon: {
-    marginRight: 12,
+    marginRight: 15,
   },
   message: {
     color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "bold",
+    flex: 1,
   },
   closeButton: {
-    marginLeft: 12,
+    marginLeft: 15,
     padding: 4,
   },
 });

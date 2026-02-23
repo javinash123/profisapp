@@ -106,18 +106,38 @@ export default function LiveMatchScreen() {
         const isAdding = lowerFull.includes("add") || lowerFull.includes("plus") || lowerFull.includes("put") || (!lowerFull.includes("remove") && !lowerFull.includes("reduce") && !lowerFull.includes("minus") && !lowerFull.includes("take"));
         
         const currentWeight = currentMatch.nets[netIdx].weight;
+        const capacity = currentMatch.nets[netIdx].capacity;
+
         if (isAdding) {
           const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
           const addedOz = Math.round(totalGrams / GRAMS_PER_OZ);
-          setNetWeight(netIdx, (totalOz + addedOz) * GRAMS_PER_OZ);
-          Speech.speak(`Added ${lbMatch ? lbMatch[1] + ' pounds ' : ''}${ozMatch ? ozMatch[1] + ' ounces ' : ''}to net ${netIdx + 1}`);
+          const newWeight = (totalOz + addedOz) * GRAMS_PER_OZ;
+          
+          if (capacity && newWeight > capacity) {
+            Alert.alert(
+              "Capacity Warning",
+              `Net ${netIdx + 1} will exceed its limit. Continue?`,
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Continue", onPress: () => {
+                  setNetWeight(netIdx, newWeight);
+                  Speech.speak(`Added ${lbMatch ? lbMatch[1] + ' pounds ' : ''}${ozMatch ? ozMatch[1] + ' ounces ' : ''}to net ${netIdx + 1}`);
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                }}
+              ]
+            );
+          } else {
+            setNetWeight(netIdx, newWeight);
+            Speech.speak(`Added ${lbMatch ? lbMatch[1] + ' pounds ' : ''}${ozMatch ? ozMatch[1] + ' ounces ' : ''}to net ${netIdx + 1}`);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
         } else {
           const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
           const removedOz = Math.round(totalGrams / GRAMS_PER_OZ);
           setNetWeight(netIdx, Math.max(0, (totalOz - removedOz) * GRAMS_PER_OZ));
           Speech.speak(`Removed ${lbMatch ? lbMatch[1] + ' pounds ' : ''}${ozMatch ? ozMatch[1] + ' ounces ' : ''}from net ${netIdx + 1}`);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else if (weightMentioned) {
         Speech.speak("I heard the weight but couldn't identify which net to update.");
       }
@@ -203,8 +223,8 @@ export default function LiveMatchScreen() {
 
       // Softer, more user-friendly tone
       const { sound } = await Audio.Sound.createAsync(
-        { uri: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3' },
-        { shouldPlay: true, isLooping: false, volume: 0.7 }
+        { uri: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3' }, // Softer chime
+        { shouldPlay: true, isLooping: false, volume: 0.5 }
       );
       soundRef.current = sound;
       await sound.playAsync();
@@ -426,7 +446,29 @@ export default function LiveMatchScreen() {
                       </Pressable>
                       <ThemedText type="caption" style={{ color: theme.textSecondary }}>LB</ThemedText>
                       <Pressable
-                        onPress={() => !isLocked && setNetWeight(index, net.weight + GRAMS_PER_LB)}
+                        onPress={() => {
+                          if (!isLocked) {
+                            const newOz = Math.round((net.weight + GRAMS_PER_LB) / GRAMS_PER_OZ);
+                            const newWeight = newOz * GRAMS_PER_OZ;
+                            
+                            if (net.capacity && newWeight > net.capacity) {
+                              Alert.alert(
+                                "Capacity Warning",
+                                `Net ${index + 1} will exceed its limit. Continue?`,
+                                [
+                                  { text: "Cancel", style: "cancel" },
+                                  { text: "Continue", onPress: () => {
+                                    setNetWeight(index, newWeight);
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                  }}
+                                ]
+                              );
+                            } else {
+                              setNetWeight(index, newWeight);
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            }
+                          }
+                        }}
                         disabled={isLocked}
                         style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 }]}
                       >
@@ -449,7 +491,29 @@ export default function LiveMatchScreen() {
                       </Pressable>
                       <ThemedText type="caption" style={{ color: theme.textSecondary }}>OZ</ThemedText>
                       <Pressable
-                        onPress={() => !isLocked && setNetWeight(index, net.weight + GRAMS_PER_OZ)}
+                        onPress={() => {
+                          if (!isLocked) {
+                            const newOz = Math.round((net.weight + GRAMS_PER_OZ) / GRAMS_PER_OZ);
+                            const newWeight = newOz * GRAMS_PER_OZ;
+                            
+                            if (net.capacity && newWeight > net.capacity) {
+                              Alert.alert(
+                                "Capacity Warning",
+                                `Net ${index + 1} will exceed its limit. Continue?`,
+                                [
+                                  { text: "Cancel", style: "cancel" },
+                                  { text: "Continue", onPress: () => {
+                                    setNetWeight(index, newWeight);
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                  }}
+                                ]
+                              );
+                            } else {
+                              setNetWeight(index, newWeight);
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            }
+                          }
+                        }}
                         disabled={isLocked}
                         style={[styles.controlButton, { backgroundColor: theme.backgroundTertiary, opacity: isLocked ? 0.4 : 1 }]}
                       >

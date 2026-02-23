@@ -354,12 +354,22 @@ export default function EndMatchSummaryScreen() {
           <Card elevation={1} style={{ padding: Spacing.md, marginBottom: Spacing.md }}>
             {minuteReport.length > 0 ? (
               minuteReport.map((item, idx) => (
-                <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: theme.border }}>
-                  <View>
-                    <ThemedText type="small" style={{ color: theme.textSecondary }}>Min {item.minute} ({item.time})</ThemedText>
-                    <ThemedText type="caption" style={{ color: theme.textSecondary }}>{item.fishCount} catch{item.fishCount > 1 ? 'es' : ''}</ThemedText>
+                <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: idx === minuteReport.length - 1 ? 0 : 1, borderBottomColor: theme.border }}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                      <Feather name="clock" size={14} color={Colors.dark.primary} style={{ marginRight: 6 }} />
+                      <ThemedText type="body" style={{ fontWeight: 'bold' }}>{item.time}</ThemedText>
+                      <ThemedText type="caption" style={{ color: theme.textSecondary, marginLeft: 8 }}>Minute {item.minute}</ThemedText>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Feather name="activity" size={12} color={theme.textSecondary} style={{ marginRight: 6 }} />
+                      <ThemedText type="caption" style={{ color: theme.textSecondary }}>{item.fishCount} fish caught in this minute</ThemedText>
+                    </View>
                   </View>
-                  <ThemedText type="body" style={{ fontWeight: '600', color: Colors.dark.primary }}>{item.weight}</ThemedText>
+                  <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
+                    <ThemedText type="h4" style={{ color: Colors.dark.primary }}>{item.weight}</ThemedText>
+                    <ThemedText type="caption" style={{ color: theme.textSecondary }}>Weight gain</ThemedText>
+                  </View>
                 </View>
               ))
             ) : (
