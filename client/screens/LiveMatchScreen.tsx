@@ -125,14 +125,30 @@ export default function LiveMatchScreen() {
   });
 
   const handleMatchEnd = useCallback(async () => {
-    try {
-      console.log("Ending match...");
-      const matchData = await endMatch();
-      navigation.navigate("EndMatchSummary", { matchData });
-    } catch (error) {
-      console.error("Error ending match:", error);
-      navigation.navigate("EndMatchSummary", { matchData: null });
-    }
+    Alert.alert(
+      "End Match",
+      "Are you sure you want to end this match? This will finalize your weights and results.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "End Match",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              console.log("Ending match...");
+              const matchData = await endMatch();
+              navigation.navigate("EndMatchSummary", { matchData });
+            } catch (error) {
+              console.error("Error ending match:", error);
+              navigation.navigate("EndMatchSummary", { matchData: null });
+            }
+          },
+        },
+      ]
+    );
   }, [endMatch, navigation]);
 
   useEffect(() => {
@@ -273,8 +289,10 @@ export default function LiveMatchScreen() {
     if (recordingState === "recording") {
       const audioBlob = await stopRecording();
       setIsListening(false);
+      // Use absolute URL for the API endpoint
+      const apiUrl = "/api/conversations/1/messages";
       try {
-        await streamVoiceResponse("/api/conversations/1/messages", audioBlob);
+        await streamVoiceResponse(apiUrl, audioBlob);
       } catch (e) {
         console.error("Voice streaming error:", e);
         Alert.alert("Error", "Failed to process voice command.");

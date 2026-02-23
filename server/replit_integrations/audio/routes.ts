@@ -2,11 +2,9 @@ import express, { type Express, type Request, type Response } from "express";
 import { chatStorage } from "../chat/storage";
 import { openai, speechToText, ensureCompatibleFormat } from "./client";
 
-// Body parser with 50MB limit for audio payloads
 const audioBodyParser = express.json({ limit: "50mb" });
 
 export function registerAudioRoutes(app: Express): void {
-  // Get all conversations
   app.get("/api/conversations", async (req: Request, res: Response) => {
     try {
       const conversations = await chatStorage.getAllConversations();
@@ -17,14 +15,11 @@ export function registerAudioRoutes(app: Express): void {
     }
   });
 
-  // Get single conversation with messages
   app.get("/api/conversations/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const conversation = await chatStorage.getConversation(id);
-      if (!conversation) {
-        return res.status(404).json({ error: "Conversation not found" });
-      }
+      if (!conversation) return res.status(404).json({ error: "Conversation not found" });
       const messages = await chatStorage.getMessagesByConversation(id);
       res.json({ ...conversation, messages });
     } catch (error) {
@@ -33,7 +28,6 @@ export function registerAudioRoutes(app: Express): void {
     }
   });
 
-  // Create new conversation
   app.post("/api/conversations", async (req: Request, res: Response) => {
     try {
       const { title } = req.body;
@@ -45,7 +39,6 @@ export function registerAudioRoutes(app: Express): void {
     }
   });
 
-  // Delete conversation
   app.delete("/api/conversations/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -57,75 +50,48 @@ export function registerAudioRoutes(app: Express): void {
     }
   });
 
-  // Send voice message and get streaming audio response
-  // Auto-detects audio format and converts WebM/MP4/OGG to WAV
-  // Uses gpt-4o-mini-transcribe for STT, gpt-audio for voice response
   app.post("/api/conversations/:id/messages", audioBodyParser, async (req: Request, res: Response) => {
     try {
       const conversationId = parseInt(req.params.id);
       const { audio, voice = "alloy" } = req.body;
+      if (!audio) return res.status(400).json({ error: "Audio data (base64) is required" });
 
-      if (!audio) {
-        return res.status(400).json({ error: "Audio data (base64) is required" });
-      }
-
-      // 1. Auto-detect format and convert to OpenAI-compatible format
       const rawBuffer = Buffer.from(audio, "base64");
       const { buffer: audioBuffer, format: inputFormat } = await ensureCompatibleFormat(rawBuffer);
-
-      // 2. Transcribe user audio
       const userTranscript = await speechToText(audioBuffer, inputFormat);
-
-      // 3. Save user message
       await chatStorage.createMessage(conversationId, "user", userTranscript);
 
-      // 4. Get conversation history
       const existingMessages = await chatStorage.getMessagesByConversation(conversationId);
-      const chatHistory = existingMessages.map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      }));
+      const chatHistory = existingMessages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
 
-      // 5. Set up SSE
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
       res.setHeader("Connection", "keep-alive");
-
       res.write(`data: ${JSON.stringify({ type: "user_transcript", data: userTranscript })}\n\n`);
 
-      // 6. Stream audio response from gpt-audio
       const systemPrompt = "You are a fishing match assistant. Users will give commands like 'add a fish', 'remove a fish', 'add 2lb 4oz to net 1', 'remove 1lb from net 2'. Respond concisely confirming the action, e.g., 'Added one fish' or 'Added 2 pounds 4 ounces to net 1'. If they say remove, use the word 'removed' in your response. Always include the specific units and net numbers if provided.";
-      
+
       const stream = await openai.chat.completions.create({
-        model: "gpt-4o-audio-preview", // Use a model that supports audio/text modalities
+        model: "gpt-audio",
         modalities: ["text", "audio"],
         audio: { voice, format: "pcm16" },
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...chatHistory
-        ],
+        messages: [{ role: "system", content: systemPrompt }, ...chatHistory],
         stream: true,
       });
 
       let assistantTranscript = "";
-
       for await (const chunk of stream) {
         const delta = chunk.choices?.[0]?.delta as any;
         if (!delta) continue;
-
         if (delta?.audio?.transcript) {
           assistantTranscript += delta.audio.transcript;
           res.write(`data: ${JSON.stringify({ type: "transcript", data: delta.audio.transcript })}\n\n`);
         }
-
         if (delta?.audio?.data) {
           res.write(`data: ${JSON.stringify({ type: "audio", data: delta.audio.data })}\n\n`);
         }
       }
-
-      // 7. Save assistant message
       await chatStorage.createMessage(conversationId, "assistant", assistantTranscript);
-
       res.write(`data: ${JSON.stringify({ type: "done", transcript: assistantTranscript })}\n\n`);
       res.end();
     } catch (error) {

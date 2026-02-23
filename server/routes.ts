@@ -1,8 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "node:http";
 import { Match } from "./mongodb";
+import { registerAudioRoutes } from "./replit_integrations/audio/routes";
 
 export async function registerRoutes(app: Express): Promise<void> {
+  registerAudioRoutes(app);
+  
   app.get("/matches", async (req, res) => {
     try {
       const authenticatedUser = req.isAuthenticated() ? (req.user as any) : null;
