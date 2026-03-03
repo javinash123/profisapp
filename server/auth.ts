@@ -44,8 +44,8 @@ export function setupAuth(app: Express | Router) {
         }
 
         // Check if account is locked
-        if (user.lockUntil && user.lockUntil > Date.now()) {
-          return done(null, false, { message: "Account is locked due to too many failed attempts. Please reset your password to continue." });
+        if (user.lockUntil && user.lockUntil > new Date()) {
+          return done(null, false, { message: "Your account has been locked after 5 failed login attempts. Please reset your password to continue." });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -55,9 +55,9 @@ export function setupAuth(app: Express | Router) {
           // Increment login attempts
           user.loginAttempts = (user.loginAttempts || 0) + 1;
           if (user.loginAttempts >= 5) {
-            user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // Lock for 24 hours or until reset
+            user.lockUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // Lock indefinitely (1 year) until reset
             await user.save();
-            return done(null, false, { message: "Too many failed attempts. Account locked. Please reset your password to continue." });
+            return done(null, false, { message: "Your account has been locked after 5 failed login attempts. Please reset your password to continue." });
           }
           await user.save();
           

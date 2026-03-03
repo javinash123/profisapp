@@ -34,7 +34,7 @@ export default function LiveMatchScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
-  const { currentMatch, setNetWeight, updateNetName, endMatch, refreshWeather, settings, alarms, weather } = useApp();
+  const { currentMatch, setNetWeight, updateNetName, endMatch, refreshWeather, settings, alarms, weather, setActiveAlarm } = useApp();
   const { startRecording, stopRecording, state: recordingState } = useVoiceRecorder();
   
   const GRAMS_PER_OZ = 28.3495;
@@ -50,7 +50,6 @@ export default function LiveMatchScreen() {
   const [editNetName, setEditNetName] = useState("");
   const [firedAlarms, setFiredAlarms] = useState<FiredAlarmTracker>({});
   const [totalFish, setTotalFish] = useState(0);
-  const [activeAlarmBanner, setActiveAlarmBanner] = useState<Alarm | null>(null);
   const [isListening, setIsListening] = useState(false);
   const soundRef = useRef<any>(null);
 
@@ -279,8 +278,7 @@ export default function LiveMatchScreen() {
 
         if (shouldFire) {
           setFiredAlarms((prev) => ({ ...prev, [alarm.id]: now }));
-          setActiveAlarmBanner(alarm);
-          setTimeout(() => setActiveAlarmBanner(null), 10000);
+          setActiveAlarm(alarm);
           await playAlarmSound();
           if (alarm.vibrationEnabled && settings.haptics) {
             try {
@@ -561,15 +559,6 @@ export default function LiveMatchScreen() {
           </View>
         </Animated.View>
       </ScrollView>
-
-      {activeAlarmBanner && (
-        <View style={{ position: 'absolute', top: insets.top + 60, left: 0, right: 0, zIndex: 1000 }}>
-          <AlarmBanner 
-            message={`ALARM: ${activeAlarmBanner.label || 'Timer'}`} 
-            onClose={() => setActiveAlarmBanner(null)}
-          />
-        </View>
-      )}
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}>
         <View style={[styles.totalCard, { backgroundColor: theme.backgroundDefault }]}>

@@ -21,6 +21,8 @@ interface AppContextType {
   addAlarm: (alarm: Omit<Alarm, "id">) => Promise<void>;
   updateAlarm: (id: string, updates: Partial<Alarm>) => Promise<void>;
   deleteAlarm: (id: string) => Promise<void>;
+  activeAlarm: Alarm | null;
+  setActiveAlarm: (alarm: Alarm | null) => void;
   weather: WeatherData | null;
   refreshWeather: () => Promise<void>;
   logout: () => Promise<void>;
@@ -36,6 +38,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [currentMatch, setCurrentMatch] = useState<MatchState | null>(null);
   const [lastCompletedMatch, setLastCompletedMatch] = useState<MatchState | null>(null);
   const [alarms, setAlarms] = useState<Alarm[]>([]);
+  const [activeAlarm, setActiveAlarm] = useState<Alarm | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
@@ -402,6 +405,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addAlarm,
         updateAlarm,
         deleteAlarm,
+        activeAlarm,
+        setActiveAlarm,
         weather,
         refreshWeather,
         isLoading,
