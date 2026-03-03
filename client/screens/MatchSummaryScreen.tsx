@@ -59,6 +59,9 @@ export default function MatchSummaryScreen() {
       .sort((a, b) => a.minute - b.minute);
   }, [matchData]);
 
+  const totalCatches = catches.length;
+  const averageWeight = catches.length > 0 ? matchData.details.totalWeight / catches.length : 0;
+
   if (!matchData) {
     return (
       <ThemedView style={styles.centered}>
@@ -95,6 +98,19 @@ export default function MatchSummaryScreen() {
               <ThemedText type="h4" style={styles.statValue}>{weight}lb</ThemedText>
               <ThemedText style={styles.statLabel}>Total Weight</ThemedText>
             </View>
+            <View style={styles.statBox}>
+              <Feather name="target" size={24} color={Colors.dark.primary} />
+              <ThemedText type="h4" style={styles.statValue}>{totalCatches}</ThemedText>
+              <ThemedText style={styles.statLabel}>Catches</ThemedText>
+            </View>
+            <View style={styles.statBox}>
+              <Feather name="trending-up" size={24} color={Colors.dark.primary} />
+              <ThemedText type="h4" style={styles.statValue}>{formatWeight(averageWeight)}</ThemedText>
+              <ThemedText style={styles.statLabel}>Avg Weight</ThemedText>
+            </View>
+          </View>
+          
+          <View style={[styles.statsGrid, { marginTop: Spacing.lg }]}>
             <View style={styles.statBox}>
               <Feather name="clock" size={24} color={Colors.dark.primary} />
               <ThemedText type="h4" style={styles.statValue}>{duration}h</ThemedText>
@@ -255,7 +271,7 @@ const styles = StyleSheet.create({
   statsGrid: { flexDirection: "row", width: "100%", justifyContent: "space-around", marginTop: Spacing.md },
   statBox: { alignItems: "center" },
   statValue: { marginTop: Spacing.xs },
-  statLabel: { color: Colors.dark.textSecondary, fontSize: 12 },
+  statLabel: { color: Colors.dark.textSecondary, fontSize: 10 },
   sectionTitle: { marginTop: Spacing.lg, marginBottom: Spacing.sm },
   netsGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.md },
   netCard: { flex: 1, minWidth: "45%", padding: Spacing.md, alignItems: "center" },
@@ -271,34 +287,6 @@ const styles = StyleSheet.create({
   catchItem: { padding: Spacing.md, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   catchInfo: { gap: 2 },
   catchTag: { backgroundColor: Colors.dark.primary + '20', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  description: { lineHeight: 20 },
-  conditionRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
-  conditionText: { textTransform: "capitalize" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-});
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: Spacing.xl,
-    paddingTop: 60,
-    gap: Spacing.md,
-  },
-  backButton: { padding: 4 },
-  scrollContent: { padding: Spacing.xl },
-  summaryCard: { padding: Spacing.xl, alignItems: "center", marginBottom: Spacing.lg },
-  venueTitle: { marginBottom: Spacing.xs },
-  statsGrid: { flexDirection: "row", width: "100%", justifyContent: "space-around", marginTop: Spacing.md },
-  statBox: { alignItems: "center" },
-  statValue: { marginTop: Spacing.xs },
-  statLabel: { color: Colors.dark.textSecondary, fontSize: 12 },
-  sectionTitle: { marginTop: Spacing.lg, marginBottom: Spacing.sm },
-  netsGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.md },
-  netCard: { flex: 1, minWidth: "45%", padding: Spacing.md, alignItems: "center" },
-  netWeight: { marginTop: 4 },
-  card: { padding: Spacing.lg },
   description: { lineHeight: 20 },
   conditionRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   conditionText: { textTransform: "capitalize" },

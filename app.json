@@ -6,7 +6,10 @@
       }
     },
     "android": {
-      "package": "com.expo3aarna.myapp"
-    }
+      "package": "com.expo3aarna.myapp",
+      "permissions": [
+        "RECORD_AUDIO"
+      ]
+    },
   }
 }

@@ -1,10 +1,40 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Voice from "@react-native-voice/voice";
 
 export function useVoiceCommands(onCommand: (text: string) => void) {
   const [isListening, setIsListening] = useState(false);
   const [lastText, setLastText] = useState("");
   const isStartingRef = useRef(false);
+  const onCommandRef = useRef(onCommand);
+
+  useEffect(() => {
+    onCommandRef.current = onCommand;
+  }, [onCommand]);
+
+  const startListening = useCallback(async () => {
+    if (isStartingRef.current) return;
+    isStartingRef.current = true;
+
+    try {
+      await Voice.start("en-US");
+      setIsListening(true);
+    } catch (e) {
+      console.log("Start error:", e);
+    }
+
+    setTimeout(() => {
+      isStartingRef.current = false;
+    }, 500);
+  }, []);
+
+  const stopListening = useCallback(async () => {
+    try {
+      await Voice.stop();
+      setIsListening(false);
+    } catch (e) {
+      console.log("Stop error:", e);
+    }
+  }, []);
 
   useEffect(() => {
     Voice.onSpeechStart = () => {
@@ -20,6 +50,10 @@ export function useVoiceCommands(onCommand: (text: string) => void) {
     Voice.onSpeechError = (e) => {
       console.log("Speech error:", e);
       setIsListening(false);
+      // Attempt to restart if it's a timeout or non-fatal error
+      if (e.error?.code === '7' || e.error?.code === 'no-match') {
+        startListening();
+      }
     };
 
     Voice.onSpeechResults = (e) => {
@@ -28,8 +62,10 @@ export function useVoiceCommands(onCommand: (text: string) => void) {
       setLastText(text);
 
       if (text) {
-        onCommand(text);
+        onCommandRef.current(text);
       }
+      // Restart listening for continuous mode
+      startListening();
     };
 
     Voice.onSpeechPartialResults = (e) => {
@@ -40,32 +76,7 @@ export function useVoiceCommands(onCommand: (text: string) => void) {
     return () => {
       Voice.destroy().then(Voice.removeAllListeners);
     };
-  }, [onCommand]);
-
-  const startListening = async () => {
-    if (isStartingRef.current) return;
-    isStartingRef.current = true;
-
-    try {
-      await Voice.start("en-US");
-      setIsListening(true);
-    } catch (e) {
-      console.log("Start error:", e);
-    }
-
-    setTimeout(() => {
-      isStartingRef.current = false;
-    }, 500);
-  };
-
-  const stopListening = async () => {
-    try {
-      await Voice.stop();
-      setIsListening(false);
-    } catch (e) {
-      console.log("Stop error:", e);
-    }
-  };
+  }, [startListening]);
 
   return { startListening, stopListening, isListening, lastText };
 }

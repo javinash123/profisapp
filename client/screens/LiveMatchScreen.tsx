@@ -9,7 +9,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { Audio } from "expo-av";
 import Animated, { FadeIn } from "react-native-reanimated";
 
-import * as Speech from 'expo-speech';
+import { useVoiceCommands } from "@/hooks/useVoiceCommands";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
@@ -35,7 +35,43 @@ export default function LiveMatchScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
   const { currentMatch, setNetWeight, updateNetName, endMatch, refreshWeather, settings, alarms, weather, setActiveAlarm } = useApp();
-  const { startRecording, stopRecording, state: recordingState } = useVoiceRecorder();
+  
+  const handleVoiceCommandText = useCallback((text: string) => {
+    console.log("Voice Command Received:", text);
+    const lowerFull = text.toLowerCase();
+    
+    // Handle "add a fish" or "add fish"
+    if ((lowerFull.includes("add") || lowerFull.includes("plus")) && lowerFull.includes("fish")) {
+      setTotalFish(prev => prev + 1);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      return;
+    }
+    
+    // Handle weight commands
+    const lbMatch = lowerFull.match(/(\d+)\s*(?:lb|pound|pounds|lbs)/i);
+    const ozMatch = lowerFull.match(/(\d+)\s*(?:oz|ounce|ounces)/i);
+    const netMatch = lowerFull.match(/net\s*(\d+)/i);
+    
+    let totalGrams = 0;
+    if (lbMatch) totalGrams += parseInt(lbMatch[1]) * 453.592;
+    if (ozMatch) totalGrams += parseInt(ozMatch[1]) * 28.3495;
+    
+    const netIdx = netMatch ? parseInt(netMatch[1]) - 1 : (editingNetIndex ?? 0);
+    
+    if (totalGrams > 0 && currentMatch && netIdx >= 0 && netIdx < currentMatch.nets.length) {
+      const isAdding = lowerFull.includes("add") || lowerFull.includes("plus") || lowerFull.includes("put") || (!lowerFull.includes("remove") && !lowerFull.includes("reduce") && !lowerFull.includes("minus") && !lowerFull.includes("take"));
+      
+      const currentWeight = currentMatch.nets[netIdx].weight;
+      if (isAdding) {
+        setNetWeight(netIdx, currentWeight + totalGrams);
+      } else {
+        setNetWeight(netIdx, Math.max(0, currentWeight - totalGrams));
+      }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  }, [currentMatch, editingNetIndex, setNetWeight]);
+
+  const { startListening, stopListening, isListening: isVoiceListening } = useVoiceCommands(handleVoiceCommandText);
   
   const GRAMS_PER_OZ = 28.3495;
   const GRAMS_PER_LB = 453.592;
@@ -304,32 +340,12 @@ export default function LiveMatchScreen() {
   };
 
   const handleVoiceCommand = useCallback(async () => {
-    if (recordingState === "recording") {
-      const audioBlob = await stopRecording();
-      setIsListening(false);
-      // Use absolute URL for the API endpoint
-      const apiUrl = "/api/conversations/1/messages";
-      try {
-        await streamVoiceResponse(apiUrl, audioBlob);
-      } catch (e) {
-        console.error("Voice streaming error:", e);
-        Alert.alert("Error", "Failed to process voice command.");
-      }
-      return;
+    if (isVoiceListening) {
+      await stopListening();
+    } else {
+      await startListening();
     }
-    
-    try {
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert("Permission Denied", "Microphone access is required for voice commands.");
-        return;
-      }
-      await startRecording();
-      setIsListening(true);
-    } catch (e) {
-      console.log("Voice start error:", e);
-    }
-  }, [recordingState, startRecording, stopRecording, streamVoiceResponse]);
+  }, [isVoiceListening, startListening, stopListening]);
 
   if (!currentMatch) return null;
 
@@ -363,7 +379,7 @@ export default function LiveMatchScreen() {
               <Feather name="cloud" size={22} color={theme.text} />
             </Pressable>
             <Pressable onPress={handleVoiceCommand} style={styles.headerButton} hitSlop={15}>
-              <Feather name="mic" size={22} color={isListening ? Colors.dark.primary : theme.text} />
+              <Feather name="mic" size={22} color={isVoiceListening ? Colors.dark.primary : theme.text} />
             </Pressable>
             <Pressable onPress={() => navigation.navigate("Settings")} style={styles.headerButton} hitSlop={15}>
               <Feather name="settings" size={22} color={theme.text} />
