@@ -9,7 +9,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { Audio } from "expo-av";
 import Animated, { FadeIn } from "react-native-reanimated";
 
-import { useVoiceCommands } from "@/hooks/useVoiceCommands";
+import { useVoiceCommand } from "@/hooks/useVoiceCommand";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
@@ -36,42 +36,7 @@ export default function LiveMatchScreen() {
   const { theme } = useTheme();
   const { currentMatch, setNetWeight, updateNetName, endMatch, refreshWeather, settings, alarms, weather, setActiveAlarm } = useApp();
   
-  const handleVoiceCommandText = useCallback((text: string) => {
-    console.log("Voice Command Received:", text);
-    const lowerFull = text.toLowerCase();
-    
-    // Handle "add a fish" or "add fish"
-    if ((lowerFull.includes("add") || lowerFull.includes("plus")) && lowerFull.includes("fish")) {
-      setTotalFish(prev => prev + 1);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      return;
-    }
-    
-    // Handle weight commands
-    const lbMatch = lowerFull.match(/(\d+)\s*(?:lb|pound|pounds|lbs)/i);
-    const ozMatch = lowerFull.match(/(\d+)\s*(?:oz|ounce|ounces)/i);
-    const netMatch = lowerFull.match(/net\s*(\d+)/i);
-    
-    let totalGrams = 0;
-    if (lbMatch) totalGrams += parseInt(lbMatch[1]) * 453.592;
-    if (ozMatch) totalGrams += parseInt(ozMatch[1]) * 28.3495;
-    
-    const netIdx = netMatch ? parseInt(netMatch[1]) - 1 : (editingNetIndex ?? 0);
-    
-    if (totalGrams > 0 && currentMatch && netIdx >= 0 && netIdx < currentMatch.nets.length) {
-      const isAdding = lowerFull.includes("add") || lowerFull.includes("plus") || lowerFull.includes("put") || (!lowerFull.includes("remove") && !lowerFull.includes("reduce") && !lowerFull.includes("minus") && !lowerFull.includes("take"));
-      
-      const currentWeight = currentMatch.nets[netIdx].weight;
-      if (isAdding) {
-        setNetWeight(netIdx, currentWeight + totalGrams);
-      } else {
-        setNetWeight(netIdx, Math.max(0, currentWeight - totalGrams));
-      }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  }, [currentMatch, editingNetIndex, setNetWeight]);
-
-  const { startListening, stopListening, isListening: isVoiceListening } = useVoiceCommands(handleVoiceCommandText);
+  const { isListening: isVoiceListening, toggleListening: handleVoiceCommand, isProcessing } = useVoiceCommand();
   
   const GRAMS_PER_OZ = 28.3495;
   const GRAMS_PER_LB = 453.592;
@@ -88,96 +53,6 @@ export default function LiveMatchScreen() {
   const [totalFish, setTotalFish] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const soundRef = useRef<any>(null);
-
-  const { streamVoiceResponse } = useVoiceStream({
-    onUserTranscript: (text) => console.log("User said:", text),
-    onTranscript: (delta) => console.log("AI says:", delta),
-    onComplete: (full) => {
-      console.log("Voice processing complete. AI full response:", full);
-      
-      const lowerFull = full.toLowerCase();
-      
-      // Handle "add a fish" or "add fish"
-      if ((lowerFull.includes("add") || lowerFull.includes("plus")) && lowerFull.includes("fish")) {
-        setTotalFish(prev => prev + 1);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Speech.speak("Added a fish");
-        return;
-      }
-      
-      // Handle "total fish 20" or "fish count 15"
-      const totalFishMatch = lowerFull.match(/(?:total|count|set)\s*fish\s*(?:to|is)?\s*(\d+)/i) || lowerFull.match(/fish\s*(?:total|count|set)\s*(?:to|is)?\s*(\d+)/i);
-      if (totalFishMatch) {
-        const count = parseInt(totalFishMatch[1]);
-        setTotalFish(count);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Speech.speak(`Total fish set to ${count}`);
-        return;
-      }
-      
-      // Handle "remove a fish" or "remove fish"
-      if ((lowerFull.includes("remove") || lowerFull.includes("delete") || lowerFull.includes("minus")) && lowerFull.includes("fish")) {
-        setTotalFish(prev => Math.max(0, prev - 1));
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Speech.speak("Removed a fish");
-        return;
-      }
-
-      // Handle weight commands
-      // Matches "add 5 lb to net 1", "plus 10 oz net 2", "5 pound net 3", "2oz net 1"
-      const lbMatch = full.match(/(\d+)\s*(?:lb|pound|lbs)/i);
-      const ozMatch = full.match(/(\d+)\s*(?:oz|ounce|ounces)/i);
-      const netMatch = full.match(/net\s*(\d+)/i);
-      const weightMentioned = full.match(/(\d+)\s*(?:lb|pound|lbs|oz|ounce|ounces)/i);
-      
-      let totalGrams = 0;
-      if (lbMatch) totalGrams += parseInt(lbMatch[1]) * GRAMS_PER_LB;
-      if (ozMatch) totalGrams += parseInt(ozMatch[1]) * GRAMS_PER_OZ;
-      
-      // Default to net 1 if no net mentioned and no net is being edited
-      const netIdx = netMatch ? parseInt(netMatch[1]) - 1 : (editingNetIndex ?? 0);
-      
-      if (weightMentioned && currentMatch && netIdx >= 0 && netIdx < currentMatch.nets.length) {
-        const isAdding = lowerFull.includes("add") || lowerFull.includes("plus") || lowerFull.includes("put") || (!lowerFull.includes("remove") && !lowerFull.includes("reduce") && !lowerFull.includes("minus") && !lowerFull.includes("take"));
-        
-        const currentWeight = currentMatch.nets[netIdx].weight;
-        const capacity = currentMatch.nets[netIdx].capacity;
-
-        if (isAdding) {
-          const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
-          const addedOz = Math.round(totalGrams / GRAMS_PER_OZ);
-          const newWeight = (totalOz + addedOz) * GRAMS_PER_OZ;
-          
-          if (capacity && newWeight > capacity) {
-            Alert.alert(
-              "Capacity Warning",
-              `Net ${netIdx + 1} will exceed its limit. Continue?`,
-              [
-                { text: "Cancel", style: "cancel" },
-                { text: "Continue", onPress: () => {
-                  setNetWeight(netIdx, newWeight);
-                  Speech.speak(`Added ${lbMatch ? lbMatch[1] + ' pounds ' : ''}${ozMatch ? ozMatch[1] + ' ounces ' : ''}to net ${netIdx + 1}`);
-                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                }}
-              ]
-            );
-          } else {
-            setNetWeight(netIdx, newWeight);
-            Speech.speak(`Added ${lbMatch ? lbMatch[1] + ' pounds ' : ''}${ozMatch ? ozMatch[1] + ' ounces ' : ''}to net ${netIdx + 1}`);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          }
-        } else {
-          const totalOz = Math.round(currentWeight / GRAMS_PER_OZ);
-          const removedOz = Math.round(totalGrams / GRAMS_PER_OZ);
-          setNetWeight(netIdx, Math.max(0, (totalOz - removedOz) * GRAMS_PER_OZ));
-          Speech.speak(`Removed ${lbMatch ? lbMatch[1] + ' pounds ' : ''}${ozMatch ? ozMatch[1] + ' ounces ' : ''}from net ${netIdx + 1}`);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }
-      } else if (weightMentioned) {
-        Speech.speak("I heard the weight but couldn't identify which net to update.");
-      }
-    }
-  });
 
   const handleMatchEnd = useCallback(async () => {
     Alert.alert(
@@ -378,8 +253,20 @@ export default function LiveMatchScreen() {
             <Pressable onPress={() => navigation.navigate("WeatherDetails")} style={styles.headerButton} hitSlop={15}>
               <Feather name="cloud" size={22} color={theme.text} />
             </Pressable>
-            <Pressable onPress={handleVoiceCommand} style={styles.headerButton} hitSlop={15}>
-              <Feather name="mic" size={22} color={isVoiceListening ? Colors.dark.primary : theme.text} />
+            <Pressable 
+              onPress={handleVoiceCommand} 
+              style={[
+                styles.headerButton, 
+                isVoiceListening && { backgroundColor: Colors.dark.error + '40', borderRadius: 20 }
+              ]} 
+              hitSlop={15} 
+              disabled={isProcessing}
+            >
+              <Feather 
+                name="mic" 
+                size={22} 
+                color={isVoiceListening ? Colors.dark.error : (isProcessing ? theme.textSecondary : theme.text)} 
+              />
             </Pressable>
             <Pressable onPress={() => navigation.navigate("Settings")} style={styles.headerButton} hitSlop={15}>
               <Feather name="settings" size={22} color={theme.text} />
