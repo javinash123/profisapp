@@ -54,14 +54,17 @@ export function setupAuth(app: Express | Router) {
           
           // Increment login attempts
           user.loginAttempts = (user.loginAttempts || 0) + 1;
+          console.log(`User ${username} now has ${user.loginAttempts} failed attempts`);
+
           if (user.loginAttempts >= 5) {
             user.lockUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // Lock indefinitely (1 year) until reset
             await user.save();
+            console.log(`User ${username} account LOCKED`);
             return done(null, false, { message: "Your account has been locked after 5 failed login attempts. Please reset your password to continue." });
           }
           await user.save();
           
-          return done(null, false, { message: "Invalid username or password" });
+          return done(null, false, { message: `Invalid username or password. Attempt ${user.loginAttempts} of 5.` });
         }
 
         // Reset login attempts on successful login

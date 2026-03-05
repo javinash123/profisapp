@@ -192,7 +192,7 @@ export default function EndMatchSummaryScreen() {
   }, [match]);
 
   const minuteReport = useMemo(() => {
-    if (!match) return [];
+    if (!match || !match.startTime) return [];
     const start = match.startTime;
     const end = match.endTime || Date.now();
     const durationMins = Math.floor((end - start) / 60000);
@@ -215,7 +215,8 @@ export default function EndMatchSummaryScreen() {
           minute: i,
           time: new Date(minuteTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           weight: formatWeight(weight, match.config.unit),
-          fishCount: minuteCatches.length
+          fishCount: minuteCatches.length,
+          avgWeight: formatWeight(weight / minuteCatches.length, match.config.unit)
         });
       }
     }
@@ -353,25 +354,25 @@ export default function EndMatchSummaryScreen() {
           <ThemedText type="h4" style={styles.sectionTitle}>Minute-by-Minute Activity</ThemedText>
           <Card elevation={1} style={{ padding: Spacing.md, marginBottom: Spacing.md }}>
             {minuteReport.length > 0 ? (
-              minuteReport.map((item, idx) => (
-                <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: idx === minuteReport.length - 1 ? 0 : 1, borderBottomColor: theme.border }}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                      <Feather name="clock" size={14} color={Colors.dark.primary} style={{ marginRight: 6 }} />
-                      <ThemedText type="body" style={{ fontWeight: 'bold' }}>{item.time}</ThemedText>
-                      <ThemedText type="caption" style={{ color: theme.textSecondary, marginLeft: 8 }}>Minute {item.minute}</ThemedText>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Feather name="activity" size={12} color={theme.textSecondary} style={{ marginRight: 6 }} />
-                      <ThemedText type="caption" style={{ color: theme.textSecondary }}>{item.fishCount} fish caught in this minute</ThemedText>
-                    </View>
-                  </View>
-                  <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
-                    <ThemedText type="h4" style={{ color: Colors.dark.primary }}>{item.weight}</ThemedText>
-                    <ThemedText type="caption" style={{ color: theme.textSecondary }}>Weight gain</ThemedText>
-                  </View>
+              <>
+                <View style={{ flexDirection: 'row', backgroundColor: Colors.dark.primary + '20', padding: Spacing.sm, borderRadius: 4, marginBottom: 8 }}>
+                  <ThemedText type="small" style={{ flex: 1.5, fontWeight: 'bold' }}>Time</ThemedText>
+                  <ThemedText type="small" style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Fish</ThemedText>
+                  <ThemedText type="small" style={{ flex: 2, fontWeight: 'bold', textAlign: 'right' }}>Weight</ThemedText>
+                  <ThemedText type="small" style={{ flex: 2, fontWeight: 'bold', textAlign: 'right' }}>Avg</ThemedText>
                 </View>
-              ))
+                {minuteReport.map((item, idx) => (
+                  <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: idx === minuteReport.length - 1 ? 0 : 1, borderBottomColor: theme.border, alignItems: 'center' }}>
+                    <View style={{ flex: 1.5 }}>
+                      <ThemedText type="body" style={{ fontWeight: 'bold' }}>{item.time}</ThemedText>
+                      <ThemedText type="caption" style={{ color: theme.textSecondary }}>Min {item.minute}</ThemedText>
+                    </View>
+                    <ThemedText style={{ flex: 1, textAlign: 'center' }}>{item.fishCount}</ThemedText>
+                    <ThemedText style={{ flex: 2, textAlign: 'right', color: Colors.dark.primary, fontWeight: '600' }}>{item.weight}</ThemedText>
+                    <ThemedText style={{ flex: 2, textAlign: 'right', color: theme.textSecondary, fontSize: 12 }}>{item.avgWeight}</ThemedText>
+                  </View>
+                ))}
+              </>
             ) : (
               <ThemedText style={{ textAlign: 'center', padding: Spacing.lg, color: theme.textSecondary }}>No activity recorded</ThemedText>
             )}

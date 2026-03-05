@@ -18,6 +18,8 @@ export default function MatchSummaryScreen() {
   const { theme } = useTheme();
   const { matchData } = route.params as { matchData: any };
 
+  const catches = useMemo(() => matchData?.details?.catches || [], [matchData]);
+
   const GRAMS_PER_LB = 453.592;
   const GRAMS_PER_OZ = 28.3495;
 
@@ -28,21 +30,21 @@ export default function MatchSummaryScreen() {
   };
 
   const chartData = useMemo(() => {
-    if (!matchData?.details?.catches) return [];
-    return matchData.details.catches.map((c: any) => ({
+    if (!catches || catches.length === 0) return [];
+    return catches.map((c: any) => ({
       time: new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       weight: c.weight / GRAMS_PER_LB,
       fullDate: new Date(c.timestamp).toLocaleString()
     }));
-  }, [matchData]);
+  }, [catches]);
 
   const minuteReport = useMemo(() => {
-    if (!matchData?.details?.catches || !matchData.startTime) return [];
+    if (!catches || catches.length === 0 || !matchData?.startTime) return [];
     
     const report: { [key: number]: { count: number, weight: number } } = {};
     const startTime = new Date(matchData.startTime).getTime();
 
-    matchData.details.catches.forEach((c: any) => {
+    catches.forEach((c: any) => {
       const minuteOffset = Math.floor((new Date(c.timestamp).getTime() - startTime) / 60000);
       if (!report[minuteOffset]) {
         report[minuteOffset] = { count: 0, weight: 0 };
@@ -57,10 +59,10 @@ export default function MatchSummaryScreen() {
         ...data
       }))
       .sort((a, b) => a.minute - b.minute);
-  }, [matchData]);
+  }, [matchData, catches]);
 
   const totalCatches = catches.length;
-  const averageWeight = catches.length > 0 ? matchData.details.totalWeight / catches.length : 0;
+  const averageWeight = totalCatches > 0 ? (matchData.details?.totalWeight || 0) / totalCatches : 0;
 
   if (!matchData) {
     return (
@@ -168,27 +170,31 @@ export default function MatchSummaryScreen() {
           </>
         )}
 
-        {minuteReport.length > 0 && (
-          <>
-            <ThemedText type="h4" style={styles.sectionTitle}>Minute-by-Minute Report</ThemedText>
-            <Card style={styles.reportCard}>
-              <View style={styles.reportHeader}>
-                <ThemedText type="small" style={styles.reportHeaderCell}>Minute</ThemedText>
-                <ThemedText type="small" style={styles.reportHeaderCell}>Catches</ThemedText>
-                <ThemedText type="small" style={styles.reportHeaderCell}>Weight</ThemedText>
-                <ThemedText type="small" style={styles.reportHeaderCell}>Avg</ThemedText>
-              </View>
-              {minuteReport.map((row, idx) => (
-                <View key={idx} style={[styles.reportRow, idx % 2 === 0 && { backgroundColor: theme.backgroundTertiary }]}>
-                  <ThemedText style={styles.reportCell}>{row.minute}m</ThemedText>
-                  <ThemedText style={styles.reportCell}>{row.count}</ThemedText>
-                  <ThemedText style={styles.reportCell}>{formatWeight(row.weight)}</ThemedText>
-                  <ThemedText style={styles.reportCell}>{formatWeight(row.weight / row.count)}</ThemedText>
+          <ThemedText type="h4" style={styles.sectionTitle}>Minute-by-Minute Activity</ThemedText>
+          <Card elevation={1} style={{ padding: Spacing.md, marginBottom: Spacing.md }}>
+            {minuteReport.length > 0 ? (
+              <>
+                <View style={{ flexDirection: 'row', backgroundColor: Colors.dark.primary + '20', padding: Spacing.sm, borderRadius: 4, marginBottom: 8 }}>
+                  <ThemedText type="small" style={{ flex: 1.5, fontWeight: 'bold' }}>Time</ThemedText>
+                  <ThemedText type="small" style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Fish</ThemedText>
+                  <ThemedText type="small" style={{ flex: 2, fontWeight: 'bold', textAlign: 'right' }}>Weight</ThemedText>
+                  <ThemedText type="small" style={{ flex: 2, fontWeight: 'bold', textAlign: 'right' }}>Avg</ThemedText>
                 </View>
-              ))}
-            </Card>
-          </>
-        )}
+                {minuteReport.map((item, idx) => (
+                  <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: idx === minuteReport.length - 1 ? 0 : 1, borderBottomColor: theme.border, alignItems: 'center' }}>
+                    <View style={{ flex: 1.5 }}>
+                      <ThemedText type="body" style={{ fontWeight: 'bold' }}>{item.minute}m</ThemedText>
+                    </View>
+                    <ThemedText style={{ flex: 1, textAlign: 'center' }}>{item.count}</ThemedText>
+                    <ThemedText style={{ flex: 2, textAlign: 'right', color: Colors.dark.primary, fontWeight: '600' }}>{formatWeight(item.weight)}</ThemedText>
+                    <ThemedText style={{ flex: 2, textAlign: 'right', color: theme.textSecondary, fontSize: 12 }}>{formatWeight(item.weight / item.count)}</ThemedText>
+                  </View>
+                ))}
+              </>
+            ) : (
+              <ThemedText style={{ textAlign: 'center', padding: Spacing.lg, color: theme.textSecondary }}>No activity recorded</ThemedText>
+            )}
+          </Card>
 
         {catches.length > 0 && (
           <>

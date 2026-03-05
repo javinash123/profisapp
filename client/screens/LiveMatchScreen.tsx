@@ -214,13 +214,6 @@ export default function LiveMatchScreen() {
     return lb;
   };
 
-  const handleVoiceCommand = useCallback(async () => {
-    if (isVoiceListening) {
-      await stopListening();
-    } else {
-      await startListening();
-    }
-  }, [isVoiceListening, startListening, stopListening]);
 
   if (!currentMatch) return null;
 
