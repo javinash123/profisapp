@@ -1,0 +1,388 @@
+[1G[0K⠙[1G[0K
+> my-app@1.0.0 dev
+> npm run all:dev
+
+[1G[0K⠙[1G[0K
+> my-app@1.0.0 all:dev
+> npm run expo:dev & npm run server:dev
+
+[1G[0K
+> my-app@1.0.0 server:dev
+> NODE_ENV=development tsx server/index.ts
+
+[1G[0K
+> my-app@1.0.0 expo:dev
+> EXPO_PACKAGER_PROXY_URL=https://$REPLIT_DEV_DOMAIN REACT_NATIVE_PACKAGER_HOSTNAME=$REPLIT_DEV_DOMAIN EXPO_PUBLIC_DOMAIN=$REPLIT_DEV_DOMAIN:5000 npx expo start --localhost
+
+[1G[0K[1G[0K⠙[1G[0K[90mStarting project at /home/runner/workspace[39m
+[2mStarting Metro Bundler[22m
+[33mThe following packages should be updated for best compatibility with the installed [1mexpo[22m version:[39m
+[33m  [1mexpo[22m[36m@[39m[33m[31m54.0.29[39m[33m - expected version: [32m~54.0.33[39m[33m[39m
+[33m  [1mexpo-constants[22m[36m@[39m[33m[31m18.0.12[39m[33m - expected version: [32m~18.0.13[39m[33m[39m
+[33m  [1mexpo-font[22m[36m@[39m[33m[31m14.0.10[39m[33m - expected version: [32m~14.0.11[39m[33m[39m
+[33m  [1mexpo-glass-effect[22m[36m@[39m[33m[31m0.1.8[39m[33m - expected version: [32m~0.1.9[39m[33m[39m
+[33m  [1mexpo-linking[22m[36m@[39m[33m[31m8.0.10[39m[33m - expected version: [32m~8.0.11[39m[33m[39m
+[33m  [1mexpo-splash-screen[22m[36m@[39m[33m[31m31.0.12[39m[33m - expected version: [32m~31.0.13[39m[33m[39m
+[33m  [1mreact-native-svg[22m[36m@[39m[33m[31m15.15.3[39m[33m - expected version: [32m15.12.1[39m[33m[39m
+[33mYour project may not work correctly until you install the expected versions of the packages.[39m
+▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+█ ▄▄▄▄▄ █▄▀▀▀▄ ███▀█▄█▄▀ ▀█ ▄▄▄▄▄ █
+█ █   █ █   ▄▄ ▀▀ ▀▀ ▄██▄██ █   █ █
+█ █▄▄▄█ █▄█▀█ ▄▄▄ ▄▄ ▄▀ █▀█ █▄▄▄█ █
+█▄▄▄▄▄▄▄█▄█ ▀ █▄▀▄▀▄█ █▄▀▄█▄▄▄▄▄▄▄█
+█   ▄██▄▀▄█ ▀█▀▄█  ▀ ▄▄▄▀█ ▀▀▄ ▄█ █
+█▄▄ █▄█▄▄▄  ▄▀▀ ▀▀▄ █▀█▄▄ ▀▄ ██▄▀ █
+█▀▄ ▄▄█▄▄█ ▄█ ▄▄▀   ▀ █▀▄▄▀█▄▄█▀▀▄█
+█▀▄█▀ █▄██▀ ▀███▀███▄█ ▄█▀██ ▄  ▄██
+█ ▀▄ ▄▀▄▀▀▄▀▀█▄█▀█▀ ██▄  ▄█ ▄  ▄█ █
+█ ▀▀▀▀▀▄█ ▄▀▀ ▄█▄▀▀▄██▄ ▀▄▄▀ ▄█▄▄▀█
+█▀█▀ █▀▄▄ █ ▀▄▀█▄ ▄▄ ▄    █▀ █▀   █
+██▀█  █▄█▀▀█▄▄ ██▄▄▄▀ █▄▄█ ▄█▀▄█▄▄█
+█▄██▄█▄▄▄▀▄ ▄ ▄▄ ▄ █▀ █▀▄ ▄▄▄ ▄█▄██
+█ ▄▄▄▄▄ ██▄ ████▀ ██ ▄▀▀▄ █▄█ █▀▀▀█
+█ █   █ █▀ ▄▀▀ █▀█▀▄██▄█▄▄ ▄ ▄█▄▀██
+█ █▄▄▄█ █  ▀▀▄█▄▄▄▀▀▀ █▀▄ ▀▄▄█▄█▄▀█
+█▄▄▄▄▄▄▄█▄▄▄█▄█▄██▄▄▄▄▄▄████▄▄█▄███
+
+[33mUsing a non-interactive terminal, keyboard commands are disabled.[39m
+› Metro waiting on
+[4mexp://dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev[24m
+› Scan the QR code above with Expo Go (Android) or the Camera app
+(iOS)
+
+› Web is waiting on [4mhttp://localhost:8081[24m
+
+› Using [36mExpo Go[39m
+› Press [1ms[22m [2m│[22m switch to development build
+
+› Press [1ma[22m [2m│[22m open Android
+› Press [1mw[22m [2m│[22m open web
+
+› Press [1mj[22m [2m│[22m open debugger
+› Press [1mr[22m [2m│[22m reload app
+› Press [1mm[22m [2m│[22m toggle menu
+› [1mshift+m[22m [2m│[22m more tools
+› Press [1mo[22m [2m│[22m open project code in your editor
+
+› Press [1m?[22m [2m│[22m show all commands
+
+Logs for your project will appear below.[2m Press Ctrl+C to exit.[22m
+MongoDB connected
+Serving static Expo files with dynamic manifest routing
+express server serving on port 5000 with BASE_PATH: 
+[HPM] GET / -> http://localhost:8081/ [200]
+[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [47m[37m░░░░░░░░░░░░░░░░[39m[49m[1m  0.0% [22m[2m(0/1)[22m
+[67D[1A[0J[33m|[39m [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [47m[37m░░░░░░░░░░░░░░░░[39m[49m[1m  0.0% [22m[2m(0/1)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [47m[37m░░░░░░░░░░░░░░░░[39m[49m[1m  1.0% [22m[2m(1/1)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓[49m[39m[47m[37m░░░░░░░░░░░░░░░[39m[49m[1m  9.5% [22m[2m( 4/13)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓[49m[39m[47m[37m░░░░░░░░░░░░░░░[39m[49m[1m  9.5% [22m[2m( 9/39)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓[49m[39m[47m[37m░░░░░░░░░░░░░░░[39m[49m[1m  9.5% [22m[2m(13/43)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓[49m[39m[47m[37m░░░░░░░░░░░░░[39m[49m[1m 20.3% [22m[2m(23/51)[22m
+[67D[1A[0J[33m|[39m [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓[49m[39m[47m[37m░░░░░░░░░░░░░[39m[49m[1m 20.3% [22m[2m(23/51)[22m
+[67D[1A[0J[33m|[39m [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓[49m[39m[47m[37m░░░░░░░░░░░░░[39m[49m[1m 20.3% [22m[2m(23/51)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░░[39m[49m[1m 39.4% [22m[2m(32/51)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 46.0% [22m[2m(40/59)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(46/66)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(53/81)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(54/81)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(63/93)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m( 68/148)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m( 77/190)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m( 81/211)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m( 89/219)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m( 90/219)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(107/234)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(123/281)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(142/316)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(152/322)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(159/337)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(184/367)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(196/437)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(198/440)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(199/442)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(200/442)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(201/442)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(203/449)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(206/449)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(208/449)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(221/455)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(231/469)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(241/473)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(251/498)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(261/504)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(273/506)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(284/531)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(287/539)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(299/546)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(310/548)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(317/556)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(328/558)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(332/564)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(339/567)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(346/572)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(348/574)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(352/574)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(357/575)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(373/581)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(387/598)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(388/598)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(393/618)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(394/618)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(398/626)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(401/632)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(415/659)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(419/677)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(420/677)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(429/689)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(439/694)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(447/737)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(453/739)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(460/797)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(473/809)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(494/828)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(510/832)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(521/838)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(534/843)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(553/857)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(566/858)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░░[39m[49m[1m 48.6% [22m[2m(584/864)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░[39m[49m[1m 52.2% [22m[2m(630/872)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░[39m[49m[1m 52.2% [22m[2m(644/896)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░[39m[49m[1m 52.2% [22m[2m(649/899)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░[39m[49m[1m 52.5% [22m[2m(652/900)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░[39m[49m[1m 52.7% [22m[2m(662/912)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░[39m[49m[1m 53.3% [22m[2m(667/914)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░[39m[49m[1m 54.2% [22m[2m(677/920)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░[39m[49m[1m 54.2% [22m[2m(690/941)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░░[39m[49m[1m 55.7% [22m[2m(707/947)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░[39m[49m[1m 59.4% [22m[2m(735/954)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░[39m[49m[1m 59.4% [22m[2m( 746/1002)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░[39m[49m[1m 59.4% [22m[2m( 761/1008)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░[39m[49m[1m 59.4% [22m[2m( 774/1015)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░[39m[49m[1m 59.4% [22m[2m( 788/1023)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░[39m[49m[1m 59.8% [22m[2m( 797/1031)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░[39m[49m[1m 60.9% [22m[2m( 816/1046)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░░[39m[49m[1m 62.5% [22m[2m( 834/1055)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░[39m[49m[1m 64.2% [22m[2m( 853/1065)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░[39m[49m[1m 64.2% [22m[2m( 867/1084)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░[39m[49m[1m 64.3% [22m[2m( 881/1099)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░[39m[49m[1m 64.4% [22m[2m( 893/1113)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░[39m[49m[1m 64.4% [22m[2m( 895/1116)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░[39m[49m[1m 65.1% [22m[2m( 901/1117)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░[39m[49m[1m 66.5% [22m[2m( 914/1121)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░[39m[49m[1m 67.0% [22m[2m( 919/1123)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░[39m[49m[1m 67.4% [22m[2m( 922/1123)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░[39m[49m[1m 67.8% [22m[2m( 925/1123)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░░[39m[49m[1m 68.3% [22m[2m( 928/1123)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 69.5% [22m[2m( 936/1123)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 70.1% [22m[2m( 941/1124)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 70.8% [22m[2m( 948/1127)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 72.0% [22m[2m( 963/1135)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 72.0% [22m[2m( 973/1163)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 72.0% [22m[2m( 995/1185)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 72.0% [22m[2m(1015/1212)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 72.0% [22m[2m(1035/1237)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 72.0% [22m[2m(1045/1251)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 72.0% [22m[2m(1055/1253)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 72.0% [22m[2m(1058/1256)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 72.0% [22m[2m(1061/1257)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 72.0% [22m[2m(1064/1257)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 72.5% [22m[2m(1071/1258)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 73.6% [22m[2m(1082/1261)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░░[39m[49m[1m 74.9% [22m[2m(1092/1262)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 75.1% [22m[2m(1103/1273)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 75.8% [22m[2m(1113/1278)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 75.8% [22m[2m(1122/1292)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 76.1% [22m[2m(1135/1301)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 76.2% [22m[2m(1136/1301)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 76.2% [22m[2m(1146/1313)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 77.0% [22m[2m(1152/1313)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 78.1% [22m[2m(1160/1313)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 78.4% [22m[2m(1169/1320)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 79.3% [22m[2m(1181/1326)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 79.3% [22m[2m(1187/1335)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 79.8% [22m[2m(1195/1338)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 80.2% [22m[2m(1200/1340)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 80.2% [22m[2m(1202/1342)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 81.1% [22m[2m(1212/1346)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 81.1% [22m[2m(1219/1358)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░░[39m[49m[1m 81.1% [22m[2m(1225/1360)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 81.6% [22m[2m(1230/1362)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 83.1% [22m[2m(1250/1371)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 84.1% [22m[2m(1260/1374)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 84.4% [22m[2m(1275/1388)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.2% [22m[2m(1293/1401)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.2% [22m[2m(1318/1442)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.2% [22m[2m(1333/1451)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.2% [22m[2m(1339/1455)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.4% [22m[2m(1347/1458)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.7% [22m[2m(1357/1466)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.7% [22m[2m(1373/1483)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.9% [22m[2m(1394/1504)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.9% [22m[2m(1429/1546)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.9% [22m[2m(1451/1635)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.9% [22m[2m(1483/1654)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.9% [22m[2m(1496/1667)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.9% [22m[2m(1515/1685)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.9% [22m[2m(1540/1693)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.9% [22m[2m(1566/1715)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.9% [22m[2m(1580/1719)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.9% [22m[2m(1586/1720)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 85.9% [22m[2m(1592/1720)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░░[39m[49m[1m 86.6% [22m[2m(1601/1720)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░[39m[49m[1m 88.5% [22m[2m(1619/1721)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░[39m[49m[1m 89.2% [22m[2m(1631/1727)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░[39m[49m[1m 90.2% [22m[2m(1647/1734)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░[39m[49m[1m 90.2% [22m[2m(1659/1795)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░[39m[49m[1m 90.2% [22m[2m(1677/1805)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░[39m[49m[1m 90.2% [22m[2m(1698/1822)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░[39m[49m[1m 90.2% [22m[2m(1717/1837)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░[39m[49m[1m 90.2% [22m[2m(1736/1859)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░[39m[49m[1m 90.2% [22m[2m(1765/1868)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░░[39m[49m[1m 92.3% [22m[2m(1800/1874)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░[39m[49m[1m 94.9% [22m[2m(1831/1880)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░[39m[49m[1m 96.2% [22m[2m(1853/1889)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░[39m[49m[1m 97.9% [22m[2m(1873/1893)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░[39m[49m[1m 99.8% [22m[2m(1893/1895)[22m
+[67D[1A[0J[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░[39m[49m[1m 99.9% [22m[2m(1895/1895)[22m
+[67D[1A[0J[32m[1mWeb[22m Bundled [39m[2m18099ms[22m[0m[2m client/index.js (1895 modules)[22m[0m
+[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [32m[42m▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓[49m[39m[47m[37m░[39m[49m[1m 99.9% [22m[2m(1895/1895)[22m
+[67D[1A[0J[HPM] GET /client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable -> http://localhost:8081/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable [200]
+[HPM] GET /assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf -> http://localhost:8081/assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf [500]
+Error: Unauthorized request from https://dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev. This may happen because of a conflicting browser extension to intercept HTTP requests. Disable browser extensions or use incognito mode and try again.
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/CorsMiddleware.ts:51:11
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ContextModuleSourceMapsMiddleware.ts:29:7
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at middleware (/home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ExpoMiddleware.ts:62:16)
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at Function.handle (/home/runner/workspace/node_modules/connect/index.js:186:3)
+[HPM] GET /assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf -> http://localhost:8081/assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf [500]
+Error: Unauthorized request from https://dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev. This may happen because of a conflicting browser extension to intercept HTTP requests. Disable browser extensions or use incognito mode and try again.
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/CorsMiddleware.ts:51:11
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ContextModuleSourceMapsMiddleware.ts:29:7
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at middleware (/home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ExpoMiddleware.ts:62:16)
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at Function.handle (/home/runner/workspace/node_modules/connect/index.js:186:3)
+[HPM] Client connected: { address: [32m'127.0.0.1'[39m, family: [32m'IPv4'[39m, port: [33m55404[39m }
+[HPM] GET /assets/?unstable_path=.%2Fclient%2Fassets%2Fimages/logo.png -> http://localhost:8081/assets/?unstable_path=.%2Fclient%2Fassets%2Fimages/logo.png [200]
+[HPM] GET /assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf -> http://localhost:8081/assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf [500]
+Error: Unauthorized request from https://dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev. This may happen because of a conflicting browser extension to intercept HTTP requests. Disable browser extensions or use incognito mode and try again.
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/CorsMiddleware.ts:51:11
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ContextModuleSourceMapsMiddleware.ts:29:7
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at middleware (/home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ExpoMiddleware.ts:62:16)
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at Function.handle (/home/runner/workspace/node_modules/connect/index.js:186:3)
+[7m[37m[1m LOG [22m[39m[27m [web] Logs will appear in the browser console
+[HPM] Client connected: { address: [32m'127.0.0.1'[39m, family: [32m'IPv4'[39m, port: [33m55432[39m }
+[HPM] Client disconnected: { address: [32m'127.0.0.1'[39m, family: [32m'IPv4'[39m, port: [33m55404[39m }
+[HPM] Client disconnected: { address: [32m'127.0.0.1'[39m, family: [32m'IPv4'[39m, port: [33m55432[39m }
+[HPM] GET / -> http://localhost:8081/ [200]
+[1mWeb[22m [0m[2mclient/[22m[0m[1mindex.js[22m [47m[37m░
+░░░░░░░░░░░░░░░[39m[49m[1m  0.0%
+ [22m[2m(0/1)[22m
+[21D[3A[0J[32m[1mWeb[22m Bundled [39m[2m99ms[22m[0m[2m client/index.js (1 module)[22m[0m
+[HPM] GET /client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable -> http://localhost:8081/client/index.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable [200]
+[HPM] GET /assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf -> http://localhost:8081/assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf [500]
+Error: Unauthorized request from https://dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev. This may happen because of a conflicting browser extension to intercept HTTP requests. Disable browser extensions or use incognito mode and try again.
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/CorsMiddleware.ts:51:11
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ContextModuleSourceMapsMiddleware.ts:29:7
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at middleware (/home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ExpoMiddleware.ts:62:16)
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at Function.handle (/home/runner/workspace/node_modules/connect/index.js:186:3)
+[HPM] Client connected: { address: [32m'127.0.0.1'[39m, family: [32m'IPv4'[39m, port: [33m51388[39m }
+[HPM] GET /assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf -> http://localhost:8081/assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf [500]
+Error: Unauthorized request from https://dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev. This may happen because of a conflicting browser extension to intercept HTTP requests. Disable browser extensions or use incognito mode and try again.
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/CorsMiddleware.ts:51:11
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ContextModuleSourceMapsMiddleware.ts:29:7
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at middleware (/home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ExpoMiddleware.ts:62:16)
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at Function.handle (/home/runner/workspace/node_modules/connect/index.js:186:3)
+[HPM] GET /assets/?unstable_path=.%2Fclient%2Fassets%2Fimages/logo.png -> http://localhost:8081/assets/?unstable_path=.%2Fclient%2Fassets%2Fimages/logo.png [200]
+[7m[37m[1m LOG [22m[39m[27m [web] Logs will appear in the browser console
+[HPM] GET /assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf -> http://localhost:8081/assets/?unstable_path=.%2Fnode_modules%2F%40expo%2Fvector-icons%2Fbuild%2Fvendor%2Freact-native-vector-icons%2FFonts/Feather.ttf [500]
+Error: Unauthorized request from https://dd43d061-044d-4880-a3e2-2e5533344070-00-1xtamqd5lazbp.kirk.replit.dev. This may happen because of a conflicting browser extension to intercept HTTP requests. Disable browser extensions or use incognito mode and try again.
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/CorsMiddleware.ts:51:11
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at /home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ContextModuleSourceMapsMiddleware.ts:29:7
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at middleware (/home/runner/workspace/node_modules/expo/node_modules/@expo/cli/src/start/server/middleware/ExpoMiddleware.ts:62:16)
+    at call (/home/runner/workspace/node_modules/connect/index.js:239:7)
+    at next (/home/runner/workspace/node_modules/connect/index.js:183:5)
+    at Function.handle (/home/runner/workspace/node_modules/connect/index.js:186:3)
+[HPM] Client connected: { address: [32m'127.0.0.1'[39m, family: [32m'IPv4'[39m, port: [33m51406[39m }
+Incoming POST request to: /register
+Registration request received (Full Body): {
+  "username": "testfisher",
+  "email": "testfisher@pegpro.com",
+  "password": "SecurePass123!"
+}
+User saved successfully in MongoDB: new ObjectId([32m'69b045c8bf1b1542d40f0c06'[39m)
+Incoming POST request to: /login
+Login attempt for: testfisher
+Password mismatch for: testfisher
+User testfisher now has 1 failed attempts
+Login failed info: { message: [32m'Invalid username or password. Attempt 1 of 5.'[39m }
+Incoming POST request to: /login
+Login attempt for: testfisher
+Password mismatch for: testfisher
+User testfisher now has 2 failed attempts
+Login failed info: { message: [32m'Invalid username or password. Attempt 2 of 5.'[39m }
+Incoming POST request to: /login
+Login attempt for: testfisher
+Password mismatch for: testfisher
+User testfisher now has 3 failed attempts
+Login failed info: { message: [32m'Invalid username or password. Attempt 3 of 5.'[39m }
+Incoming POST request to: /login
+Login attempt for: testfisher
+Password mismatch for: testfisher
+User testfisher now has 4 failed attempts
+Login failed info: { message: [32m'Invalid username or password. Attempt 4 of 5.'[39m }
+Incoming POST request to: /login
+Login attempt for: testfisher
+Password mismatch for: testfisher
+User testfisher now has 5 failed attempts
+User testfisher account LOCKED
+Login failed info: {
+  message: [32m'Your account has been locked after 5 failed login attempts. Please reset your password to continue.'[39m
+}
+Incoming POST request to: /login
+Login attempt for: testfisher
+Login failed info: {
+  message: [32m'Your account has been locked after 5 failed login attempts. Please reset your password to continue.'[39m
+}
+Incoming POST request to: /password-reset/request
+Password reset token for testfisher@pegpro.com: fte3yi7o
+Incoming POST request to: /password-reset/reset
+Incoming POST request to: /login
+Login attempt for: testfisher
+Login successful for: testfisher
+Session established for: testfisher

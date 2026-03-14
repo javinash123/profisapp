@@ -78,7 +78,6 @@ export default function MatchSummaryScreen() {
   const duration = matchData.details?.duration ? matchData.details.duration.toFixed(1) : "0";
   const pegNumber = matchData.details?.pegNumber || "N/A";
   const nets = matchData.details?.nets || [];
-  const catches = matchData.details?.catches || [];
 
   return (
     <ThemedView style={styles.container}>

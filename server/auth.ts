@@ -52,27 +52,35 @@ export function setupAuth(app: Express | Router) {
         if (!isMatch) {
           console.log("Password mismatch for:", username);
           
-          // Increment login attempts
-          user.loginAttempts = (user.loginAttempts || 0) + 1;
-          console.log(`User ${username} now has ${user.loginAttempts} failed attempts`);
+          // Increment login attempts using findByIdAndUpdate for reliable persistence
+          const newAttempts = (user.loginAttempts || 0) + 1;
+          console.log(`User ${username} now has ${newAttempts} failed attempts`);
 
-          if (user.loginAttempts >= 5) {
-            user.lockUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // Lock indefinitely (1 year) until reset
-            await user.save();
-            console.log(`User ${username} account LOCKED`);
+          if (newAttempts >= 5) {
+            // Lock account after 5 failed attempts
+            await User.findByIdAndUpdate(user._id, {
+              loginAttempts: newAttempts,
+              lockUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // Lock for 1 year until reset
+            }, { new: true });
+            console.log(`User ${username} account LOCKED - loginAttempts: ${newAttempts}, lockUntil set`);
             return done(null, false, { message: "Your account has been locked after 5 failed login attempts. Please reset your password to continue." });
           }
-          await user.save();
           
-          return done(null, false, { message: `Invalid username or password. Attempt ${user.loginAttempts} of 5.` });
+          // Update loginAttempts for attempts 1-4
+          await User.findByIdAndUpdate(user._id, {
+            loginAttempts: newAttempts
+          }, { new: true });
+          console.log(`Updated ${username} loginAttempts in DB: ${newAttempts}`);
+          
+          return done(null, false, { message: `Invalid username or password. Attempt ${newAttempts} of 5.` });
         }
 
         // Reset login attempts on successful login
-        user.loginAttempts = 0;
-        user.lockUntil = undefined;
-        await user.save();
-
-        console.log("Login successful for:", username);
+        await User.findByIdAndUpdate(user._id, {
+          loginAttempts: 0,
+          lockUntil: null
+        }, { new: true });
+        console.log("Login successful for:", username, "- loginAttempts reset to 0");
         return done(null, user);
       } catch (err) {
         console.error("LocalStrategy error:", err);
@@ -91,7 +99,7 @@ export function setupAuth(app: Express | Router) {
     }
   });
 
-  (app as any).post("/api/register", async (req: any, res: any) => {
+  (app as any).post("/register", async (req: any, res: any) => {
     try {
       const body = req.body;
       console.log("Registration request received (Full Body):", JSON.stringify(body, null, 2));
@@ -144,7 +152,7 @@ export function setupAuth(app: Express | Router) {
     }
   });
 
-  (app as any).post("/api/login", (req: any, res: any, next: any) => {
+  (app as any).post("/login", (req: any, res: any, next: any) => {
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) {
         console.error("Auth error:", err);
@@ -165,24 +173,24 @@ export function setupAuth(app: Express | Router) {
     })(req, res, next);
   });
 
-  (app as any).post("/api/logout", (req: any, res: any, next: any) => {
+  (app as any).post("/logout", (req: any, res: any, next: any) => {
     req.logout((err: any) => {
       if (err) return next(err);
       res.sendStatus(200);
     });
   });
 
-  (app as any).get("/api/user", (req: any, res: any) => {
+  (app as any).get("/user", (req: any, res: any) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
     res.json(req.user);
   });
 
-  (app as any).get("/api/check-auth", (req: any, res: any) => {
+  (app as any).get("/check-auth", (req: any, res: any) => {
     res.json({ authenticated: req.isAuthenticated(), user: req.user });
   });
 
   // Password Reset Routes
-  (app as any).post("/api/password-reset/request", async (req: any, res: any) => {
+  (app as any).post("/password-reset/request", async (req: any, res: any) => {
     try {
       const { email } = req.body;
       const user = await User.findOne({ email: email.toLowerCase() });
@@ -203,7 +211,7 @@ export function setupAuth(app: Express | Router) {
     }
   });
 
-  (app as any).post("/api/password-reset/reset", async (req: any, res: any) => {
+  (app as any).post("/password-reset/reset", async (req: any, res: any) => {
     try {
       const { token, password } = req.body;
       const user = await User.findOne({
@@ -229,7 +237,7 @@ export function setupAuth(app: Express | Router) {
   });
 
   // Biometric Settings
-  (app as any).post("/api/user/biometrics", async (req: any, res: any) => {
+  (app as any).post("/user/biometrics", async (req: any, res: any) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Not authenticated" });
     try {
       const { enabled } = req.body;

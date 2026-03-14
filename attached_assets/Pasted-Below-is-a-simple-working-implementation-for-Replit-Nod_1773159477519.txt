@@ -1,0 +1,145 @@
+Below is a simple working implementation for Replit (Node.js + Express + Passport + MongoDB) that locks the account after 5 failed login attempts and forces the user to reset the password.
+
+1️⃣ User Model (MongoDB / Mongoose)
+
+Create or update your User schema.
+
+const mongoose = require("mongoose");
+
+const userSchema = new mongoose.Schema({
+  username: String,
+  email: String,
+  password: String,
+
+  loginAttempts: {
+    type: Number,
+    default: 0
+  },
+
+  lockUntil: {
+    type: Date,
+    default: null
+  }
+});
+
+module.exports = mongoose.model("User", userSchema);
+2️⃣ Passport Login Strategy (Main Logic)
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const bcrypt = require("bcryptjs");
+const User = require("./models/User");
+
+passport.use(
+  new LocalStrategy(
+    { usernameField: "username", passwordField: "password" },
+    async (username, password, done) => {
+      try {
+
+        const user = await User.findOne({
+          $or: [{ username: username }, { email: username }]
+        });
+
+        if (!user) {
+          return done(null, false, { message: "Invalid username or password" });
+        }
+
+        // CHECK IF ACCOUNT IS LOCKED
+        if (user.lockUntil && user.lockUntil > Date.now()) {
+          return done(null, false, {
+            message:
+              "Your account has been locked after 5 failed login attempts. Please reset your password to continue."
+          });
+        }
+
+        // CHECK PASSWORD
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+
+          const attempts = user.loginAttempts + 1;
+
+          // LOCK ACCOUNT AFTER 5 ATTEMPTS
+          if (attempts >= 5) {
+            await User.findByIdAndUpdate(user._id, {
+              loginAttempts: attempts,
+              lockUntil: Date.now() + 60 * 60 * 1000 // lock for 1 hour
+            });
+
+            return done(null, false, {
+              message:
+                "Your account has been locked after 5 failed login attempts. Please reset your password to continue."
+            });
+          }
+
+          // INCREMENT ATTEMPTS
+          await User.findByIdAndUpdate(user._id, {
+            loginAttempts: attempts
+          });
+
+          return done(null, false, {
+            message: `Invalid username or password. Attempt ${attempts} of 5`
+          });
+        }
+
+        // SUCCESSFUL LOGIN → RESET ATTEMPTS
+        await User.findByIdAndUpdate(user._id, {
+          loginAttempts: 0,
+          lockUntil: null
+        });
+
+        return done(null, user);
+
+      } catch (err) {
+        return done(err);
+      }
+    }
+  )
+);
+3️⃣ Login API Route
+app.post("/api/login", (req, res, next) => {
+
+  passport.authenticate("local", (err, user, info) => {
+
+    if (err) {
+      return res.status(500).json({ message: "Server error" });
+    }
+
+    if (!user) {
+      return res.status(401).json({ message: info.message });
+    }
+
+    req.logIn(user, function (err) {
+      if (err) {
+        return res.status(500).json({ message: "Login failed" });
+      }
+
+      return res.json({
+        message: "Login successful",
+        user: user.username
+      });
+    });
+
+  })(req, res, next);
+
+});
+4️⃣ Expected Behavior
+First wrong password
+Invalid username or password. Attempt 1 of 5
+Second
+Invalid username or password. Attempt 2 of 5
+Fifth wrong password
+Your account has been locked after 5 failed login attempts. Please reset your password to continue.
+Next login attempt
+
+Still shows:
+
+Your account has been locked after 5 failed login attempts. Please reset your password to continue.
+5️⃣ Database Example After Lock
+
+User document will look like:
+
+{
+ "username": "testuser",
+ "loginAttempts": 5,
+ "lockUntil": "2026-03-08T10:30:00.000Z"
+}
